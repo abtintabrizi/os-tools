@@ -1,34 +1,11 @@
 export default function ErrorScreen({ message }: { message: string }) {
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: "16px",
-        fontFamily: "var(--font-mono)",
-        fontSize: "13px",
-        color: "var(--text-muted)",
-        textTransform: "uppercase",
-        letterSpacing: "0.1em",
-      }}
-    >
-      <span style={{ color: "#f87171" }}>{message}</span>
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 font-mono text-[13px] text-text-muted uppercase tracking-widest">
+      <span className="text-red-400">{message}</span>
+
       <button
         onClick={() => (window.location.href = window.location.pathname)}
-        style={{
-          background: "transparent",
-          border: "1px solid var(--border)",
-          borderRadius: "6px",
-          color: "var(--text-muted)",
-          padding: "8px 16px",
-          fontFamily: "var(--font-mono)",
-          fontSize: "11px",
-          letterSpacing: "0.1em",
-          cursor: "pointer",
-        }}
+        className="bg-transparent border border-border rounded-md text-text-muted px-4 py-2 font-mono text-[11px] tracking-widest cursor-pointer hover:text-text hover:border-border-bright transition"
       >
         Back to setup
       </button>
