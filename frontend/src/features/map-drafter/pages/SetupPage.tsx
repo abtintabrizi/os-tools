@@ -49,30 +49,24 @@ export default function SetupPage({ onLaunch }: Props) {
 
   return (
     <div className="min-h-screen flex justify-center items-center">
-      <div className="w-full max-w-160">
-        <div className="text-[11px] font-mono tracking-[0.25em] text-(--text-muted) uppercase mb-8 flex items-center gap-3 before:content-[''] before:inline-block before:w-6 before:h-0.5 before:bg-(--gold) before:shrink-0">
-          Omega Strikers
-        </div>
-        <h1 className="text-[clamp(36px,7vw,64px)] font-extrabold leading-none tracking-tight mb-2 text-(--text)">
+      <div className="w-full max-w-160 flex flex-col">
+        <h1 className="text-[clamp(36px,7vw,64px)] font-extrabold leading-none tracking-tight mb-10">
           Map
           <br />
-          <em className="not-italic text-(--gold)">Draft</em>
+          <span className="text-tools-gold">Draft</span>
         </h1>
-        <p className="font-mono text-xs text-(--text-muted) tracking-[0.08em] mb-10">
-          // Best of 3 · Online
-        </p>
 
-        <div className="bg-(--bg2) border border-(--border) rounded-2xl p-6 mb-4">
-          <div className="text-[10px] font-mono tracking-[0.2em] text-(--text-muted) uppercase mb-4">
+        <div className="bg-tools-bg2 border border-tools-border rounded-2xl p-6 mb-4">
+          <div className="text-[10px] font-mono tracking-[0.2em] text-tools-text-muted uppercase mb-4">
             Teams
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] font-mono font-bold tracking-[0.12em] py-0.5 px-1.75 rounded pointer-events-none bg-(--blue-dim) text-(--blue)">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] font-mono font-bold tracking-[0.12em] py-0.5 px-1.75 rounded pointer-events-none bg-tools-blue-dim text-tools-blue">
                 Blue
               </span>
               <input
-                className="w-full bg-(--bg3) border border-(--border) rounded-lg py-2.5 pr-3 pl-16 font-head text-[15px] font-semibold text-(--text) outline-none transition-colors duration-200 focus:border-(--border-bright)"
+                className="w-full bg-tools-bg3 border border-tools-border rounded-lg py-2.5 pr-3 pl-16 font-head text-[15px] font-semibold text-tools-text outline-none transition-colors duration-200 focus:border-tools-border-bright"
                 type="text"
                 placeholder="Team A"
                 maxLength={24}
@@ -81,11 +75,11 @@ export default function SetupPage({ onLaunch }: Props) {
               />
             </div>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] font-mono font-bold tracking-[0.12em] py-0.5 px-1.75 rounded pointer-events-none bg-(--red-dim) text-(--red)">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] font-mono font-bold tracking-[0.12em] py-0.5 px-1.75 rounded pointer-events-none bg-tools-red-dim text-tools-red">
                 Red
               </span>
               <input
-                className="w-full bg-(--bg3) border border-(--border) rounded-lg py-2.5 pr-3 pl-16 font-head text-[15px] font-semibold text-(--text) outline-none transition-colors duration-200 focus:border-(--border-bright)"
+                className="w-full bg-tools-bg3 border border-tools-border rounded-lg py-2.5 pr-3 pl-16 font-head text-[15px] font-semibold text-tools-text outline-none transition-colors duration-200 focus:border-tools-border-bright"
                 type="text"
                 placeholder="Team B"
                 maxLength={24}
@@ -96,8 +90,8 @@ export default function SetupPage({ onLaunch }: Props) {
           </div>
         </div>
 
-        <div className="bg-(--bg2) border border-(--border) rounded-2xl p-6 mb-4">
-          <div className="text-[10px] font-mono tracking-[0.2em] text-(--text-muted) uppercase mb-4">
+        <div className="bg-tools-bg2 border border-tools-border rounded-2xl p-6 mb-4">
+          <div className="text-[10px] font-mono tracking-[0.2em] text-tools-text-muted uppercase mb-4">
             Map pool — click to toggle
           </div>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-2">
@@ -108,14 +102,14 @@ export default function SetupPage({ onLaunch }: Props) {
                   key={map}
                   className={`border rounded-lg py-2.5 px-3.5 font-head text-[13px] font-medium flex items-center gap-2 transition-all duration-150 select-none text-left ${
                     on
-                      ? "border-[rgba(245,158,11,0.4)] text-(--text) bg-[rgba(245,158,11,0.06)]"
-                      : "bg-(--bg3) border-(--border) text-(--text-muted)"
+                      ? "border-tools-gold/40 text-tools-text bg-tools-gold/6"
+                      : "bg-tools-bg3 border-tools-border text-tools-text-muted"
                   }`}
                   onClick={() => toggleMap(map)}
                 >
                   <span
                     className={`w-1.75 h-1.75 rounded-full shrink-0 transition-colors duration-150 ${
-                      on ? "bg-(--gold)" : "bg-(--border-bright)"
+                      on ? "bg-tools-gold" : "bg-tools-border-bright"
                     }`}
                   />
                   {map}
@@ -126,7 +120,7 @@ export default function SetupPage({ onLaunch }: Props) {
         </div>
 
         <button
-          className="w-full py-4 bg-(--gold) text-black border-none rounded-[10px] font-head text-[15px] font-extrabold tracking-[0.04em] mt-4 transition-all duration-150 hover:opacity-90 hover:-translate-y-px active:scale-[0.99]"
+          className="w-full py-4 bg-tools-gold text-black border-none rounded-[10px] font-head text-[15px] font-extrabold tracking-[0.04em] mt-4 transition-all duration-150 hover:opacity-90 hover:-translate-y-px active:scale-[0.99]"
           onClick={handleLaunch}
           disabled={loading}
         >
