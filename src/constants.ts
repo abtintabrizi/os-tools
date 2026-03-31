@@ -1,4 +1,4 @@
-import type { SequenceStep } from './types'
+import { SequenceStep } from "@/types"
 
 export const ALL_MAPS = [
   "Ahten City",

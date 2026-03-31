@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { DraftState, Side, ActionType } from '../types'
+import type { DraftState, Side } from '@/types'
 import { SEQUENCE } from '../constants'
 import { deriveMapStatuses, getDeciderMap } from '../utils'
 import ConfirmModal from './ConfirmModal'

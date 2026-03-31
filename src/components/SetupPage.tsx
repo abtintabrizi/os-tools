@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import type { DraftState } from '../types'
-import { ALL_MAPS } from '../constants'
-import styles from './SetupPage.module.css'
+import type { DraftState } from '@/types'
+import { ALL_MAPS } from '@/constants'
+import styles from '@/SetupPage.module.css'
 
 interface Props {
   onLaunch: (state: DraftState) => void

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import type { DraftState } from '../types'
-import { supabase } from '../lib/supabase'
+import type { DraftState } from '@/types'
+import { supabase } from '@/lib/supabase'
 
 // Each draft room is a single row in the `drafts` table keyed by roomId.
 // All clients subscribe to the same Realtime channel for that room and

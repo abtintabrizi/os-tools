@@ -1,4 +1,5 @@
-import type { DraftState, MapStatus } from '../types'
+import { DraftState, MapStatus } from "@/types"
+
 
 export function deriveMapStatuses(state: DraftState): Record<string, MapStatus> {
   const statuses: Record<string, MapStatus> = {}

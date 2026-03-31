@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
-import type { Page, Side, DraftState } from './types'
+import type { Page, Side, DraftState } from '@/types'
 import { useDraftState } from './hooks/useDraftState'
-import SetupPage from './components/SetupPage'
-import LobbyPage from './components/LobbyPage'
-import SidePickPage from './components/SidePickPage'
-import DraftPage from './components/DraftPage'
-import './index.css'
+import SetupPage from '@/components/SetupPage'
+import LobbyPage from '@/components/LobbyPage'
+import SidePickPage from '@/components/SidePickPage'
+import DraftPage from '@/components/DraftPage'
+import '@/index.css'
 
 function getUrlParams() {
   const params = new URLSearchParams(window.location.search)
