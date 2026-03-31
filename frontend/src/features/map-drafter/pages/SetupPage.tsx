@@ -1,16 +1,9 @@
 import { useState } from "react";
-import type { DraftState } from "@map-drafter/types";
 import { ALL_MAPS } from "@/common/constants";
+import { useDraftContext } from "@/features/map-drafter/context/DraftContext";
 
-interface Props {
-  onLaunch: (state: DraftState) => void;
-}
-
-function generateRoomId(): string {
-  return Math.random().toString(36).slice(2, 8).toUpperCase();
-}
-
-export default function SetupPage({ onLaunch }: Props) {
+export default function SetupPage() {
+  const { handleLaunch } = useDraftContext();
   const [blueName, setBlueName] = useState("");
   const [redName, setRedName] = useState("");
   const [enabledMaps, setEnabledMaps] = useState<Set<string>>(
@@ -27,24 +20,22 @@ export default function SetupPage({ onLaunch }: Props) {
     });
   }
 
-  async function handleLaunch() {
+  async function handleSubmit() {
     const maps = ALL_MAPS.filter((m) => enabledMaps.has(m));
     if (maps.length < 5) {
       alert("Enable at least 5 maps for a Bo3 draft.");
       return;
     }
     setLoading(true);
-    const state: DraftState = {
-      roomId: generateRoomId(),
-      blueName: blueName.trim() || "Team A",
-      redName: redName.trim() || "Team B",
-      maps,
-      step: 0,
-      actions: [],
-      done: false,
-    };
-    await onLaunch(state);
-    setLoading(false);
+    try {
+      await handleLaunch({
+        blueName: blueName.trim() || "Team A",
+        redName: redName.trim() || "Team B",
+        maps,
+      });
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -121,7 +112,7 @@ export default function SetupPage({ onLaunch }: Props) {
 
         <button
           className="w-full py-4 bg-tools-gold text-black border-none rounded-[10px] font-head text-[15px] font-extrabold tracking-[0.04em] mt-4 transition-all duration-150 hover:opacity-90 hover:-translate-y-px active:scale-[0.99]"
-          onClick={handleLaunch}
+          onClick={handleSubmit}
           disabled={loading}
         >
           {loading ? "Creating room..." : "Create Draft Room →"}
