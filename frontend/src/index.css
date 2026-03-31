@@ -1,3 +1,15 @@
+@import "tailwindcss";
+
+@theme {
+  --font-head: 'Syne', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+}
+
+@keyframes pulseBorder {
+  0%, 100% { border-color: rgba(245, 158, 11, 0.15); }
+  50% { border-color: rgba(245, 158, 11, 0.45); }
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -21,8 +33,6 @@
   --text: #f0f0f0;
   --text-muted: #555;
   --text-dim: #888;
-  --font-head: 'Syne', sans-serif;
-  --font-mono: 'Space Mono', monospace;
 }
 
 html, body, #root {
