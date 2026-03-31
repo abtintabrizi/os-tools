@@ -1,14 +1,14 @@
-import { createHashRouter } from 'react-router-dom'
-import Home from '@/routes/Home'
-import MapDraft from '@/routes/MapDraft'
+import { createHashRouter } from "react-router-dom";
+import Home from "@/routes/Home";
+import MapDraft from "@/routes/MapDraft";
 
 export const router = createHashRouter([
   {
-    path: '/',
+    path: "/",
     element: <Home />,
   },
   {
-    path: '/map-draft',
+    path: "/map-draft",
     element: <MapDraft />,
   },
-])
+]);

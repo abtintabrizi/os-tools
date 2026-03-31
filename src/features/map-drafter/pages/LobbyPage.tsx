@@ -1,30 +1,27 @@
-import { useState } from 'react'
-import type { DraftState, Side } from '@map-drafter/types'
-import styles from '@map-drafter/pages/LobbyPage.module.css'
+import { useState } from "react";
+import type { DraftState, Side } from "@map-drafter/types";
+import styles from "@map-drafter/pages/LobbyPage.module.css";
 
 interface Props {
-  state: DraftState
-  onEnter: (side: Side) => void
+  state: DraftState;
+  onEnter: (side: Side) => void;
 }
 
 function buildUrl(roomId: string, side: Side): string {
-  const url = new URL(window.location.href)
-  url.search = ''
-  url.searchParams.set('room', roomId)
-  url.searchParams.set('side', side)
-  return url.toString()
+  const base = `${window.location.origin}${window.location.pathname}`;
+  return `${base}#/map-draft?room=${encodeURIComponent(roomId)}&side=${encodeURIComponent(side)}`;
 }
 
 export default function LobbyPage({ state, onEnter }: Props) {
-  const [copied, setCopied] = useState<Side | null>(null)
+  const [copied, setCopied] = useState<Side | null>(null);
 
-  const blueUrl = buildUrl(state.roomId, 'blue')
-  const redUrl = buildUrl(state.roomId, 'red')
+  const blueUrl = buildUrl(state.roomId, "blue");
+  const redUrl = buildUrl(state.roomId, "red");
 
   async function copy(url: string, side: Side) {
-    await navigator.clipboard.writeText(url)
-    setCopied(side)
-    setTimeout(() => setCopied(null), 2000)
+    await navigator.clipboard.writeText(url);
+    setCopied(side);
+    setTimeout(() => setCopied(null), 2000);
   }
 
   return (
@@ -38,45 +35,60 @@ export default function LobbyPage({ state, onEnter }: Props) {
           <div className={styles.cardTitle}>Share with teams</div>
 
           <div className={styles.linkRow}>
-            <div className={styles.linkLabel + ' ' + styles.blue}>{state.blueName} — Blue side</div>
+            <div className={styles.linkLabel + " " + styles.blue}>
+              {state.blueName} — Blue side
+            </div>
             <div className={styles.urlBox}>{blueUrl}</div>
             <button
               className={`${styles.copyBtn} ${styles.blueBtn}`}
-              onClick={() => copy(blueUrl, 'blue')}
+              onClick={() => copy(blueUrl, "blue")}
             >
-              {copied === 'blue' ? 'Copied!' : 'Copy blue link'}
+              {copied === "blue" ? "Copied!" : "Copy blue link"}
             </button>
           </div>
 
           <div className={styles.divider} />
 
           <div className={styles.linkRow}>
-            <div className={styles.linkLabel + ' ' + styles.red}>{state.redName} — Red side</div>
+            <div className={styles.linkLabel + " " + styles.red}>
+              {state.redName} — Red side
+            </div>
             <div className={styles.urlBox}>{redUrl}</div>
             <button
               className={`${styles.copyBtn} ${styles.redBtn}`}
-              onClick={() => copy(redUrl, 'red')}
+              onClick={() => copy(redUrl, "red")}
             >
-              {copied === 'red' ? 'Copied!' : 'Copy red link'}
+              {copied === "red" ? "Copied!" : "Copy red link"}
             </button>
           </div>
         </div>
 
         <div className={styles.card}>
-          <div className={styles.cardTitle}>You are the organiser — enter as:</div>
+          <div className={styles.cardTitle}>
+            You are the organiser — enter as:
+          </div>
           <div className={styles.enterRow}>
-            <button className={`${styles.enterBtn} ${styles.blueBtn}`} onClick={() => onEnter('blue')}>
+            <button
+              className={`${styles.enterBtn} ${styles.blueBtn}`}
+              onClick={() => onEnter("blue")}
+            >
               Enter as {state.blueName}
             </button>
-            <button className={`${styles.enterBtn} ${styles.redBtn}`} onClick={() => onEnter('red')}>
+            <button
+              className={`${styles.enterBtn} ${styles.redBtn}`}
+              onClick={() => onEnter("red")}
+            >
               Enter as {state.redName}
             </button>
-            <button className={styles.enterBtn} onClick={() => onEnter('spectator')}>
+            <button
+              className={styles.enterBtn}
+              onClick={() => onEnter("spectator")}
+            >
               Spectate
             </button>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -8,7 +8,6 @@ import DraftPage from "@/features/map-drafter/pages/DraftPage";
 import LoadingScreen from "@/components/LoadingScreen";
 import ErrorScreen from "@/components/ErrorScreen";
 
-
 function getUrlParams() {
   const params = new URLSearchParams(window.location.search);
   return {

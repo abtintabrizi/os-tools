@@ -25,7 +25,7 @@
   gap: 12px;
 }
 .logo::before {
-  content: '';
+  content: "";
   display: inline-block;
   width: 24px;
   height: 2px;
@@ -79,8 +79,12 @@
   font-weight: 700;
   letter-spacing: 0.1em;
 }
-.linkLabel.blue { color: var(--blue); }
-.linkLabel.red { color: var(--red); }
+.linkLabel.blue {
+  color: var(--blue);
+}
+.linkLabel.red {
+  color: var(--red);
+}
 
 .urlBox {
   background: var(--bg3);
@@ -112,14 +116,18 @@
   color: var(--blue);
   background: rgba(59, 130, 246, 0.06);
 }
-.blueBtn:hover { background: rgba(59, 130, 246, 0.14); }
+.blueBtn:hover {
+  background: rgba(59, 130, 246, 0.14);
+}
 
 .redBtn {
   border-color: rgba(239, 68, 68, 0.35);
   color: var(--red);
   background: rgba(239, 68, 68, 0.06);
 }
-.redBtn:hover { background: rgba(239, 68, 68, 0.14); }
+.redBtn:hover {
+  background: rgba(239, 68, 68, 0.14);
+}
 
 .divider {
   height: 1px;
@@ -146,4 +154,7 @@
   color: var(--text-muted);
   transition: all 0.15s;
 }
-.enterBtn:hover { border-color: var(--border-bright); color: var(--text); }
+.enterBtn:hover {
+  border-color: var(--border-bright);
+  color: var(--text);
+}
