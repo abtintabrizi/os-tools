@@ -1,0 +1,68 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.title {
+  font-size: 13px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.15em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.cards {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.card {
+  width: 220px;
+  padding: 2rem 1.5rem;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  text-align: center;
+  transition: all 0.2s;
+}
+.card:hover { transform: translateY(-3px); }
+.card.blue:hover { border-color: var(--blue); background: var(--blue-glow); }
+.card.red:hover { border-color: var(--red); background: var(--red-glow); }
+
+.sideLabel {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.blue .sideLabel { color: var(--blue); }
+.red .sideLabel { color: var(--red); }
+
+.teamName {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.spectate {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  background: none;
+  border: none;
+  transition: color 0.15s;
+}
+.spectate:hover { color: var(--text-dim); }
