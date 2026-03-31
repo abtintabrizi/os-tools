@@ -51,11 +51,11 @@ export default function MapDrafter() {
 
   function handleSidePick(chosenSide: Side) {
     setSide(chosenSide);
-    // Update URL so refreshing keeps the side
-    const url = new URL(window.location.href);
-    url.searchParams.set("room", roomId!);
-    url.searchParams.set("side", chosenSide);
-    window.history.replaceState({}, "", url.toString());
+
+    const base = `${window.location.origin}${window.location.pathname}`;
+    const nextUrl = `${base}#/map-draft?room=${encodeURIComponent(roomId!)}&side=${encodeURIComponent(chosenSide)}`;
+
+    window.history.replaceState({}, "", nextUrl);
     setPage("draft");
   }
 
