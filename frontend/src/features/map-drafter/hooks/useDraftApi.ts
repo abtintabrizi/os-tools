@@ -4,6 +4,8 @@ import type { DraftState } from '@map-drafter/types'
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
 const WS_BASE = API_BASE.replace(/^http/, 'ws')
 
+const RECONNECT_DELAY_MS = 3000
+
 export interface CreateRoomConfig {
   blueName: string
   redName: string
@@ -15,6 +17,7 @@ export function useDraftApi(roomId: string | null) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const wsRef = useRef<WebSocket | null>(null)
+  const cancelledRef = useRef(false)
 
   useEffect(() => {
     if (!roomId) {
@@ -22,7 +25,7 @@ export function useDraftApi(roomId: string | null) {
       return
     }
 
-    let cancelled = false
+    cancelledRef.current = false
     setLoading(true)
     setError(null)
 
@@ -32,35 +35,47 @@ export function useDraftApi(roomId: string | null) {
         return r.json()
       })
       .then((data: DraftState) => {
-        if (!cancelled) {
+        if (!cancelledRef.current) {
           setState(data)
           setLoading(false)
         }
       })
       .catch((err: Error) => {
-        if (!cancelled) {
+        if (!cancelledRef.current) {
           setError(err.message)
           setLoading(false)
         }
       })
 
-    const ws = new WebSocket(`${WS_BASE}/ws/rooms/${roomId}`)
-    wsRef.current = ws
+    function connect() {
+      if (cancelledRef.current) return
 
-    ws.onmessage = (evt) => {
-      if (!cancelled) {
-        setState(JSON.parse(evt.data) as DraftState)
-        setLoading(false)
+      const ws = new WebSocket(`${WS_BASE}/ws/rooms/${roomId}`)
+      wsRef.current = ws
+
+      ws.onmessage = (evt) => {
+        if (!cancelledRef.current) {
+          setState(JSON.parse(evt.data) as DraftState)
+          setLoading(false)
+        }
+      }
+
+      ws.onclose = () => {
+        if (!cancelledRef.current) {
+          setTimeout(connect, RECONNECT_DELAY_MS)
+        }
+      }
+
+      ws.onerror = () => {
+        // onclose fires after onerror, reconnect is handled there
       }
     }
 
-    ws.onerror = () => {
-      if (!cancelled) setError('WebSocket connection error')
-    }
+    connect()
 
     return () => {
-      cancelled = true
-      ws.close()
+      cancelledRef.current = true
+      wsRef.current?.close()
       wsRef.current = null
     }
   }, [roomId])

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import type { Side } from "@map-drafter/types";
 import { useDraftContext } from "@/features/map-drafter/context/DraftContext";
 
@@ -10,13 +11,20 @@ function buildUrl(roomId: string, side: Side): string {
 }
 
 export default function LobbyPage() {
-  const { lobbyState, handleSidePick } = useDraftContext();
+  const { lobbyState, state, handleSidePick } = useDraftContext();
   const [copied, setCopied] = useState<Side | null>(null);
+  const navigate = useNavigate();
 
-  if (!lobbyState) return null;
+  const room = lobbyState ?? state;
 
-  const blueUrl = buildUrl(lobbyState.roomId, "blue");
-  const redUrl = buildUrl(lobbyState.roomId, "red");
+  useEffect(() => {
+    if (!room) navigate("/map-draft", { replace: true });
+  }, [room, navigate]);
+
+  if (!room) return null;
+
+  const blueUrl = buildUrl(room.roomId, "blue");
+  const redUrl = buildUrl(room.roomId, "red");
 
   async function copy(url: string, side: Side) {
     await navigator.clipboard.writeText(url);
@@ -43,7 +51,7 @@ export default function LobbyPage() {
           Room ready
         </h2>
         <p className="font-mono text-xs text-tools-text-muted tracking-[0.08em] mb-8">
-          // Room {lobbyState.roomId} · Share links below
+          // Room {room.roomId} · Share links below
         </p>
 
         <div className="bg-tools-bg2 border border-tools-border rounded-2xl p-6 mb-4">
@@ -53,7 +61,7 @@ export default function LobbyPage() {
 
           <div className="flex flex-col gap-2">
             <div className="text-xs font-mono font-bold tracking-widest text-tools-blue">
-              {lobbyState.blueName} — Blue side
+              {room.blueName} — Blue side
             </div>
             <div className="bg-tools-bg3 border border-tools-border rounded-lg py-2.5 px-3 font-mono text-[11px] text-tools-text-dim break-all leading-relaxed">
               {blueUrl}
@@ -70,7 +78,7 @@ export default function LobbyPage() {
 
           <div className="flex flex-col gap-2">
             <div className="text-xs font-mono font-bold tracking-widest text-tools-red">
-              {lobbyState.redName} — Red side
+              {room.redName} — Red side
             </div>
             <div className="bg-tools-bg3 border border-tools-border rounded-lg py-2.5 px-3 font-mono text-[11px] text-tools-text-dim break-all leading-relaxed">
               {redUrl}
@@ -93,13 +101,13 @@ export default function LobbyPage() {
               className={`${baseBtn} ${blueBtn} flex-1 min-w-30`}
               onClick={() => handleSidePick("blue")}
             >
-              Enter as {lobbyState.blueName}
+              Enter as {room.blueName}
             </button>
             <button
               className={`${baseBtn} ${redBtn} flex-1 min-w-30`}
               onClick={() => handleSidePick("red")}
             >
-              Enter as {lobbyState.redName}
+              Enter as {room.redName}
             </button>
             <button
               className={`${baseBtn} ${neutralBtn} flex-1 min-w-30`}

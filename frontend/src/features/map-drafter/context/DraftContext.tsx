@@ -57,7 +57,7 @@ export function DraftProvider({ children }: { children: ReactNode }) {
     const newState = await create(config)
     setLobbyState(newState)
     setRoomId(newState.roomId)
-    navigate('/map-draft/lobby')
+    navigate(`/map-draft/lobby?room=${newState.roomId}`)
   }
 
   function handleSidePick(chosenSide: Side) {
