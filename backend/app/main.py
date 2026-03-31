@@ -11,7 +11,7 @@ app = FastAPI()
 
 ALLOWED_ORIGINS = [
     "http://localhost:5173",
-    "https://os-tools.onrender.com",
+    "https://os-tools-theta.vercel.app",
 ]
 
 app.add_middleware(
