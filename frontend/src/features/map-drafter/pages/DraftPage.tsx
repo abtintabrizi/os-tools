@@ -1,18 +1,17 @@
 import { useState } from "react";
-import type { DraftState, Side } from "@map-drafter/types";
 import { BO3_SEQUENCE } from "@map-drafter/constants.ts";
 import { deriveMapStatuses, getDeciderMap } from "@/utils";
 import ConfirmModal from "@/components/ConfirmModal";
+import LoadingScreen from "@/components/LoadingScreen";
+import ErrorScreen from "@/components/ErrorScreen";
+import { useDraftContext } from "@/features/map-drafter/context/DraftContext";
 
-interface Props {
-  state: DraftState;
-  side: Side;
-  onAction: (state: DraftState) => void;
-  onReset: () => void;
-}
-
-export default function DraftPage({ state, side, onAction, onReset }: Props) {
+export default function DraftPage() {
+  const { state, side, loading, handleAction, handleReset } = useDraftContext();
   const [pending, setPending] = useState<string | null>(null);
+
+  if (loading) return <LoadingScreen message="Connecting to draft..." />;
+  if (!state) return <ErrorScreen message="Room not found. Check your link." />;
 
   const { step, done, maps, actions, blueName, redName } = state;
   const currentStep =
@@ -36,24 +35,15 @@ export default function DraftPage({ state, side, onAction, onReset }: Props) {
     setPending(map);
   }
 
-  function handleConfirm() {
-    if (!pending || !currentStep) return;
-    const next: DraftState = {
-      ...state,
-      actions: [
-        ...state.actions,
-        { map: pending, team: currentStep.team, action: currentStep.action },
-      ],
-      step: state.step + 1,
-      done: state.step + 1 >= BO3_SEQUENCE.length,
-    };
-    onAction(next);
+  async function handleConfirm() {
+    if (!pending) return;
+    await handleAction(pending);
     setPending(null);
   }
 
-  function sideLabel(s: Side) {
-    if (s === "blue") return blueName;
-    if (s === "red") return redName;
+  function sideLabel() {
+    if (side === "blue") return blueName;
+    if (side === "red") return redName;
     return "Spectating";
   }
 
@@ -69,10 +59,12 @@ export default function DraftPage({ state, side, onAction, onReset }: Props) {
       {/* Header */}
       <header className="px-6 py-4 border-b border-tools-border flex items-center justify-between flex-wrap gap-3 bg-tools-bg/85 backdrop-blur-md sticky top-0 z-10">
         <div className="flex items-center gap-2.5">
-          <span className={`font-mono text-[9px] font-bold tracking-[0.18em] uppercase py-1 px-2.5 rounded ${sideBadgeClass}`}>
+          <span
+            className={`font-mono text-[9px] font-bold tracking-[0.18em] uppercase py-1 px-2.5 rounded ${sideBadgeClass}`}
+          >
             {side === "spectator" ? "Spectator" : side === "blue" ? "Blue" : "Red"}
           </span>
-          <span className="text-sm font-bold text-tools-text">{sideLabel(side)}</span>
+          <span className="text-sm font-bold text-tools-text">{sideLabel()}</span>
         </div>
 
         <StepTracker step={step} done={done} />
@@ -83,7 +75,7 @@ export default function DraftPage({ state, side, onAction, onReset }: Props) {
           </span>
           <button
             className="bg-transparent border border-tools-border rounded-md text-tools-text-muted font-mono text-[10px] tracking-widest py-1 px-2.5 transition-all duration-150 hover:border-tools-border-bright hover:text-tools-text-dim"
-            onClick={onReset}
+            onClick={handleReset}
           >
             Reset
           </button>
@@ -127,9 +119,13 @@ export default function DraftPage({ state, side, onAction, onReset }: Props) {
           <div className="text-[11px] font-mono tracking-[0.15em] uppercase mb-1.5 font-bold text-tools-blue">
             {blueName}
           </div>
-          <div className="text-[9px] font-mono tracking-[0.2em] text-tools-text-muted uppercase mt-2.5 mb-0.5">Ban</div>
+          <div className="text-[9px] font-mono tracking-[0.2em] text-tools-text-muted uppercase mt-2.5 mb-0.5">
+            Ban
+          </div>
           <ResultSlot map={bans.A?.map} type="ban" label="Ban 1" />
-          <div className="text-[9px] font-mono tracking-[0.2em] text-tools-text-muted uppercase mt-2.5 mb-0.5">Pick</div>
+          <div className="text-[9px] font-mono tracking-[0.2em] text-tools-text-muted uppercase mt-2.5 mb-0.5">
+            Pick
+          </div>
           <ResultSlot map={picks[0]?.map} type="pick" label="Game 1" />
         </aside>
 
@@ -142,7 +138,7 @@ export default function DraftPage({ state, side, onAction, onReset }: Props) {
               g3={decider ?? "—"}
               blueName={blueName}
               redName={redName}
-              onReset={onReset}
+              onReset={handleReset}
             />
           ) : (
             <>
@@ -217,9 +213,13 @@ export default function DraftPage({ state, side, onAction, onReset }: Props) {
           <div className="text-[11px] font-mono tracking-[0.15em] uppercase mb-1.5 font-bold text-tools-red">
             {redName}
           </div>
-          <div className="text-[9px] font-mono tracking-[0.2em] text-tools-text-muted uppercase mt-2.5 mb-0.5">Ban</div>
+          <div className="text-[9px] font-mono tracking-[0.2em] text-tools-text-muted uppercase mt-2.5 mb-0.5">
+            Ban
+          </div>
           <ResultSlot map={bans.B?.map} type="ban" label="Ban 1" />
-          <div className="text-[9px] font-mono tracking-[0.2em] text-tools-text-muted uppercase mt-2.5 mb-0.5">Pick</div>
+          <div className="text-[9px] font-mono tracking-[0.2em] text-tools-text-muted uppercase mt-2.5 mb-0.5">
+            Pick
+          </div>
           <ResultSlot map={picks[1]?.map} type="pick" label="Game 2" />
         </aside>
       </div>
@@ -322,26 +322,38 @@ function DonePanel({
 
       <div className="bg-tools-bg2 border border-tools-blue/30 rounded-xl p-5 px-6 flex items-center justify-between">
         <div>
-          <div className="text-[10px] font-mono tracking-[0.2em] uppercase text-tools-text-muted mb-1">Game 1</div>
+          <div className="text-[10px] font-mono tracking-[0.2em] uppercase text-tools-text-muted mb-1">
+            Game 1
+          </div>
           <div className="text-xl font-bold text-tools-text">{g1}</div>
         </div>
-        <div className="text-[11px] font-mono tracking-widest text-tools-blue">{blueName} pick</div>
+        <div className="text-[11px] font-mono tracking-widest text-tools-blue">
+          {blueName} pick
+        </div>
       </div>
 
       <div className="bg-tools-bg2 border border-tools-red/30 rounded-xl p-5 px-6 flex items-center justify-between">
         <div>
-          <div className="text-[10px] font-mono tracking-[0.2em] uppercase text-tools-text-muted mb-1">Game 2</div>
+          <div className="text-[10px] font-mono tracking-[0.2em] uppercase text-tools-text-muted mb-1">
+            Game 2
+          </div>
           <div className="text-xl font-bold text-tools-text">{g2}</div>
         </div>
-        <div className="text-[11px] font-mono tracking-widest text-tools-red">{redName} pick</div>
+        <div className="text-[11px] font-mono tracking-widest text-tools-red">
+          {redName} pick
+        </div>
       </div>
 
       <div className="bg-tools-gold/4 border border-tools-gold/35 rounded-xl p-5 px-6 flex items-center justify-between">
         <div>
-          <div className="text-[10px] font-mono tracking-[0.2em] uppercase text-tools-text-muted mb-1">Game 3 (decider)</div>
+          <div className="text-[10px] font-mono tracking-[0.2em] uppercase text-tools-text-muted mb-1">
+            Game 3 (decider)
+          </div>
           <div className="text-xl font-bold text-tools-text">{g3}</div>
         </div>
-        <div className="text-[11px] font-mono tracking-widest text-tools-gold">Decider</div>
+        <div className="text-[11px] font-mono tracking-widest text-tools-gold">
+          Decider
+        </div>
       </div>
 
       <button
