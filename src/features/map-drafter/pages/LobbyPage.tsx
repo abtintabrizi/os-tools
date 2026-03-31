@@ -8,8 +8,11 @@ interface Props {
 }
 
 function buildUrl(roomId: string, side: Side): string {
-  const base = `${window.location.origin}${window.location.pathname}`;
-  return `${base}#/map-draft?room=${encodeURIComponent(roomId)}&side=${encodeURIComponent(side)}`;
+  const url = new URL(window.location.href);
+  url.search = "";
+  url.searchParams.set("room", roomId);
+  url.searchParams.set("side", side);
+  return url.toString();
 }
 
 export default function LobbyPage({ state, onEnter }: Props) {
