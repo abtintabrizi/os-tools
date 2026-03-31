@@ -1,7 +1,6 @@
 import { useState } from "react";
 import type { DraftState } from "@map-drafter/types";
 import { ALL_MAPS } from "@/common/constants";
-import styles from "@map-drafter/pages/SetupPage.module.css";
 
 interface Props {
   onLaunch: (state: DraftState) => void;
@@ -49,23 +48,25 @@ export default function SetupPage({ onLaunch }: Props) {
   }
 
   return (
-    <div className={styles.page}>
-      <div className={styles.wrap}>
-        <div className={styles.logo}>Omega Strikers</div>
-        <h1 className={styles.title}>
+    <div className="min-h-screen flex justify-center items-center">
+      <div className="w-full max-w-160 flex flex-col">
+        <h1 className="text-[clamp(36px,7vw,64px)] font-extrabold leading-none tracking-tight mb-10">
           Map
           <br />
-          <em>Draft</em>
+          <span className="text-tools-gold">Draft</span>
         </h1>
-        <p className={styles.sub}>// Best of 3 · Online</p>
 
-        <div className={styles.card}>
-          <div className={styles.cardTitle}>Teams</div>
-          <div className={styles.teamsRow}>
-            <div className={styles.inputWrap}>
-              <span className={`${styles.badge} ${styles.blue}`}>Blue</span>
+        <div className="bg-tools-bg2 border border-tools-border rounded-2xl p-6 mb-4">
+          <div className="text-[10px] font-mono tracking-[0.2em] text-tools-text-muted uppercase mb-4">
+            Teams
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] font-mono font-bold tracking-[0.12em] py-0.5 px-1.75 rounded pointer-events-none bg-tools-blue-dim text-tools-blue">
+                Blue
+              </span>
               <input
-                className={styles.input}
+                className="w-full bg-tools-bg3 border border-tools-border rounded-lg py-2.5 pr-3 pl-16 font-head text-[15px] font-semibold text-tools-text outline-none transition-colors duration-200 focus:border-tools-border-bright"
                 type="text"
                 placeholder="Team A"
                 maxLength={24}
@@ -73,10 +74,12 @@ export default function SetupPage({ onLaunch }: Props) {
                 onChange={(e) => setBlueName(e.target.value)}
               />
             </div>
-            <div className={styles.inputWrap}>
-              <span className={`${styles.badge} ${styles.red}`}>Red</span>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] font-mono font-bold tracking-[0.12em] py-0.5 px-1.75 rounded pointer-events-none bg-tools-red-dim text-tools-red">
+                Red
+              </span>
               <input
-                className={styles.input}
+                className="w-full bg-tools-bg3 border border-tools-border rounded-lg py-2.5 pr-3 pl-16 font-head text-[15px] font-semibold text-tools-text outline-none transition-colors duration-200 focus:border-tools-border-bright"
                 type="text"
                 placeholder="Team B"
                 maxLength={24}
@@ -87,24 +90,37 @@ export default function SetupPage({ onLaunch }: Props) {
           </div>
         </div>
 
-        <div className={styles.card}>
-          <div className={styles.cardTitle}>Map pool — click to toggle</div>
-          <div className={styles.mapsGrid}>
-            {ALL_MAPS.map((map) => (
-              <button
-                key={map}
-                className={`${styles.mapToggle} ${enabledMaps.has(map) ? styles.on : ""}`}
-                onClick={() => toggleMap(map)}
-              >
-                <span className={styles.pip} />
-                {map}
-              </button>
-            ))}
+        <div className="bg-tools-bg2 border border-tools-border rounded-2xl p-6 mb-4">
+          <div className="text-[10px] font-mono tracking-[0.2em] text-tools-text-muted uppercase mb-4">
+            Map pool — click to toggle
+          </div>
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-2">
+            {ALL_MAPS.map((map) => {
+              const on = enabledMaps.has(map);
+              return (
+                <button
+                  key={map}
+                  className={`border rounded-lg py-2.5 px-3.5 font-head text-[13px] font-medium flex items-center gap-2 transition-all duration-150 select-none text-left ${
+                    on
+                      ? "border-tools-gold/40 text-tools-text bg-tools-gold/6"
+                      : "bg-tools-bg3 border-tools-border text-tools-text-muted"
+                  }`}
+                  onClick={() => toggleMap(map)}
+                >
+                  <span
+                    className={`w-1.75 h-1.75 rounded-full shrink-0 transition-colors duration-150 ${
+                      on ? "bg-tools-gold" : "bg-tools-border-bright"
+                    }`}
+                  />
+                  {map}
+                </button>
+              );
+            })}
           </div>
         </div>
 
         <button
-          className={styles.launchBtn}
+          className="w-full py-4 bg-tools-gold text-black border-none rounded-[10px] font-head text-[15px] font-extrabold tracking-[0.04em] mt-4 transition-all duration-150 hover:opacity-90 hover:-translate-y-px active:scale-[0.99]"
           onClick={handleLaunch}
           disabled={loading}
         >

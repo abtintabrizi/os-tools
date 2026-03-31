@@ -1,45 +1,37 @@
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+@import "tailwindcss";
 
-:root {
-  --blue: #3B82F6;
-  --blue-dim: #1e3a5f;
-  --blue-glow: rgba(59, 130, 246, 0.15);
-  --red: #EF4444;
-  --red-dim: #5a1e1e;
-  --red-glow: rgba(239, 68, 68, 0.15);
-  --gold: #F59E0B;
-  --gold-dim: rgba(245, 158, 11, 0.12);
-  --bg: #0a0a0f;
-  --bg2: #111118;
-  --bg3: #18181f;
-  --border: rgba(255, 255, 255, 0.07);
-  --border-bright: rgba(255, 255, 255, 0.15);
-  --text: #f0f0f0;
-  --text-muted: #555;
-  --text-dim: #888;
+@theme {
   --font-head: 'Syne', sans-serif;
   --font-mono: 'Space Mono', monospace;
+
+  --color-tools-blue: #3B82F6;
+  --color-tools-blue-dim: #1e3a5f;
+  --color-tools-red: #EF4444;
+  --color-tools-red-dim: #5a1e1e;
+  --color-tools-red-light: #f87171;
+  --color-tools-green: #22c55e;
+  --color-tools-green-light: #4ade80;
+  --color-tools-gold: #F59E0B;
+  --color-tools-bg: #0a0a0f;
+  --color-tools-bg2: #111118;
+  --color-tools-bg3: #18181f;
+  --color-tools-border: rgba(255, 255, 255, 0.07);
+  --color-tools-border-bright: rgba(255, 255, 255, 0.15);
+  --color-tools-text: #f0f0f0;
+  --color-tools-text-muted: #555555;
+  --color-tools-text-dim: #888888;
+}
+
+@keyframes pulseBorder {
+  0%, 100% { border-color: rgba(245, 158, 11, 0.15); }
+  50% { border-color: rgba(245, 158, 11, 0.45); }
 }
 
 html, body, #root {
   min-height: 100vh;
-  background: var(--bg);
-  color: var(--text);
+  background: var(--color-tools-bg);
+  color: var(--color-tools-text);
   font-family: var(--font-head);
-}
-
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 999;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-  background-size: 256px 256px;
 }
 
 .grid-bg {
@@ -48,17 +40,12 @@ body::before {
   pointer-events: none;
   z-index: 0;
   background-image:
-    linear-gradient(var(--border) 1px, transparent 1px),
-    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    linear-gradient(var(--color-tools-border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-tools-border) 1px, transparent 1px);
   background-size: 40px 40px;
   mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
 }
 
 button {
-  font-family: var(--font-head);
   cursor: pointer;
-}
-
-input {
-  font-family: var(--font-head);
 }
