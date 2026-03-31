@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import type { DraftState, Side } from '@/types'
-import { SEQUENCE } from '../constants'
-import { deriveMapStatuses, getDeciderMap } from '../utils'
-import ConfirmModal from './ConfirmModal'
-import styles from './DraftPage.module.css'
+import { SEQUENCE } from '@/constants'
+import { deriveMapStatuses, getDeciderMap } from '@/utils'
+import ConfirmModal from '@/components/ConfirmModal'
+import styles from '@/components/DraftPage.module.css'
 
 interface Props {
   state: DraftState

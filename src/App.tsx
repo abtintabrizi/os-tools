@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { Page, Side, DraftState } from '@/types'
-import { useDraftState } from './hooks/useDraftState'
+import { useDraftState } from '@/hooks/useDraftState'
 import SetupPage from '@/components/SetupPage'
 import LobbyPage from '@/components/LobbyPage'
 import SidePickPage from '@/components/SidePickPage'

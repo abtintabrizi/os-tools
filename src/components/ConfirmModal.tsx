@@ -1,5 +1,5 @@
 import type { ActionType } from '@/types'
-import styles from '@/ConfirmModal.module.css'
+import styles from '@/components/ConfirmModal.module.css'
 
 interface Props {
   map: string

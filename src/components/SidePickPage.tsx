@@ -1,5 +1,5 @@
 import type { DraftState, Side } from '@/types'
-import styles from '@/SidePickPage.module.css'
+import styles from '@/components/SidePickPage.module.css'
 
 interface Props {
   state: DraftState

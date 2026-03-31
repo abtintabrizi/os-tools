@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { DraftState, Side } from '@/types'
-import styles from '@/LobbyPage.module.css'
+import styles from '@/components/LobbyPage.module.css'
 
 interface Props {
   state: DraftState
