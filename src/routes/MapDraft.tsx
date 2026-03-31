@@ -9,7 +9,11 @@ import LoadingScreen from "@/components/LoadingScreen";
 import ErrorScreen from "@/components/ErrorScreen";
 
 function getUrlParams() {
-  const params = new URLSearchParams(window.location.search);
+  const hash = window.location.hash;
+  const queryString = hash.includes("?") ? hash.split("?")[1] : "";
+
+  const params = new URLSearchParams(queryString);
+
   return {
     roomId: params.get("room"),
     side: params.get("side") as Side | null,
