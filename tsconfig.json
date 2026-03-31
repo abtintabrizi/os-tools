@@ -22,7 +22,8 @@
     "paths": {
       "@/*": [
         "./src/*"
-      ]
+      ],
+      "@map-drafter/*": ["./src/features/map-drafter/*"]
     }
   },
   "include": [

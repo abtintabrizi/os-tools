@@ -7,6 +7,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@map-drafter': path.resolve(__dirname, './src/features/map-drafter'),
     },
   },
 })

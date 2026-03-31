@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react'
-import type { Page, Side, DraftState } from '@/types'
-import { useDraftState } from '@/hooks/useDraftState'
-import SetupPage from '@/components/SetupPage'
-import LobbyPage from '@/components/LobbyPage'
-import SidePickPage from '@/components/SidePickPage'
-import DraftPage from '@/components/DraftPage'
+import type { Page, Side, DraftState } from '@/features/map-drafter/types'
+import { useDraftState } from '@/features/map-drafter/hooks/useDraftState'
+import SetupPage from '@/features/map-drafter/pages/SetupPage'
+import LobbyPage from '@/features/map-drafter/pages/LobbyPage'
+import SidePickPage from '@/features/map-drafter/pages/SidePickPage'
+import DraftPage from '@/features/map-drafter/pages/DraftPage'
 import '@/index.css'
+import LoadingScreen from '@/components/LoadingScreen'
+import ErrorScreen from '@/components/ErrorScreen'
+
 
 function getUrlParams() {
   const params = new URLSearchParams(window.location.search)
@@ -15,8 +18,8 @@ function getUrlParams() {
   }
 }
 
-export default function App() {
-  const { roomId: urlRoom, side: urlSide } = getUrlParams()
+export default function MapDrafter() {
+    const { roomId: urlRoom, side: urlSide } = getUrlParams()
 
   // If the URL already has a room+side, jump straight to draft
   const [page, setPage] = useState<Page>(() => {
@@ -100,40 +103,5 @@ export default function App() {
             : <ErrorScreen message="Room not found. Check your link." />
       )}
     </>
-  )
-}
-
-function LoadingScreen({ message }: { message: string }) {
-  return (
-    <div style={{
-      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontFamily: 'var(--font-mono)', fontSize: '12px', letterSpacing: '0.15em',
-      color: 'var(--text-muted)', textTransform: 'uppercase'
-    }}>
-      {message}
-    </div>
-  )
-}
-
-function ErrorScreen({ message }: { message: string }) {
-  return (
-    <div style={{
-      minHeight: '100vh', display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center', gap: '16px',
-      fontFamily: 'var(--font-mono)', fontSize: '13px',
-      color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em'
-    }}>
-      <span style={{ color: '#f87171' }}>{message}</span>
-      <button
-        onClick={() => window.location.href = window.location.pathname}
-        style={{
-          background: 'transparent', border: '1px solid var(--border)',
-          borderRadius: '6px', color: 'var(--text-muted)', padding: '8px 16px',
-          fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '0.1em', cursor: 'pointer'
-        }}
-      >
-        Back to setup
-      </button>
-    </div>
   )
 }

@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import type { DraftState, Side } from '@/types'
-import { SEQUENCE } from '@/constants'
+import type { DraftState, Side } from '@map-drafter/types'
+import { BO3_SEQUENCE } from '@map-drafter/constants.ts'
 import { deriveMapStatuses, getDeciderMap } from '@/utils'
 import ConfirmModal from '@/components/ConfirmModal'
-import styles from '@/components/DraftPage.module.css'
+import styles from '@map-drafter/pages/DraftPage.module.css'
 
 interface Props {
   state: DraftState
@@ -16,7 +16,7 @@ export default function DraftPage({ state, side, onAction, onReset }: Props) {
   const [pending, setPending] = useState<string | null>(null)
 
   const { step, done, maps, actions, blueName, redName } = state
-  const currentStep = !done && step < SEQUENCE.length ? SEQUENCE[step] : null
+  const currentStep = !done && step < BO3_SEQUENCE.length ? BO3_SEQUENCE[step] : null
   const isMyTurn =
     currentStep !== null &&
     ((currentStep.team === 'A' && side === 'blue') ||
@@ -39,7 +39,7 @@ export default function DraftPage({ state, side, onAction, onReset }: Props) {
       ...state,
       actions: [...state.actions, { map: pending, team: currentStep.team, action: currentStep.action }],
       step: state.step + 1,
-      done: state.step + 1 >= SEQUENCE.length,
+      done: state.step + 1 >= BO3_SEQUENCE.length,
     }
     onAction(next)
     setPending(null)
@@ -183,7 +183,7 @@ function ResultSlot({ map, type, label }: { map?: string; type: 'ban' | 'pick'; 
 function StepTracker({ step, done }: { step: number; done: boolean }) {
   return (
     <div className={styles.stepTracker}>
-      {SEQUENCE.map((s, i) => {
+      {BO3_SEQUENCE.map((s, i) => {
         let cls = styles.pip
         if (i < step || done) cls += ' ' + (s.action === 'ban' ? styles.pipBan : styles.pipPick)
         else if (i === step && !done) cls += ' ' + styles.pipCurrent

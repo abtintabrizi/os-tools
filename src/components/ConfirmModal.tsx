@@ -1,4 +1,4 @@
-import type { ActionType } from '@/types'
+import type { ActionType } from '@/features/map-drafter/types'
 import styles from '@/components/ConfirmModal.module.css'
 
 interface Props {

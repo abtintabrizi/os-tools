@@ -1,4 +1,4 @@
-import { DraftState, MapStatus } from "@/types"
+import { DraftState, MapStatus } from "@/features/map-drafter/types"
 
 
 export function deriveMapStatuses(state: DraftState): Record<string, MapStatus> {
