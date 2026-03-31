@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { Page, Side, DraftState } from "@/features/map-drafter/types";
 import { useDraftState } from "@/features/map-drafter/hooks/useDraftState";
 import SetupPage from "@/features/map-drafter/pages/SetupPage";
