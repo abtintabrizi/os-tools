@@ -1,6 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom'
 import Home from '@/routes/Home'
-import MapDrafter from '@/routes/MapDrafter'
+import MapDraft from '@/routes/MapDraft'
 
 export const router = createBrowserRouter([
   {
@@ -9,6 +9,6 @@ export const router = createBrowserRouter([
   },
   {
     path: '/map-draft',
-    element: <MapDrafter />,
+    element: <MapDraft />,
   },
 ])
