@@ -1,8 +1,8 @@
-import { createBrowserRouter } from 'react-router-dom'
+import { createHashRouter } from 'react-router-dom'
 import Home from '@/routes/Home'
 import MapDraft from '@/routes/MapDraft'
 
-export const router = createBrowserRouter([
+export const router = createHashRouter([
   {
     path: '/',
     element: <Home />,
