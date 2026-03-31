@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 
 from .constants import BO3_SEQUENCE
 from .models import ActionRequest, CreateRoomRequest
-from .store import generate_room_id, rooms
+from .store import generate_room_id, get_room, save_room
 from .ws import manager
 
 router = APIRouter()
@@ -30,23 +30,23 @@ async def create_room(body: CreateRoomRequest):
         "actions": [],
         "done": False,
     }
-    rooms[room_id] = state
+    await save_room(room_id, state)
     return state
 
 
 @router.get("/rooms/{room_id}")
-async def get_room(room_id: str):
-    if room_id not in rooms:
+async def get_room_route(room_id: str):
+    state = await get_room(room_id)
+    if state is None:
         raise HTTPException(status_code=404, detail="Room not found")
-    return rooms[room_id]
+    return state
 
 
 @router.post("/rooms/{room_id}/action")
 async def apply_action(room_id: str, body: ActionRequest):
-    if room_id not in rooms:
+    state = await get_room(room_id)
+    if state is None:
         raise HTTPException(status_code=404, detail="Room not found")
-
-    state = rooms[room_id]
 
     if state["done"]:
         raise HTTPException(status_code=400, detail="Draft is already complete")
@@ -70,7 +70,7 @@ async def apply_action(room_id: str, body: ActionRequest):
     done = new_step >= len(BO3_SEQUENCE)
 
     updated = {**state, "step": new_step, "actions": new_actions, "done": done}
-    rooms[room_id] = updated
+    await save_room(room_id, updated)
 
     await manager.broadcast(room_id, updated)
     return updated
@@ -80,8 +80,9 @@ async def apply_action(room_id: str, body: ActionRequest):
 async def websocket_endpoint(room_id: str, ws: WebSocket):
     await manager.connect(room_id, ws)
     try:
-        if room_id in rooms:
-            await ws.send_json(rooms[room_id])
+        state = await get_room(room_id)
+        if state is not None:
+            await ws.send_json(state)
         while True:
             await ws.receive_text()
     except WebSocketDisconnect:
