@@ -13,6 +13,7 @@ interface DraftContextValue {
   handleLaunch: (config: CreateRoomConfig) => Promise<void>
   handleSidePick: (side: Side) => void
   handleAction: (map: string) => Promise<void>
+  handleReady: () => Promise<void>
   handleReset: () => void
 }
 
@@ -40,7 +41,7 @@ export function DraftProvider({ children }: { children: ReactNode }) {
   const [roomId, setRoomId] = useState<string | null>(urlRoom)
   const [lobbyState, setLobbyState] = useState<DraftState | null>(null)
 
-  const { state, loading, error, create, applyAction } = useDraftApi(roomId)
+  const { state, loading, error, create, applyAction, ready } = useDraftApi(roomId)
 
   // Redirect from base path when URL has room+side params (e.g. from a shared lobby link)
   useEffect(() => {
@@ -73,6 +74,12 @@ export function DraftProvider({ children }: { children: ReactNode }) {
     await applyAction(map)
   }
 
+  async function handleReady() {
+    if (side === 'blue' || side === 'red') {
+      await ready(side)
+    }
+  }
+
   function handleReset() {
     window.history.replaceState({}, '', '/map-draft')
     setRoomId(null)
@@ -93,6 +100,7 @@ export function DraftProvider({ children }: { children: ReactNode }) {
         handleLaunch,
         handleSidePick,
         handleAction,
+        handleReady,
         handleReset,
       }}
     >
