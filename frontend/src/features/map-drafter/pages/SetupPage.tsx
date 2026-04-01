@@ -32,6 +32,12 @@ export default function SetupPage() {
     );
     setLoading(true);
     try {
+      toast({
+        message:
+          "I'm using free server hosting right now so this can take up to 1 min if there hasn't been any usage within 15 minutes, but don't worry it is working",
+        variant: "info",
+        position: "bottom-center",
+      });
       await handleLaunch({
         blueName: blueName.trim() || "Team A",
         redName: redName.trim() || "Team B",
