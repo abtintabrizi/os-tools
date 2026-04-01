@@ -73,15 +73,13 @@ export default function DraftPage() {
       {/* Header */}
       <header className="grid grid-cols-3 px-6 py-4 border-b border-white/7 bg-tools-void/70">
         <div className="flex items-center gap-2.5">
-          <span
-            className={`font-mono text-xs font-bold tracking-widest uppercase py-1 px-2.5 rounded ${side === "blue" ? blueBadgeClass : redBadgeClass}`}
-          >
-            {side === "spectator"
-              ? "Spectator"
-              : side === "blue"
-                ? "Blue"
-                : "Red"}
-          </span>
+          {side !== "spectator" && (
+            <span
+              className={`font-mono text-xs font-bold tracking-widest uppercase py-1 px-2.5 rounded ${side === "blue" ? blueBadgeClass : redBadgeClass}`}
+            >
+              {side === "blue" ? "Blue" : "Red"}
+            </span>
+          )}
           <span className="text-sm font-bold">{sideLabel()}</span>
         </div>
 
