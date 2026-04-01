@@ -116,5 +116,22 @@ export function useDraftApi(roomId: string | null) {
     [roomId],
   );
 
-  return { state, loading, error, create, applyAction };
+  const ready = useCallback(
+    async (side: "blue" | "red"): Promise<void> => {
+      if (!roomId) return;
+      const resp = await fetch(`${API_BASE}/rooms/${roomId}/ready`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ side }),
+      });
+      if (!resp.ok) {
+        const err = await resp.json();
+        throw new Error(err.detail ?? "Ready failed");
+      }
+      // State update arrives via WebSocket broadcast
+    },
+    [roomId],
+  );
+
+  return { state, loading, error, create, applyAction, ready };
 }

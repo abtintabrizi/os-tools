@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 
 from .constants import SEQUENCES
-from .models import ActionRequest, CreateRoomRequest
+from .models import ActionRequest, CreateRoomRequest, ReadyRequest
 from .store import generate_room_id, get_room, save_room
 from .ws import manager
 
@@ -29,6 +29,8 @@ async def create_room(body: CreateRoomRequest):
         "actions": [],
         "done": False,
         "bestOf": body.bestOf,
+        "readyBlue": False,
+        "readyRed": False,
     }
     await save_room(room_id, state)
     return state
@@ -42,11 +44,33 @@ async def get_room_route(room_id: str):
     return state
 
 
+@router.post("/rooms/{room_id}/ready")
+async def set_ready(room_id: str, body: ReadyRequest):
+    state = await get_room(room_id)
+    if state is None:
+        raise HTTPException(status_code=404, detail="Room not found")
+    if body.side not in ("blue", "red"):
+        raise HTTPException(status_code=400, detail="Invalid side")
+
+    updated = {**state}
+    if body.side == "blue":
+        updated["readyBlue"] = True
+    else:
+        updated["readyRed"] = True
+
+    await save_room(room_id, updated)
+    await manager.broadcast(room_id, updated)
+    return updated
+
+
 @router.post("/rooms/{room_id}/action")
 async def apply_action(room_id: str, body: ActionRequest):
     state = await get_room(room_id)
     if state is None:
         raise HTTPException(status_code=404, detail="Room not found")
+
+    if not state.get("readyBlue") or not state.get("readyRed"):
+        raise HTTPException(status_code=400, detail="Both teams must be ready before the draft can start")
 
     if state["done"]:
         raise HTTPException(status_code=400, detail="Draft is already complete")

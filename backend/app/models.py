@@ -10,3 +10,7 @@ class CreateRoomRequest(BaseModel):
 
 class ActionRequest(BaseModel):
     map: str
+
+
+class ReadyRequest(BaseModel):
+    side: str

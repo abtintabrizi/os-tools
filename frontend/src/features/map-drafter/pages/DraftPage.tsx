@@ -11,7 +11,7 @@ import ResultCard from "@/features/map-drafter/components/ResultCard";
 import DonePanel from "@/features/map-drafter/components/DonePanel";
 
 export default function DraftPage() {
-  const { state, side, loading, handleAction, handleReset } = useDraftContext();
+  const { state, side, loading, handleAction, handleReady, handleReset } = useDraftContext();
   const [pending, setPending] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -25,6 +25,7 @@ export default function DraftPage() {
   if (loading) return <LoadingScreen message="Connecting to draft..." />;
   if (!state) return <ErrorScreen message="Room not found. Check your link." />;
 
+  const bothReady = state.readyBlue && state.readyRed;
   const { step, done, maps, actions, blueName, redName } = state;
   const sequence = SEQUENCE_MAP[state.bestOf];
   const currentSeqStep =
@@ -162,7 +163,62 @@ export default function DraftPage() {
 
         {/* Center */}
         <div className="p-5 flex flex-col flex-1">
-          {done ? (
+          {!bothReady ? (
+            <div className="flex flex-col items-center justify-center h-full gap-8">
+              <span className="font-mono text-xs tracking-widest uppercase text-white/40">
+                Waiting for both teams to ready up
+              </span>
+              <div className="flex gap-6">
+                <div className="flex flex-col items-center gap-3">
+                  <span className={`font-mono text-xs font-bold tracking-widest uppercase py-1 px-2.5 rounded ${blueBadgeClass}`}>
+                    Blue
+                  </span>
+                  <span className="font-mono text-sm font-bold">{blueName}</span>
+                  {state.readyBlue ? (
+                    <span className="font-mono text-xs tracking-widest uppercase text-tools-green-light bg-tools-green/10 px-3 py-1.5 rounded border border-tools-green/20">
+                      Ready
+                    </span>
+                  ) : side === "blue" ? (
+                    <button
+                      onClick={handleReady}
+                      className="font-mono text-xs tracking-widest uppercase px-4 py-1.5 rounded border border-tools-blue/40 text-tools-blue hover:border-tools-blue/70 hover:bg-tools-blue/10 transition"
+                    >
+                      Ready up
+                    </button>
+                  ) : (
+                    <span className="font-mono text-xs tracking-widest uppercase text-white/25 px-3 py-1.5">
+                      Not ready
+                    </span>
+                  )}
+                </div>
+
+                <div className="w-px bg-white/7 self-stretch" />
+
+                <div className="flex flex-col items-center gap-3">
+                  <span className={`font-mono text-xs font-bold tracking-widest uppercase py-1 px-2.5 rounded ${redBadgeClass}`}>
+                    Red
+                  </span>
+                  <span className="font-mono text-sm font-bold">{redName}</span>
+                  {state.readyRed ? (
+                    <span className="font-mono text-xs tracking-widest uppercase text-tools-green-light bg-tools-green/10 px-3 py-1.5 rounded border border-tools-green/20">
+                      Ready
+                    </span>
+                  ) : side === "red" ? (
+                    <button
+                      onClick={handleReady}
+                      className="font-mono text-xs tracking-widest uppercase px-4 py-1.5 rounded border border-tools-red/40 text-tools-red hover:border-tools-red/70 hover:bg-tools-red/10 transition"
+                    >
+                      Ready up
+                    </button>
+                  ) : (
+                    <span className="font-mono text-xs tracking-widest uppercase text-white/25 px-3 py-1.5">
+                      Not ready
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : done ? (
             <div className="flex flex-col h-full">
               <DonePanel
                 picks={actions.filter((a) => a.action === "pick")}

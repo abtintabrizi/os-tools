@@ -21,6 +21,8 @@ export interface DraftState {
   actions: DraftAction[];
   done: boolean;
   bestOf: SequenceKey;
+  readyBlue: boolean;
+  readyRed: boolean;
 }
 
 export type MapStatus =
