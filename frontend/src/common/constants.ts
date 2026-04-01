@@ -1,42 +1,42 @@
 export const ALL_MAPS = [
   {
     name: "Ahten City",
-    image: "",
+    image: "/Ahten_City.png",
   },
   {
     name: "Aimi's App",
-    image: "",
+    image: "/AiMis_App.png",
   },
   {
     name: "Atlas's Lab",
-    image: "",
+    image: "/Atlas_Lab.png",
   },
   {
     name: "Clarion Test Chamber",
-    image: "",
+    image: "/Clarion_Test_Chamber.png",
   },
   {
     name: "Demon Dais",
-    image: "",
+    image: "/Demon_Dais.png",
   },
   {
     name: "Gates of Obscura",
-    image: "",
+    image: "/Gates_of_Obscura.png",
   },
   {
     name: "Inky's Splash Zone",
-    image: "",
+    image: "/Inkys_Splash_Zone.png",
   },
   {
     name: "Night Market",
-    image: "",
+    image: "/Night_Market.png",
   },
   {
     name: "Oni Village",
-    image: "",
+    image: "/Oni_Village.png",
   },
   {
     name: "Taiko Temple",
-    image: "",
+    image: "/Taiko_Temple.png",
   },
 ];
