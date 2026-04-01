@@ -12,14 +12,9 @@
   --color-tools-green: #22c55e;
   --color-tools-green-light: #4ade80;
   --color-tools-gold: #F59E0B;
-  --color-tools-bg: #0a0a0f;
-  --color-tools-bg2: #111118;
-  --color-tools-bg3: #18181f;
-  --color-tools-border: rgba(255, 255, 255, 0.07);
-  --color-tools-border-bright: rgba(255, 255, 255, 0.15);
-  --color-tools-text: #f0f0f0;
-  --color-tools-text-muted: #555555;
-  --color-tools-text-dim: #888888;
+  --color-tools-void: #0a0a0f;
+  --color-tools-carbon: #111118;
+  --color-tools-graphite: #18181f;
 }
 
 @keyframes pulseBorder {
@@ -29,21 +24,9 @@
 
 html, body, #root {
   min-height: 100vh;
-  background: var(--color-tools-bg);
-  color: var(--color-tools-text);
+  background: radial-gradient(ellipse 120% 100% at 50% 50%, #1a1a2e 0%, var(--color-tools-void) 70%);
+  color: white;
   font-family: var(--font-head);
-}
-
-.grid-bg {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background-image:
-    linear-gradient(var(--color-tools-border) 1px, transparent 1px),
-    linear-gradient(90deg, var(--color-tools-border) 1px, transparent 1px);
-  background-size: 40px 40px;
-  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
 }
 
 button {

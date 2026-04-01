@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 
-from .constants import BO3_SEQUENCE
+from .constants import SEQUENCES
 from .models import ActionRequest, CreateRoomRequest
 from .store import generate_room_id, get_room, save_room
 from .ws import manager
@@ -15,10 +15,9 @@ async def root():
 
 @router.post("/rooms")
 async def create_room(body: CreateRoomRequest):
-    if len(body.maps) < 5:
-        raise HTTPException(
-            status_code=400, detail="At least 5 maps required for a Bo3 draft"
-        )
+    minMaps = len(SEQUENCES[body.bestOf]) + 1
+    if len(body.maps) < minMaps:
+        raise HTTPException(status_code=400, detail=f"At least {minMaps} maps required for a {body.bestOf} draft")
 
     room_id = generate_room_id()
     state = {
@@ -29,6 +28,7 @@ async def create_room(body: CreateRoomRequest):
         "step": 0,
         "actions": [],
         "done": False,
+        "bestOf": body.bestOf,
     }
     await save_room(room_id, state)
     return state
@@ -52,7 +52,8 @@ async def apply_action(room_id: str, body: ActionRequest):
         raise HTTPException(status_code=400, detail="Draft is already complete")
 
     step = state["step"]
-    if step >= len(BO3_SEQUENCE):
+    currentSequence = SEQUENCES[state["bestOf"]]
+    if step >= len(currentSequence):
         raise HTTPException(status_code=400, detail="No more steps remaining")
 
     if body.map not in state["maps"]:
@@ -62,12 +63,11 @@ async def apply_action(room_id: str, body: ActionRequest):
     if body.map in used_maps:
         raise HTTPException(status_code=400, detail="Map already used")
 
-    seq_step = BO3_SEQUENCE[step]
+    seq_step = currentSequence[step]
     new_step = step + 1
-    new_actions = state["actions"] + [
-        {"map": body.map, "team": seq_step["team"], "action": seq_step["action"]}
-    ]
-    done = new_step >= len(BO3_SEQUENCE)
+    team_name = state["blueName"] if seq_step["team"] == "blue" else state["redName"]
+    new_actions = state["actions"] + [{"map": body.map, "team": team_name, "action": seq_step["action"]}]
+    done = new_step >= len(currentSequence)
 
     updated = {**state, "step": new_step, "actions": new_actions, "done": done}
     await save_room(room_id, updated)

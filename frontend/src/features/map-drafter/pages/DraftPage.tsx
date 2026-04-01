@@ -1,34 +1,52 @@
-import { useState } from "react";
-import { BO3_SEQUENCE } from "@map-drafter/constants.ts";
-import { deriveMapStatuses, getDeciderMap } from "@/utils";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { SEQUENCE_MAP } from "@map-drafter/constants.ts";
+import { deriveMapStatuses } from "@/utils";
 import ConfirmModal from "@/components/ConfirmModal";
 import LoadingScreen from "@/components/LoadingScreen";
 import ErrorScreen from "@/components/ErrorScreen";
 import { useDraftContext } from "@/features/map-drafter/context/DraftContext";
+import { StepTracker } from "@/features/map-drafter/components/StepTracker";
+import ResultCard from "@/features/map-drafter/components/ResultCard";
+import DonePanel from "@/features/map-drafter/components/DonePanel";
 
 export default function DraftPage() {
   const { state, side, loading, handleAction, handleReset } = useDraftContext();
   const [pending, setPending] = useState<string | null>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.get("room") || !params.get("side")) {
+      navigate("/map-draft", { replace: true });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) return <LoadingScreen message="Connecting to draft..." />;
   if (!state) return <ErrorScreen message="Room not found. Check your link." />;
 
   const { step, done, maps, actions, blueName, redName } = state;
-  const currentStep =
-    !done && step < BO3_SEQUENCE.length ? BO3_SEQUENCE[step] : null;
-  const isMyTurn =
-    currentStep !== null &&
-    ((currentStep.team === "A" && side === "blue") ||
-      (currentStep.team === "B" && side === "red"));
+  const sequence = SEQUENCE_MAP[state.bestOf];
+  const currentSeqStep =
+    !done && step < sequence.length ? sequence[step] : null;
+  const currentTeam = currentSeqStep
+    ? currentSeqStep.team === "blue"
+      ? blueName
+      : redName
+    : null;
+  const isMyTurn = currentSeqStep !== null && currentSeqStep.team === side;
 
   const mapStatuses = deriveMapStatuses(state);
-  const decider = getDeciderMap(state);
 
-  const bans = {
-    A: actions.find((a) => a.action === "ban" && a.team === "A"),
-    B: actions.find((a) => a.action === "ban" && a.team === "B"),
-  };
-  const picks = actions.filter((a) => a.action === "pick");
+  const blueActions = actions.filter((a) => a.team === blueName);
+  const redActions = actions.filter((a) => a.team === redName);
+
+  const blueSeqSteps = sequence
+    .map((s, globalIdx) => ({ ...s, globalIdx }))
+    .filter((s) => s.team === "blue");
+  const redSeqSteps = sequence
+    .map((s, globalIdx) => ({ ...s, globalIdx }))
+    .filter((s) => s.team === "red");
 
   function handleMapClick(map: string) {
     if (!isMyTurn || mapStatuses[map] !== "available") return;
@@ -47,102 +65,121 @@ export default function DraftPage() {
     return "Spectating";
   }
 
-  const sideBadgeClass =
-    side === "blue"
-      ? "bg-tools-blue-dim text-tools-blue"
-      : side === "red"
-        ? "bg-tools-red-dim text-tools-red"
-        : "bg-tools-bg3 text-tools-text-muted";
+  const blueBadgeClass = "bg-tools-blue-dim text-tools-blue";
+  const redBadgeClass = "bg-tools-red-dim text-tools-red";
 
   return (
-    <div className="min-h-screen flex flex-col relative z-1">
+    <div className="h-screen flex flex-col">
       {/* Header */}
-      <header className="px-6 py-4 border-b border-tools-border flex items-center justify-between flex-wrap gap-3 bg-tools-bg/85 backdrop-blur-md sticky top-0 z-10">
+      <header className="grid grid-cols-3 px-6 py-4 border-b border-white/7 bg-tools-void/70">
         <div className="flex items-center gap-2.5">
           <span
-            className={`font-mono text-[9px] font-bold tracking-[0.18em] uppercase py-1 px-2.5 rounded ${sideBadgeClass}`}
+            className={`font-mono text-xs font-bold tracking-widest uppercase py-1 px-2.5 rounded ${side === "blue" ? blueBadgeClass : redBadgeClass}`}
           >
-            {side === "spectator" ? "Spectator" : side === "blue" ? "Blue" : "Red"}
+            {side === "spectator"
+              ? "Spectator"
+              : side === "blue"
+                ? "Blue"
+                : "Red"}
           </span>
-          <span className="text-sm font-bold text-tools-text">{sideLabel()}</span>
+          <span className="text-sm font-bold">{sideLabel()}</span>
         </div>
 
-        <StepTracker step={step} done={done} />
+        <div className="flex items-center justify-center">
+          <StepTracker step={step} sequence={state.bestOf} done={done} />
+        </div>
 
-        <div className="flex items-center gap-3">
-          <span className="font-mono text-[11px] text-tools-text-muted tracking-[0.06em]">
+        <div className="flex justify-end items-center gap-3">
+          <span className="text-sm tracking-wider font-bold">
             {blueName} vs {redName}
           </span>
-          <button
-            className="bg-transparent border border-tools-border rounded-md text-tools-text-muted font-mono text-[10px] tracking-widest py-1 px-2.5 transition-all duration-150 hover:border-tools-border-bright hover:text-tools-text-dim"
-            onClick={handleReset}
-          >
-            Reset
-          </button>
         </div>
       </header>
 
       {/* Status bar */}
-      <div className="py-3 px-6 bg-tools-bg2 border-b border-tools-border flex items-center justify-center gap-3">
+      <div className="py-3 px-6 bg-tools-carbon border-b border-white/7 flex items-center justify-center gap-3">
         {done ? (
           <>
-            <span className="font-mono text-[11px] tracking-[0.08em] text-tools-text-muted">
+            <span className="font-mono text-sm tracking-widest">
               Draft complete
             </span>
-            <span className="font-mono text-[10px] tracking-[0.12em] py-0.75 px-2.5 rounded uppercase bg-tools-gold/10 text-tools-gold">
+            <span className="font-mono text-sm tracking-widest py-0.75 px-2.5 rounded uppercase bg-tools-gold/10 text-tools-gold">
               Done
             </span>
           </>
-        ) : currentStep ? (
+        ) : currentSeqStep ? (
           <>
-            <span className="font-mono text-[11px] tracking-[0.08em] text-tools-text-muted [&_strong]:text-tools-text">
-              <strong>{currentStep.team === "A" ? blueName : redName}</strong>
-              {isMyTurn ? " — your turn" : " is choosing"}
+            <span
+              className={`font-mono text-xs font-bold tracking-widest uppercase py-1 px-2.5 rounded ${currentSeqStep.team === "blue" ? blueBadgeClass : redBadgeClass}`}
+            >
+              {currentSeqStep.team === "blue" ? "Blue" : "Red"}
+            </span>
+            <span className="font-mono text-sm tracking-widest">
+              <strong>{currentTeam}</strong>
+              {isMyTurn ? " — Your turn to" : " is choosing their"}
             </span>
             <span
-              className={`font-mono text-[10px] tracking-[0.12em] py-0.75 px-2.5 rounded uppercase ${
-                currentStep.action === "ban"
+              className={`font-mono text-xs tracking-widest py-0.75 px-2.5 rounded uppercase ${
+                currentSeqStep.action === "ban"
                   ? "bg-tools-red/12 text-tools-red-light"
                   : "bg-tools-green/10 text-tools-green-light"
               }`}
             >
-              {currentStep.action.toUpperCase()}
+              {currentSeqStep.action.toUpperCase()}
             </span>
           </>
         ) : null}
       </div>
 
       {/* Main body */}
-      <div className="flex-1 grid grid-cols-[220px_1fr_220px] max-[700px]:grid-cols-1">
+      <div className="h-full flex flex-row">
         {/* Blue sidebar */}
-        <aside className="p-5 border-r border-tools-border flex flex-col gap-1.5 max-[700px]:hidden">
-          <div className="text-[11px] font-mono tracking-[0.15em] uppercase mb-1.5 font-bold text-tools-blue">
+        <div className="p-5 border-r border-white/7 flex flex-col gap-3 w-1/6">
+          <div
+            className={`text-lg font-mono tracking-widest uppercase mb-1.5 font-bold text-center border rounded-lg ${blueBadgeClass}`}
+          >
             {blueName}
           </div>
-          <div className="text-[9px] font-mono tracking-[0.2em] text-tools-text-muted uppercase mt-2.5 mb-0.5">
-            Ban
-          </div>
-          <ResultSlot map={bans.A?.map} type="ban" label="Ban 1" />
-          <div className="text-[9px] font-mono tracking-[0.2em] text-tools-text-muted uppercase mt-2.5 mb-0.5">
-            Pick
-          </div>
-          <ResultSlot map={picks[0]?.map} type="pick" label="Game 1" />
-        </aside>
+          {blueSeqSteps.map((s, i) => {
+            const n =
+              blueSeqSteps.slice(0, i).filter((p) => p.action === s.action)
+                .length + 1;
+            const filled = blueActions[i];
+            const status = filled
+              ? "filled"
+              : s.globalIdx === step
+                ? "active"
+                : "pending";
+            return (
+              <ResultCard
+                key={i}
+                map={filled?.map}
+                type={s.action}
+                label={s.action === "ban" ? `Ban ${n}` : `Pick ${n}`}
+                status={status}
+              />
+            );
+          })}
+        </div>
 
         {/* Center */}
-        <main className="p-5 flex flex-col">
+        <div className="p-5 flex flex-col flex-1">
           {done ? (
-            <DonePanel
-              g1={picks[0]?.map ?? "—"}
-              g2={picks[1]?.map ?? "—"}
-              g3={decider ?? "—"}
-              blueName={blueName}
-              redName={redName}
-              onReset={handleReset}
-            />
+            <>
+              <DonePanel
+                picks={actions.filter((a) => a.action === "pick")}
+                blueName={blueName}
+              />
+              <button
+                className="mt-1 py-3 px-3 bg-transparent border border-white/7 rounded-lg font-head text-[13px] font-semibold text-white transition-all duration-150 w-full hover:border-white/15 hover:text-white"
+                onClick={handleReset}
+              >
+                New draft
+              </button>
+            </>
           ) : (
             <>
-              <div className="text-[9px] font-mono tracking-[0.25em] text-tools-text-muted uppercase text-center mb-4">
+              <div className="text-lg font-mono tracking-widest uppercase text-center mb-4">
                 Map pool
               </div>
               <div className="flex flex-col gap-2">
@@ -150,33 +187,29 @@ export default function DraftPage() {
                   const status = mapStatuses[map];
                   const clickable = status === "available" && isMyTurn;
 
+                  const isPick = status.startsWith("picked-");
+                  const gameNum = isPick
+                    ? status.replace("picked-g", "")
+                    : null;
+
                   const cardClass = [
-                    "border rounded-[10px] py-3.5 px-[18px] flex items-center justify-between w-full text-left transition-all duration-200 relative overflow-hidden",
+                    "border rounded-lg py-3.5 px-4 flex items-center justify-between w-full text-left transition-all duration-200 relative overflow-hidden",
                     "before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.75 before:bg-transparent before:transition-colors before:duration-200",
-                    status === "available" && clickable
-                      ? "bg-tools-bg2 border-tools-gold/30 animate-[pulseBorder_2s_infinite] hover:border-tools-border-bright hover:bg-tools-bg3 hover:translate-x-0.5 hover:before:bg-tools-gold"
+                    clickable
+                      ? "cursor-pointer bg-tools-carbon border-tools-gold/30 animate-[pulseBorder_2s_infinite] hover:border-white/15 hover:bg-tools-graphite hover:translate-x-0.5 hover:before:bg-tools-gold"
                       : status === "banned"
-                        ? "opacity-40 bg-tools-bg3 border-transparent cursor-default"
-                        : status === "picked-g1" || status === "picked-g2"
-                          ? "bg-tools-green/4 border-tools-green/20 cursor-not-allowed"
-                          : status === "picked-g3"
-                            ? "bg-tools-gold/5 border-tools-gold/25 cursor-not-allowed"
-                            : "bg-tools-bg2 border-tools-border",
+                        ? "!cursor-default opacity-50 bg-tools-graphite border-tools-red/20 blur-[0.5px]"
+                        : isPick
+                          ? "!cursor-default bg-tools-green/4 border-tools-green/20"
+                          : "!cursor-default bg-tools-carbon border-white/7",
                   ].join(" ");
 
-                  const mapNameClass =
-                    status === "banned"
-                      ? "text-[15px] font-semibold text-tools-text-muted line-through"
-                      : "text-[15px] font-semibold text-tools-text";
-
                   const mapStatusClass = [
-                    "text-[9px] font-mono tracking-[0.15em] uppercase py-0.75 px-2.25 rounded",
-                    status === "available" ? "hidden" : "",
-                    status === "banned" ? "bg-tools-red/10 text-tools-red-light" : "",
-                    status === "picked-g1" || status === "picked-g2"
-                      ? "bg-tools-green/10 text-tools-green-light"
-                      : "",
-                    status === "picked-g3" ? "bg-tools-gold/12 text-tools-gold" : "",
+                    "text-sm font-mono tracking-widest uppercase py-0.75 px-2.25 rounded",
+                    status === "available" && "hidden",
+                    status === "banned" &&
+                      "bg-tools-red/10 text-tools-red-light",
+                    isPick && "bg-tools-green/10 text-tools-green-light",
                   ]
                     .filter(Boolean)
                     .join(" ");
@@ -188,17 +221,17 @@ export default function DraftPage() {
                       onClick={() => handleMapClick(map)}
                       disabled={!clickable}
                     >
-                      <span className={mapNameClass}>{map}</span>
+                      <span
+                        className={`font-semibold${status === "banned" ? " line-through text-tools-red-light" : ""}`}
+                      >
+                        {map}
+                      </span>
                       <span className={mapStatusClass}>
                         {status === "banned"
                           ? "Banned"
-                          : status === "picked-g1"
-                            ? "Game 1"
-                            : status === "picked-g2"
-                              ? "Game 2"
-                              : status === "picked-g3"
-                                ? "Decider"
-                                : ""}
+                          : isPick
+                            ? `Game ${gameNum}`
+                            : ""}
                       </span>
                     </button>
                   );
@@ -206,162 +239,46 @@ export default function DraftPage() {
               </div>
             </>
           )}
-        </main>
+        </div>
 
         {/* Red sidebar */}
-        <aside className="p-5 border-l border-tools-border flex flex-col gap-1.5 max-[700px]:hidden">
-          <div className="text-[11px] font-mono tracking-[0.15em] uppercase mb-1.5 font-bold text-tools-red">
+        <div className="p-5 border-l border-white/7 flex flex-col gap-3 w-1/6">
+          <div
+            className={`text-lg font-mono tracking-widest uppercase mb-1.5 font-bold text-center border rounded-lg ${redBadgeClass}`}
+          >
             {redName}
           </div>
-          <div className="text-[9px] font-mono tracking-[0.2em] text-tools-text-muted uppercase mt-2.5 mb-0.5">
-            Ban
-          </div>
-          <ResultSlot map={bans.B?.map} type="ban" label="Ban 1" />
-          <div className="text-[9px] font-mono tracking-[0.2em] text-tools-text-muted uppercase mt-2.5 mb-0.5">
-            Pick
-          </div>
-          <ResultSlot map={picks[1]?.map} type="pick" label="Game 2" />
-        </aside>
+          {redSeqSteps.map((s, i) => {
+            const n =
+              redSeqSteps.slice(0, i).filter((p) => p.action === s.action)
+                .length + 1;
+            const filled = redActions[i];
+            const status = filled
+              ? "filled"
+              : s.globalIdx === step
+                ? "active"
+                : "pending";
+            return (
+              <ResultCard
+                key={i}
+                map={filled?.map}
+                type={s.action}
+                label={s.action === "ban" ? `Ban ${n}` : `Pick ${n}`}
+                status={status}
+              />
+            );
+          })}
+        </div>
       </div>
 
-      {pending && currentStep && (
+      {pending && currentSeqStep && (
         <ConfirmModal
           map={pending}
-          action={currentStep.action}
+          action={currentSeqStep.action}
           onConfirm={handleConfirm}
           onCancel={() => setPending(null)}
         />
       )}
-    </div>
-  );
-}
-
-function ResultSlot({
-  map,
-  type,
-  label,
-}: {
-  map?: string;
-  type: "ban" | "pick";
-  label: string;
-}) {
-  const filled = !!map;
-
-  const slotClass = [
-    "border rounded-lg py-2.5 px-3 min-h-11 flex items-center gap-2 relative transition-all duration-300",
-    filled && type === "ban"
-      ? "border-tools-red/25 bg-tools-red/6"
-      : filled && type === "pick"
-        ? "border-tools-green/25 bg-tools-green/6"
-        : "bg-tools-bg3 border-tools-border",
-  ].join(" ");
-
-  const iconClass = [
-    "w-5 h-5 rounded flex items-center justify-center text-[10px] shrink-0",
-    type === "ban"
-      ? "bg-tools-red/15 text-tools-red-light"
-      : "bg-tools-green/12 text-tools-green-light",
-  ].join(" ");
-
-  const mapClass = filled
-    ? type === "ban"
-      ? "text-[13px] font-semibold flex-1 text-tools-red-light line-through decoration-tools-red/40"
-      : "text-[13px] font-semibold flex-1 text-tools-green-light"
-    : "text-[13px] font-semibold flex-1 text-tools-text-dim";
-
-  return (
-    <div className={slotClass}>
-      <span className={iconClass}>{type === "ban" ? "✕" : "✓"}</span>
-      <span className={mapClass}>{map ?? "—"}</span>
-      <span className="text-[8px] font-mono tracking-[0.15em] uppercase text-tools-text-muted opacity-50">
-        {label}
-      </span>
-    </div>
-  );
-}
-
-function StepTracker({ step, done }: { step: number; done: boolean }) {
-  return (
-    <div className="flex items-center gap-1">
-      {BO3_SEQUENCE.map((s, i) => {
-        const base = "w-5 h-1 rounded-sm transition-colors duration-300";
-        let color: string;
-        if (i < step || done) {
-          color = s.action === "ban" ? "bg-tools-red/50" : "bg-tools-green/50";
-        } else if (i === step && !done) {
-          color = "bg-tools-gold";
-        } else {
-          color = "bg-tools-bg3";
-        }
-        return <span key={i} className={`${base} ${color}`} />;
-      })}
-    </div>
-  );
-}
-
-function DonePanel({
-  g1,
-  g2,
-  g3,
-  blueName,
-  redName,
-  onReset,
-}: {
-  g1: string;
-  g2: string;
-  g3: string;
-  blueName: string;
-  redName: string;
-  onReset: () => void;
-}) {
-  return (
-    <div className="flex flex-col gap-3 py-2">
-      <div className="text-[11px] font-mono tracking-[0.2em] text-tools-gold uppercase text-center mb-1">
-        Draft complete
-      </div>
-
-      <div className="bg-tools-bg2 border border-tools-blue/30 rounded-xl p-5 px-6 flex items-center justify-between">
-        <div>
-          <div className="text-[10px] font-mono tracking-[0.2em] uppercase text-tools-text-muted mb-1">
-            Game 1
-          </div>
-          <div className="text-xl font-bold text-tools-text">{g1}</div>
-        </div>
-        <div className="text-[11px] font-mono tracking-widest text-tools-blue">
-          {blueName} pick
-        </div>
-      </div>
-
-      <div className="bg-tools-bg2 border border-tools-red/30 rounded-xl p-5 px-6 flex items-center justify-between">
-        <div>
-          <div className="text-[10px] font-mono tracking-[0.2em] uppercase text-tools-text-muted mb-1">
-            Game 2
-          </div>
-          <div className="text-xl font-bold text-tools-text">{g2}</div>
-        </div>
-        <div className="text-[11px] font-mono tracking-widest text-tools-red">
-          {redName} pick
-        </div>
-      </div>
-
-      <div className="bg-tools-gold/4 border border-tools-gold/35 rounded-xl p-5 px-6 flex items-center justify-between">
-        <div>
-          <div className="text-[10px] font-mono tracking-[0.2em] uppercase text-tools-text-muted mb-1">
-            Game 3 (decider)
-          </div>
-          <div className="text-xl font-bold text-tools-text">{g3}</div>
-        </div>
-        <div className="text-[11px] font-mono tracking-widest text-tools-gold">
-          Decider
-        </div>
-      </div>
-
-      <button
-        className="mt-1 py-3 px-3 bg-transparent border border-tools-border rounded-lg font-head text-[13px] font-semibold text-tools-text-muted transition-all duration-150 w-full hover:border-tools-border-bright hover:text-tools-text"
-        onClick={onReset}
-      >
-        New draft
-      </button>
     </div>
   );
 }
