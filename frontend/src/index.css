@@ -22,6 +22,16 @@
   50% { border-color: rgba(245, 158, 11, 0.45); }
 }
 
+@keyframes pulseBorderRed {
+  0%, 100% { border-color: rgba(239, 68, 68, 0.2); }
+  50% { border-color: rgba(239, 68, 68, 0.6); }
+}
+
+@keyframes pulseBorderGreen {
+  0%, 100% { border-color: rgba(34, 197, 94, 0.2); }
+  50% { border-color: rgba(34, 197, 94, 0.6); }
+}
+
 html, body, #root {
   min-height: 100vh;
   background: radial-gradient(ellipse 120% 100% at 50% 50%, #1a1a2e 0%, var(--color-tools-void) 70%);

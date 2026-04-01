@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { SEQUENCE_MAP } from "@map-drafter/constants.ts";
+import { ALL_MAPS } from "@/common/constants";
 import { deriveMapStatuses } from "@/utils";
-import ConfirmModal from "@/components/ConfirmModal";
 import LoadingScreen from "@/components/LoadingScreen";
-import ErrorScreen from "@/components/ErrorScreen";
+import ErrorScreen from "@/features/map-drafter/components/ErrorScreen";
 import { useDraftContext } from "@/features/map-drafter/context/DraftContext";
 import { StepTracker } from "@/features/map-drafter/components/StepTracker";
 import ResultCard from "@/features/map-drafter/components/ResultCard";
@@ -163,54 +163,63 @@ export default function DraftPage() {
         {/* Center */}
         <div className="p-5 flex flex-col flex-1">
           {done ? (
-            <>
+            <div className="flex flex-col h-full">
               <DonePanel
                 picks={actions.filter((a) => a.action === "pick")}
                 blueName={blueName}
               />
+              <div className="flex-1" />
               <button
-                className="mt-1 py-3 px-3 bg-transparent border border-white/7 rounded-lg font-head text-[13px] font-semibold text-white transition-all duration-150 w-full hover:border-white/15 hover:text-white"
+                className="py-3 px-3 bg-transparent border border-white/7 rounded-lg font-head text-[13px] font-semibold text-white transition-all duration-150 w-full hover:border-white/15 hover:text-white"
                 onClick={handleReset}
               >
                 New draft
               </button>
-            </>
+            </div>
           ) : (
-            <>
-              <div className="text-lg font-mono tracking-widest uppercase text-center mb-4">
+            <div className="flex flex-col justify-center items-center">
+              <div className="text-lg font-mono tracking-widest uppercase mb-4">
                 Map pool
               </div>
-              <div className="flex flex-col gap-2">
+              <div className="grid grid-cols-4 gap-3 mb-3">
                 {maps.map((map) => {
                   const status = mapStatuses[map];
                   const clickable = status === "available" && isMyTurn;
-
                   const isPick = status.startsWith("picked-");
                   const gameNum = isPick
                     ? status.replace("picked-g", "")
                     : null;
+                  const image = ALL_MAPS.find((m) => m.name === map)?.image;
+                  const pickAction = isPick
+                    ? actions.find((a) => a.map === map && a.action === "pick")
+                    : null;
+                  const pickTeam = pickAction?.team ?? null;
+                  const banTeam =
+                    status === "banned"
+                      ? (actions.find(
+                          (a) => a.map === map && a.action === "ban",
+                        )?.team ?? null)
+                      : null;
+                  const isBanning = currentSeqStep?.action === "ban";
+
+                  const isSelected = pending === map;
 
                   const cardClass = [
-                    "border rounded-lg py-3.5 px-4 flex items-center justify-between w-full text-left transition-all duration-200 relative overflow-hidden",
-                    "before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.75 before:bg-transparent before:transition-colors before:duration-200",
+                    "relative rounded-lg overflow-hidden border-2 transition-all duration-200 aspect-video",
                     clickable
-                      ? "cursor-pointer bg-tools-carbon border-tools-gold/30 animate-[pulseBorder_2s_infinite] hover:border-white/15 hover:bg-tools-graphite hover:translate-x-0.5 hover:before:bg-tools-gold"
+                      ? isSelected
+                        ? isBanning
+                          ? "cursor-pointer border-tools-red scale-[1.03]"
+                          : "cursor-pointer border-tools-green scale-[1.03]"
+                        : isBanning
+                          ? "cursor-pointer border-tools-red/40 animate-[pulseBorderRed_2s_infinite] hover:border-tools-red/70 hover:scale-[1.03]"
+                          : "cursor-pointer border-tools-green/40 animate-[pulseBorderGreen_2s_infinite] hover:border-tools-green/70 hover:scale-[1.03]"
                       : status === "banned"
-                        ? "!cursor-default opacity-50 bg-tools-graphite border-tools-red/20 blur-[0.5px]"
+                        ? "!cursor-default opacity-40 border-tools-red/20 grayscale"
                         : isPick
-                          ? "!cursor-default bg-tools-green/4 border-tools-green/20"
-                          : "!cursor-default bg-tools-carbon border-white/7",
+                          ? "!cursor-default border-tools-green/30"
+                          : "!cursor-default border-white/7",
                   ].join(" ");
-
-                  const mapStatusClass = [
-                    "text-sm font-mono tracking-widest uppercase py-0.75 px-2.25 rounded",
-                    status === "available" && "hidden",
-                    status === "banned" &&
-                      "bg-tools-red/10 text-tools-red-light",
-                    isPick && "bg-tools-green/10 text-tools-green-light",
-                  ]
-                    .filter(Boolean)
-                    .join(" ");
 
                   return (
                     <button
@@ -219,23 +228,57 @@ export default function DraftPage() {
                       onClick={() => handleMapClick(map)}
                       disabled={!clickable}
                     >
-                      <span
-                        className={`font-semibold${status === "banned" ? " line-through text-tools-red-light" : ""}`}
-                      >
-                        {map}
-                      </span>
-                      <span className={mapStatusClass}>
-                        {status === "banned"
-                          ? "Banned"
-                          : isPick
-                            ? `Game ${gameNum}`
-                            : ""}
-                      </span>
+                      {image && (
+                        <img
+                          src={image}
+                          alt={map}
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                      <div className="absolute inset-0 bg-linear-to-t from-black/70 to-transparent" />
+                      {isPick && pickTeam && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="font-mono text-sm font-bold tracking-widest uppercase bg-tools-green/20 text-tools-green-light px-2.5 py-1 rounded">
+                            {pickTeam} · G{gameNum}
+                          </span>
+                        </div>
+                      )}
+                      {status === "banned" && banTeam && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="font-mono text-sm font-bold tracking-widest uppercase bg-tools-red/20 text-tools-red-light px-2.5 py-1 rounded">
+                            {banTeam} · Banned
+                          </span>
+                        </div>
+                      )}
+                      <div className="absolute bottom-0 left-0 right-0 p-2">
+                        <span className="font-semibold leading-tight line-through text-tools-red-light">
+                          {status === "banned" ? map : ""}
+                        </span>
+                        {status !== "banned" && (
+                          <span className="font-semibold leading-tight">
+                            {map}
+                          </span>
+                        )}
+                      </div>
                     </button>
                   );
                 })}
               </div>
-            </>
+              {isMyTurn && currentSeqStep && (
+                <button
+                  className={`py-3 px-3 border rounded-lg font-head font-semibold transition-all duration-150 w-1/3 disabled:opacity-30 disabled:cursor-default! ${
+                    currentSeqStep.action === "ban"
+                      ? "bg-tools-red/10 border-tools-red/30 text-tools-red-light hover:bg-tools-red/20 hover:border-tools-red/50"
+                      : "bg-tools-green/10 border-tools-green/30 text-tools-green-light hover:bg-tools-green/20 hover:border-tools-green/50"
+                  }`}
+                  disabled={!pending}
+                  onClick={handleConfirm}
+                >
+                  {currentSeqStep.action === "ban" ? "Ban" : "Pick"}
+                  {pending ? ` ${pending}` : ""}
+                </button>
+              )}
+            </div>
           )}
         </div>
 
@@ -268,15 +311,6 @@ export default function DraftPage() {
           })}
         </div>
       </div>
-
-      {pending && currentSeqStep && (
-        <ConfirmModal
-          map={pending}
-          action={currentSeqStep.action}
-          onConfirm={handleConfirm}
-          onCancel={() => setPending(null)}
-        />
-      )}
     </div>
   );
 }
