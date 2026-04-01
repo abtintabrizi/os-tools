@@ -1,17 +1,20 @@
 import { SequenceStep } from "@/features/map-drafter/types";
+import { SequenceKey } from './types/index';
 
 export const BO3_SEQUENCE: SequenceStep[] = [
-  { team: 'A', action: 'ban' },
-  { team: 'B', action: 'ban' },
-  { team: 'B', action: 'pick' },
-  { team: 'A', action: 'pick' },
-  { team: 'A', action: 'ban' },
-  { team: 'B', action: 'pick' },
-]
+  { team: "blue", action: "ban" },
+  { team: "red", action: "ban" },
+  { team: "red", action: "pick" },
+  { team: "blue", action: "pick" },
+  { team: "blue", action: "ban" },
+  { team: "red", action: "pick" },
+];
 
 export const BO1_SEQUENCE: SequenceStep[] = [
-  { team: 'A', action: 'ban' },
-  { team: 'A', action: 'ban' },
-  { team: 'A', action: 'ban' },
-  { team: 'B', action: 'pick' },
-]
+  { team: "blue", action: "ban" },
+  { team: "blue", action: "ban" },
+  { team: "blue", action: "ban" },
+  { team: "red", action: "pick" },
+];
+
+export const SEQUENCE_MAP: Record<SequenceKey, SequenceStep[]> = { bo1: BO1_SEQUENCE, bo3: BO3_SEQUENCE };

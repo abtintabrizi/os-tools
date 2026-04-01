@@ -1,32 +1,33 @@
-export type Side = 'blue' | 'red' | 'spectator'
-export type ActionType = 'ban' | 'pick'
-export type Team = 'A' | 'B' // A = blue, B = red
-export type Page = 'setup' | 'lobby' | 'pick' | 'draft'
 
+export type Side = "blue" | "red" | "spectator";
+export type ActionType = "ban" | "pick";
 export interface DraftAction {
-  map: string
-  team: Team
-  action: ActionType
+  map: string;
+  team: string;
+  action: ActionType;
 }
 
 export interface SequenceStep {
-  team: Team
-  action: ActionType
+  team: string;
+  action: ActionType;
 }
 
 export interface DraftState {
-  roomId: string
-  blueName: string
-  redName: string
-  maps: string[]
-  step: number
-  actions: DraftAction[]
-  done: boolean
+  roomId: string;
+  blueName: string;
+  redName: string;
+  maps: string[];
+  step: number;
+  actions: DraftAction[];
+  done: boolean;
+  bestOf: SequenceKey;
 }
 
 export type MapStatus =
-  | 'available'
-  | 'banned'
-  | 'picked-g1'
-  | 'picked-g2'
-  | 'picked-g3'
+  | "available"
+  | "banned"
+  | "picked-g1"
+  | "picked-g2"
+  | "picked-g3";
+
+export type SequenceKey = "bo1" | "bo3";

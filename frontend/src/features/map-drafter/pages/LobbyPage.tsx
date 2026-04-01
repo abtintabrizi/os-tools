@@ -4,7 +4,7 @@ import type { Side } from "@map-drafter/types";
 import { useDraftContext } from "@/features/map-drafter/context/DraftContext";
 
 function buildUrl(roomId: string, side: Side): string {
-  const url = new URL(window.location.origin + "/map-draft");
+  const url = new URL(window.location.origin + "/map-draft/draft");
   url.searchParams.set("room", roomId);
   url.searchParams.set("side", side);
   return url.toString();
@@ -33,29 +33,27 @@ export default function LobbyPage() {
   }
 
   const baseBtn =
-    "px-2.5 py-2.5 rounded-lg font-head text-[13px] font-bold transition-all duration-150";
+    "px-2.5 py-2.5 rounded-lg font-head text-sm font-bold transition-all duration-150";
   const blueBtn =
     "border border-tools-blue/35 text-tools-blue bg-tools-blue/6 hover:bg-tools-blue/14";
   const redBtn =
     "border border-tools-red/35 text-tools-red bg-tools-red/6 hover:bg-tools-red/14";
   const neutralBtn =
-    "border border-tools-border text-tools-text-muted bg-transparent hover:border-tools-border-bright hover:text-tools-text";
+    "border border-white/7 bg-transparent hover:border-white/15";
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-8 px-4 relative z-1">
-      <div className="w-full max-w-150">
-        <div className="text-[11px] font-mono tracking-[0.25em] text-tools-text-muted uppercase mb-6 flex items-center gap-3 before:content-[''] before:inline-block before:w-6 before:h-0.5 before:bg-tools-gold before:shrink-0">
-          Omega Strikers
-        </div>
-        <h2 className="text-[clamp(28px,5vw,48px)] font-extrabold leading-tight tracking-tight mb-2 text-tools-text">
-          Room ready
+    <div className="h-screen flex items-center justify-center">
+      <div className="flex flex-col gap-3 w-full max-w-160">
+        <h2 className="text-6xl font-extrabold leading-tight tracking-tight">
+          Room <span className="text-tools-gold">Ready</span>
         </h2>
-        <p className="font-mono text-xs text-tools-text-muted tracking-[0.08em] mb-8">
-          // Room {room.roomId} · Share links below
+
+        <p className="font-mono text-xs tracking-wider uppercase">
+          // Room {room.roomId} · {room.bestOf} · Share links below
         </p>
 
-        <div className="bg-tools-bg2 border border-tools-border rounded-2xl p-6 mb-4">
-          <div className="text-[10px] font-mono tracking-[0.2em] text-tools-text-muted uppercase mb-5">
+        <div className="flex flex-col gap-3 bg-tools-carbon border border-white/7 rounded-2xl p-6">
+          <div className="text-sm font-mono tracking-[0.2em] uppercase">
             Share with teams
           </div>
 
@@ -63,7 +61,7 @@ export default function LobbyPage() {
             <div className="text-xs font-mono font-bold tracking-widest text-tools-blue">
               {room.blueName} — Blue side
             </div>
-            <div className="bg-tools-bg3 border border-tools-border rounded-lg py-2.5 px-3 font-mono text-[11px] text-tools-text-dim break-all leading-relaxed">
+            <div className="bg-tools-graphite border border-white/7 rounded-lg py-2.5 px-3 font-mono text-xs break-all leading-relaxed">
               {blueUrl}
             </div>
             <button
@@ -74,13 +72,13 @@ export default function LobbyPage() {
             </button>
           </div>
 
-          <div className="h-px bg-tools-border my-5" />
+          <div className="h-px bg-tools-gold my-3" />
 
           <div className="flex flex-col gap-2">
             <div className="text-xs font-mono font-bold tracking-widest text-tools-red">
               {room.redName} — Red side
             </div>
-            <div className="bg-tools-bg3 border border-tools-border rounded-lg py-2.5 px-3 font-mono text-[11px] text-tools-text-dim break-all leading-relaxed">
+            <div className="bg-tools-graphite border border-white/7 rounded-lg py-2.5 px-3 font-mono text-xs break-all leading-relaxed">
               {redUrl}
             </div>
             <button
@@ -92,8 +90,8 @@ export default function LobbyPage() {
           </div>
         </div>
 
-        <div className="bg-tools-bg2 border border-tools-border rounded-2xl p-6 mb-4">
-          <div className="text-[10px] font-mono tracking-[0.2em] text-tools-text-muted uppercase mb-5">
+        <div className="flex flex-col gap-4 bg-tools-carbon border border-white/7 rounded-2xl p-6">
+          <div className="text-sm font-mono tracking-[0.2em] uppercase">
             You are the organiser — enter as:
           </div>
           <div className="flex gap-2.5 flex-wrap">
