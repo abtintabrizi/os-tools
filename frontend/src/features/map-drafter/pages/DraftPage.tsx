@@ -41,11 +41,16 @@ export default function DraftPage() {
       setTimeLeft(TIMER_SECONDS);
       return;
     }
+    // Use server elapsed (clamped to ≥0) as the starting point, then count
+    // down with local clock to avoid clock-skew causing a frozen/stuttering display.
+    const serverElapsed = Math.max(0, Date.now() / 1000 - state!.stepStartedAt!);
+    const initialTimeLeft = Math.max(0, Math.ceil(TIMER_SECONDS - serverElapsed));
+    setTimeLeft(initialTimeLeft);
+    const localStart = Date.now();
     function tick() {
-      const elapsed = Date.now() / 1000 - state!.stepStartedAt!;
-      setTimeLeft(Math.min(TIMER_SECONDS, Math.max(0, Math.ceil(TIMER_SECONDS - elapsed))));
+      const localElapsed = (Date.now() - localStart) / 1000;
+      setTimeLeft(Math.max(0, Math.ceil(initialTimeLeft - localElapsed)));
     }
-    tick();
     const id = setInterval(tick, 250);
     return () => clearInterval(id);
   }, [state?.stepStartedAt, state?.done, state?.readyBlue, state?.readyRed]);
