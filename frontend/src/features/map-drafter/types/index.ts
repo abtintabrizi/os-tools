@@ -1,4 +1,3 @@
-
 export type Side = "blue" | "red" | "spectator";
 export type ActionType = "ban" | "pick";
 export interface DraftAction {
@@ -23,6 +22,9 @@ export interface DraftState {
   bestOf: SequenceKey;
   readyBlue: boolean;
   readyRed: boolean;
+  pendingBlue: string | null;
+  pendingRed: string | null;
+  stepStartedAt: number | null;
 }
 
 export type MapStatus =

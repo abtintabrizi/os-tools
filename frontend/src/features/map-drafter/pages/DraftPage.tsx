@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { SEQUENCE_MAP } from "@map-drafter/constants.ts";
-import { ALL_MAPS } from "@/common/constants";
+import { ALL_MAPS, TIMER_SECONDS } from "@/common/constants";
 import { deriveMapStatuses } from "@/utils";
 import LoadingScreen from "@/components/LoadingScreen";
 import ErrorScreen from "@/features/map-drafter/components/ErrorScreen";
@@ -11,8 +11,17 @@ import ResultCard from "@/features/map-drafter/components/ResultCard";
 import DonePanel from "@/features/map-drafter/components/DonePanel";
 
 export default function DraftPage() {
-  const { state, side, loading, handleAction, handleReady, handleReset } = useDraftContext();
-  const [pending, setPending] = useState<string | null>(null);
+  const {
+    state,
+    side,
+    loading,
+    handleAction,
+    handlePending,
+    handleReady,
+    handleReset,
+  } = useDraftContext();
+  const [timeLeft, setTimeLeft] = useState<number>(TIMER_SECONDS);
+  const [localPending, setLocalPending] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -21,6 +30,29 @@ export default function DraftPage() {
       navigate("/map-draft", { replace: true });
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (
+      !state?.stepStartedAt ||
+      state.done ||
+      !state.readyBlue ||
+      !state.readyRed
+    ) {
+      setTimeLeft(TIMER_SECONDS);
+      return;
+    }
+    function tick() {
+      const elapsed = Date.now() / 1000 - state!.stepStartedAt!;
+      setTimeLeft(Math.max(0, Math.ceil(TIMER_SECONDS - elapsed)));
+    }
+    tick();
+    const id = setInterval(tick, 250);
+    return () => clearInterval(id);
+  }, [state?.stepStartedAt, state?.done, state?.readyBlue, state?.readyRed]);
+
+  useEffect(() => {
+    setLocalPending(null);
+  }, [state?.step]);
 
   if (loading) return <LoadingScreen message="Connecting to draft..." />;
   if (!state) return <ErrorScreen message="Room not found. Check your link." />;
@@ -37,6 +69,14 @@ export default function DraftPage() {
     : null;
   const isMyTurn = currentSeqStep !== null && currentSeqStep.team === side;
 
+  const serverPending =
+    side === "blue"
+      ? state.pendingBlue
+      : side === "red"
+        ? state.pendingRed
+        : null;
+  const pending = localPending ?? serverPending;
+
   const mapStatuses = deriveMapStatuses(state);
 
   const blueActions = actions.filter((a) => a.team === blueName);
@@ -51,13 +91,13 @@ export default function DraftPage() {
 
   function handleMapClick(map: string) {
     if (!isMyTurn || mapStatuses[map] !== "available") return;
-    setPending(map);
+    setLocalPending(map);
+    handlePending(map);
   }
 
   async function handleConfirm() {
     if (!pending) return;
     await handleAction(pending);
-    setPending(null);
   }
 
   function sideLabel() {
@@ -96,38 +136,42 @@ export default function DraftPage() {
       </header>
 
       {/* Status bar */}
-      <div className="py-3 px-6 bg-tools-carbon border-b border-white/7 flex items-center justify-center gap-3">
-        {done ? (
-          <>
-            <span className="font-mono text-sm tracking-widest">
-              Draft complete
-            </span>
-            <span className="font-mono text-sm tracking-widest py-0.75 px-2.5 rounded uppercase bg-tools-gold/10 text-tools-gold">
-              Done
-            </span>
-          </>
-        ) : currentSeqStep ? (
-          <>
-            <span
-              className={`font-mono text-xs font-bold tracking-widest uppercase py-1 px-2.5 rounded ${currentSeqStep.team === "blue" ? blueBadgeClass : redBadgeClass}`}
-            >
-              {currentSeqStep.team === "blue" ? "Blue" : "Red"}
-            </span>
-            <span className="font-mono text-sm tracking-widest">
-              <strong>{currentTeam}</strong>
-              {isMyTurn ? " — Your turn to" : " is choosing their"}
-            </span>
-            <span
-              className={`font-mono text-xs tracking-widest py-0.75 px-2.5 rounded uppercase ${
-                currentSeqStep.action === "ban"
-                  ? "bg-tools-red/12 text-tools-red-light"
-                  : "bg-tools-green/10 text-tools-green-light"
-              }`}
-            >
-              {currentSeqStep.action.toUpperCase()}
-            </span>
-          </>
-        ) : null}
+      <div className="py-3 px-6 bg-tools-carbon border-b border-white/7 grid grid-cols-3 items-center">
+        <div />
+        <div className="flex items-center justify-center gap-3">
+          {done ? (
+            <>
+              <span className="font-mono text-sm tracking-widest">
+                Draft complete
+              </span>
+              <span className="font-mono text-sm tracking-widest py-0.75 px-2.5 rounded uppercase bg-tools-gold/10 text-tools-gold">
+                Done
+              </span>
+            </>
+          ) : currentSeqStep ? (
+            <>
+              <span
+                className={`font-mono text-xs font-bold tracking-widest uppercase py-1 px-2.5 rounded ${currentSeqStep.team === "blue" ? blueBadgeClass : redBadgeClass}`}
+              >
+                {currentSeqStep.team === "blue" ? "Blue" : "Red"}
+              </span>
+              <span className="font-mono text-sm tracking-widest">
+                <strong>{currentTeam}</strong>
+                {isMyTurn ? " — Your turn to" : " is choosing their"}
+              </span>
+              <span
+                className={`font-mono text-xs tracking-widest py-0.75 px-2.5 rounded uppercase ${
+                  currentSeqStep.action === "ban"
+                    ? "bg-tools-red/12 text-tools-red-light"
+                    : "bg-tools-green/10 text-tools-green-light"
+                }`}
+              >
+                {currentSeqStep.action.toUpperCase()}
+              </span>
+            </>
+          ) : null}
+        </div>
+        <div />
       </div>
 
       {/* Main body */}
@@ -170,10 +214,14 @@ export default function DraftPage() {
               </span>
               <div className="flex gap-6">
                 <div className="flex flex-col items-center gap-3">
-                  <span className={`font-mono text-xs font-bold tracking-widest uppercase py-1 px-2.5 rounded ${blueBadgeClass}`}>
+                  <span
+                    className={`font-mono text-xs font-bold tracking-widest uppercase py-1 px-2.5 rounded ${blueBadgeClass}`}
+                  >
                     Blue
                   </span>
-                  <span className="font-mono text-sm font-bold">{blueName}</span>
+                  <span className="font-mono text-sm font-bold">
+                    {blueName}
+                  </span>
                   {state.readyBlue ? (
                     <span className="font-mono text-xs tracking-widest uppercase text-tools-green-light bg-tools-green/10 px-3 py-1.5 rounded border border-tools-green/20">
                       Ready
@@ -195,7 +243,9 @@ export default function DraftPage() {
                 <div className="w-px bg-white/7 self-stretch" />
 
                 <div className="flex flex-col items-center gap-3">
-                  <span className={`font-mono text-xs font-bold tracking-widest uppercase py-1 px-2.5 rounded ${redBadgeClass}`}>
+                  <span
+                    className={`font-mono text-xs font-bold tracking-widest uppercase py-1 px-2.5 rounded ${redBadgeClass}`}
+                  >
                     Red
                   </span>
                   <span className="font-mono text-sm font-bold">{redName}</span>
@@ -234,8 +284,16 @@ export default function DraftPage() {
             </div>
           ) : (
             <div className="flex flex-col justify-center items-center">
-              <div className="text-lg font-mono tracking-widest uppercase mb-4">
-                Map pool
+              <div
+                className={`font-mono font-bold tabular-nums mb-4 text-6xl transition-colors ${
+                  timeLeft <= 5
+                    ? "text-tools-red"
+                    : timeLeft <= 10
+                      ? "text-amber-400"
+                      : "text-white/30"
+                }`}
+              >
+                {timeLeft}
               </div>
               <div className="grid grid-cols-4 gap-3 mb-3">
                 {maps.map((map) => {

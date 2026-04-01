@@ -116,6 +116,19 @@ export function useDraftApi(roomId: string | null) {
     [roomId],
   );
 
+  const setPending = useCallback(
+    async (side: "blue" | "red", map: string | null): Promise<void> => {
+      if (!roomId) return;
+      await fetch(`${API_BASE}/rooms/${roomId}/pending`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ side, map }),
+      });
+      // State update arrives via WebSocket broadcast
+    },
+    [roomId],
+  );
+
   const ready = useCallback(
     async (side: "blue" | "red"): Promise<void> => {
       if (!roomId) return;
@@ -133,5 +146,5 @@ export function useDraftApi(roomId: string | null) {
     [roomId],
   );
 
-  return { state, loading, error, create, applyAction, ready };
+  return { state, loading, error, create, applyAction, setPending, ready };
 }
