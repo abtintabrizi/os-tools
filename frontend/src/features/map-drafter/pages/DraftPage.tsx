@@ -43,7 +43,7 @@ export default function DraftPage() {
     }
     function tick() {
       const elapsed = Date.now() / 1000 - state!.stepStartedAt!;
-      setTimeLeft(Math.max(0, Math.ceil(TIMER_SECONDS - elapsed)));
+      setTimeLeft(Math.min(TIMER_SECONDS, Math.max(0, Math.ceil(TIMER_SECONDS - elapsed))));
     }
     tick();
     const id = setInterval(tick, 250);

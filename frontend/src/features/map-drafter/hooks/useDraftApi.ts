@@ -18,7 +18,6 @@ export function useDraftApi(roomId: string | null) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
-  const cancelledRef = useRef(false);
 
   useEffect(() => {
     if (!roomId) {
@@ -26,7 +25,7 @@ export function useDraftApi(roomId: string | null) {
       return;
     }
 
-    cancelledRef.current = false;
+    let cancelled = false;
     setLoading(true);
     setError(null);
 
@@ -36,33 +35,33 @@ export function useDraftApi(roomId: string | null) {
         return r.json();
       })
       .then((data: DraftState) => {
-        if (!cancelledRef.current) {
+        if (!cancelled) {
           setState(data);
           setLoading(false);
         }
       })
       .catch((err: Error) => {
-        if (!cancelledRef.current) {
+        if (!cancelled) {
           setError(err.message);
           setLoading(false);
         }
       });
 
     function connect() {
-      if (cancelledRef.current) return;
+      if (cancelled) return;
 
       const ws = new WebSocket(`${WS_BASE}/ws/rooms/${roomId}`);
       wsRef.current = ws;
 
       ws.onmessage = (evt) => {
-        if (!cancelledRef.current) {
+        if (!cancelled) {
           setState(JSON.parse(evt.data) as DraftState);
           setLoading(false);
         }
       };
 
       ws.onclose = () => {
-        if (!cancelledRef.current) {
+        if (!cancelled) {
           setTimeout(connect, RECONNECT_DELAY_MS);
         }
       };
@@ -75,7 +74,7 @@ export function useDraftApi(roomId: string | null) {
     connect();
 
     return () => {
-      cancelledRef.current = true;
+      cancelled = true;
       wsRef.current?.close();
       wsRef.current = null;
     };
