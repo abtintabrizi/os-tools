@@ -196,7 +196,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         ([position, items]) => (
           <div
             key={position}
-            className={`fixed z-[200] flex flex-col gap-3 pointer-events-none ${positionContainerStyles[position]}`}
+            className={`fixed z-200 flex flex-col gap-3 pointer-events-none ${positionContainerStyles[position]}`}
           >
             {items.map((t) => (
               <div key={t.id} className="pointer-events-auto">

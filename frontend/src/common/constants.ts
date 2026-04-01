@@ -40,3 +40,5 @@ export const ALL_MAPS = [
     image: "/Taiko_Temple.png",
   },
 ];
+
+export const TIMER_SECONDS = 30;

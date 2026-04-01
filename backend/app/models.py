@@ -14,3 +14,8 @@ class ActionRequest(BaseModel):
 
 class ReadyRequest(BaseModel):
     side: str
+
+
+class PendingRequest(BaseModel):
+    side: str
+    map: str | None = None
