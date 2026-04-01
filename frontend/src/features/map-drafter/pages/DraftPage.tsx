@@ -139,7 +139,11 @@ export default function DraftPage() {
       <div className="py-3 px-6 bg-tools-carbon border-b border-white/7 grid grid-cols-3 items-center">
         <div />
         <div className="flex items-center justify-center gap-3">
-          {done ? (
+          {!bothReady ? (
+            <span className="font-mono text-sm tracking-widest">
+              Waiting for both teams to ready up
+            </span>
+          ) : done ? (
             <>
               <span className="font-mono text-sm tracking-widest">
                 Draft complete
@@ -209,9 +213,6 @@ export default function DraftPage() {
         <div className="p-5 flex flex-col flex-1">
           {!bothReady ? (
             <div className="flex flex-col items-center justify-center h-full gap-8">
-              <span className="font-mono text-xs tracking-widest uppercase text-white/40">
-                Waiting for both teams to ready up
-              </span>
               <div className="flex gap-6">
                 <div className="flex flex-col items-center gap-3">
                   <span
