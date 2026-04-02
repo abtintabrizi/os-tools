@@ -10,6 +10,8 @@ export function deriveMapStatuses(
   state.actions.forEach((a) => {
     if (a.action === "ban") {
       statuses[a.map] = "banned";
+    } else if (a.team === null) {
+      statuses[a.map] = "decider";
     } else {
       pickCount++;
       statuses[a.map] = `picked-g${pickCount}` as MapStatus;

@@ -277,7 +277,7 @@ export default function DraftPage() {
           ) : done ? (
             <div className="flex flex-col h-full">
               <DonePanel
-                picks={actions.filter((a) => a.action === "pick")}
+                actions={actions}
                 blueName={blueName}
               />
               <div className="flex-1" />
@@ -304,6 +304,7 @@ export default function DraftPage() {
               <div className="grid grid-cols-4 gap-3 mb-3">
                 {maps.map((map) => {
                   const status = mapStatuses[map];
+                  const isDecider = status === "decider";
                   const clickable = status === "available" && isMyTurn;
                   const isPick = status.startsWith("picked-");
                   const gameNum = isPick
@@ -338,7 +339,9 @@ export default function DraftPage() {
                         ? "!cursor-default opacity-40 border-tools-red/20 grayscale"
                         : isPick
                           ? "!cursor-default border-tools-green/30"
-                          : "!cursor-default border-white/7",
+                          : isDecider
+                            ? "!cursor-default border-tools-gold/50"
+                            : "!cursor-default border-white/7",
                   ].join(" ");
 
                   return (
@@ -367,6 +370,13 @@ export default function DraftPage() {
                         <div className="absolute inset-0 flex items-center justify-center">
                           <span className="font-mono text-sm font-bold tracking-widest uppercase bg-tools-red/20 text-tools-red-light px-2.5 py-1 rounded">
                             {banTeam} · Banned
+                          </span>
+                        </div>
+                      )}
+                      {isDecider && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="font-mono text-sm font-bold tracking-widest uppercase bg-tools-gold/20 text-tools-gold px-2.5 py-1 rounded">
+                            Decider · G3
                           </span>
                         </div>
                       )}
