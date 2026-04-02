@@ -4,12 +4,22 @@ import time
 
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 
-from .constants import SEQUENCES, TIMER_SECONDS
+from .constants import MIN_MAPS, SEQUENCES, TIMER_SECONDS
 from .models import ActionRequest, CreateRoomRequest, PendingRequest, ReadyRequest
 from .store import generate_room_id, get_room, save_room
 from .ws import manager
 
 router = APIRouter()
+
+
+def _append_decider(maps: list[str], actions: list[dict], best_of: str) -> list[dict]:
+    if best_of != "bo3":
+        return actions
+    used = {a["map"] for a in actions}
+    remaining = [m for m in maps if m not in used]
+    if len(remaining) == 1:
+        return actions + [{"map": remaining[0], "team": None, "action": "pick"}]
+    return actions
 
 
 # Tracks the active auto-advance task per room
@@ -55,6 +65,8 @@ async def _auto_advance(room_id: str, expected_step: int, delay: float) -> None:
     new_actions = state["actions"] + [{"map": chosen_map, "team": team_name, "action": seq_step["action"]}]
     new_step = expected_step + 1
     done = new_step >= len(sequence)
+    if done:
+        new_actions = _append_decider(state["maps"], new_actions, state["bestOf"])
 
     updated = {
         **state,
@@ -80,9 +92,8 @@ async def root():
 
 @router.post("/rooms")
 async def create_room(body: CreateRoomRequest):
-    minMaps = len(SEQUENCES[body.bestOf]) + 1
-    if len(body.maps) < minMaps:
-        raise HTTPException(status_code=400, detail=f"At least {minMaps} maps required for a {body.bestOf} draft")
+    if len(body.maps) != MIN_MAPS:
+        raise HTTPException(status_code=400, detail=f"Exactly {MIN_MAPS} maps required to draft")
 
     room_id = generate_room_id()
     state = {
@@ -186,6 +197,8 @@ async def apply_action(room_id: str, body: ActionRequest):
     team_name = state["blueName"] if seq_step["team"] == "blue" else state["redName"]
     new_actions = state["actions"] + [{"map": body.map, "team": team_name, "action": seq_step["action"]}]
     done = new_step >= len(currentSequence)
+    if done:
+        new_actions = _append_decider(state["maps"], new_actions, state["bestOf"])
 
     updated = {
         **state,

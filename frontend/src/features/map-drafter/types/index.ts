@@ -2,7 +2,7 @@ export type Side = "blue" | "red" | "spectator";
 export type ActionType = "ban" | "pick";
 export interface DraftAction {
   map: string;
-  team: string;
+  team: string | null;
   action: ActionType;
 }
 
@@ -32,6 +32,7 @@ export type MapStatus =
   | "banned"
   | "picked-g1"
   | "picked-g2"
-  | "picked-g3";
+  | "picked-g3"
+  | "decider";
 
 export type SequenceKey = "bo1" | "bo3";

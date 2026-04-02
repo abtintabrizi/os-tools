@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ALL_MAPS } from "@/common/constants";
+import { ALL_MAPS, CURRENT_MAP_POOL } from "@/common/constants";
 import { useDraftContext } from "@/features/map-drafter/context/DraftContext";
 import { useToast } from "@/common/components/Toast";
 import Spinner from "@/common/components/Spinner";
@@ -13,7 +13,7 @@ export default function SetupPage() {
   const [redName, setRedName] = useState("");
   const [bestOf, setBestOf] = useState<SequenceKey>("bo3");
   const [enabledMaps, setEnabledMaps] = useState<Set<string>>(
-    new Set(ALL_MAPS.map((m) => m.name)),
+    new Set(CURRENT_MAP_POOL),
   );
   const [loading, setLoading] = useState(false);
 
@@ -122,8 +122,15 @@ export default function SetupPage() {
             })}
           </div>
 
-          <div className="text-sm font-mono tracking-widest uppercase">
-            Map pool — click to toggle
+          <div className="flex items-center justify-between">
+            <div className="text-sm font-mono tracking-widest uppercase">
+              Map pool — click to toggle
+            </div>
+            <div
+              className={`text-xs font-mono tracking-widest ${enabledMaps.size === 7 ? "text-tools-gold" : "text-tools-red"}`}
+            >
+              {enabledMaps.size} / 7
+            </div>
           </div>
           <div className="grid grid-cols-3 gap-2">
             {ALL_MAPS.map((map) => {
@@ -151,9 +158,9 @@ export default function SetupPage() {
         </div>
 
         <button
-          className="flex justify-center items-center w-full h-14 bg-tools-gold text-black rounded-2xl font-head text-xl font-bold"
+          className="flex justify-center items-center w-full h-14 bg-tools-gold text-black rounded-2xl font-head text-xl font-bold disabled:cursor-default! disabled:opacity-50"
           onClick={handleSubmit}
-          disabled={loading}
+          disabled={loading || enabledMaps.size !== 7}
         >
           {loading ? (
             <Spinner size="lg" primary="white" secondary="black" />
