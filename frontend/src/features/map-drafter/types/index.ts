@@ -1,23 +1,18 @@
-export type Side = "blue" | "red" | "spectator";
-export type ActionType = "ban" | "pick";
-export interface DraftAction {
+import { ActionType } from "@/features/common/types";
+
+export interface MapDraftAction {
   map: string;
   team: string | null;
   action: ActionType;
 }
 
-export interface SequenceStep {
-  team: string;
-  action: ActionType;
-}
-
-export interface DraftState {
+export interface MapDraftState {
   roomId: string;
   blueName: string;
   redName: string;
   maps: string[];
   step: number;
-  actions: DraftAction[];
+  actions: MapDraftAction[];
   done: boolean;
   bestOf: SequenceKey;
   readyBlue: boolean;

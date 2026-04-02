@@ -1,93 +1,17 @@
-import asyncio
-import random
 import time
 
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 
-from .constants import MIN_MAPS, SEQUENCES, TIMER_SECONDS
-from .models import ActionRequest, CreateRoomRequest, PendingRequest, ReadyRequest
-from .store import generate_room_id, get_room, save_room
-from .ws import manager
+from app.constants.common import TIMER_SECONDS
+from app.constants.map_draft import MIN_MAPS, SEQUENCES
+from app.constants.tables import DRAFTS_TABLE
+from app.models.common import ReadyRequest
+from app.models.map_draft import ActionRequest, CreateRoomRequest, PendingRequest
+from app.utils.supabase import generate_room_id, get_room, save_room
+from app.utils.map_draft import append_decider, cancel_timer, spawn_timer, timers
+from app.utils.ws import manager
 
-router = APIRouter()
-
-
-def _append_decider(maps: list[str], actions: list[dict], best_of: str) -> list[dict]:
-    if best_of != "bo3":
-        return actions
-    used = {a["map"] for a in actions}
-    remaining = [m for m in maps if m not in used]
-    if len(remaining) == 1:
-        return actions + [{"map": remaining[0], "team": None, "action": "pick"}]
-    return actions
-
-
-# Tracks the active auto-advance task per room
-_timers: dict[str, asyncio.Task] = {}
-
-
-def _cancel_timer(room_id: str) -> None:
-    task = _timers.pop(room_id, None)
-    if task and not task.done():
-        task.cancel()
-
-
-def _spawn_timer(room_id: str, step: int, delay: float = TIMER_SECONDS) -> None:
-    _cancel_timer(room_id)
-    _timers[room_id] = asyncio.create_task(_auto_advance(room_id, step, delay))
-
-
-async def _auto_advance(room_id: str, expected_step: int, delay: float) -> None:
-    try:
-        await asyncio.sleep(delay)
-    except asyncio.CancelledError:
-        return
-
-    state = await get_room(room_id)
-    if state is None or state["done"] or state["step"] != expected_step:
-        return
-
-    sequence = SEQUENCES[state["bestOf"]]
-    seq_step = sequence[expected_step]
-
-    pending_key = "pendingBlue" if seq_step["team"] == "blue" else "pendingRed"
-    chosen_map = state.get(pending_key)
-
-    used_maps = {a["map"] for a in state["actions"]}
-    available = [m for m in state["maps"] if m not in used_maps]
-    if not available:
-        return
-
-    if not chosen_map or chosen_map not in available:
-        chosen_map = random.choice(available)
-
-    team_name = state["blueName"] if seq_step["team"] == "blue" else state["redName"]
-    new_actions = state["actions"] + [{"map": chosen_map, "team": team_name, "action": seq_step["action"]}]
-    new_step = expected_step + 1
-    done = new_step >= len(sequence)
-    if done:
-        new_actions = _append_decider(state["maps"], new_actions, state["bestOf"])
-
-    updated = {
-        **state,
-        "step": new_step,
-        "actions": new_actions,
-        "done": done,
-        "pendingBlue": None,
-        "pendingRed": None,
-        "stepStartedAt": None if done else time.time(),
-    }
-
-    await save_room(room_id, updated)
-    await manager.broadcast(room_id, updated)
-
-    if not done:
-        _spawn_timer(room_id, new_step)
-
-
-@router.get("/")
-async def root():
-    return {"message": "Backend running"}
+router = APIRouter(prefix="/map-draft")
 
 
 @router.post("/rooms")
@@ -111,13 +35,13 @@ async def create_room(body: CreateRoomRequest):
         "pendingRed": None,
         "stepStartedAt": None,
     }
-    await save_room(room_id, state)
+    await save_room(room_id, state, DRAFTS_TABLE)
     return state
 
 
 @router.get("/rooms/{room_id}")
 async def get_room_route(room_id: str):
-    state = await get_room(room_id)
+    state = await get_room(room_id, DRAFTS_TABLE)
     if state is None:
         raise HTTPException(status_code=404, detail="Room not found")
     return state
@@ -125,7 +49,7 @@ async def get_room_route(room_id: str):
 
 @router.post("/rooms/{room_id}/ready")
 async def set_ready(room_id: str, body: ReadyRequest):
-    state = await get_room(room_id)
+    state = await get_room(room_id, DRAFTS_TABLE)
     if state is None:
         raise HTTPException(status_code=404, detail="Room not found")
     if body.side not in ("blue", "red"):
@@ -140,18 +64,18 @@ async def set_ready(room_id: str, body: ReadyRequest):
     if updated["readyBlue"] and updated["readyRed"]:
         updated["stepStartedAt"] = time.time()
 
-    await save_room(room_id, updated)
+    await save_room(room_id, updated, DRAFTS_TABLE)
     await manager.broadcast(room_id, updated)
 
     if updated["readyBlue"] and updated["readyRed"]:
-        _spawn_timer(room_id, updated["step"])
+        spawn_timer(room_id, updated["step"])
 
     return updated
 
 
 @router.post("/rooms/{room_id}/pending")
 async def set_pending(room_id: str, body: PendingRequest):
-    state = await get_room(room_id)
+    state = await get_room(room_id, DRAFTS_TABLE)
     if state is None:
         raise HTTPException(status_code=404, detail="Room not found")
     if body.side not in ("blue", "red"):
@@ -163,14 +87,14 @@ async def set_pending(room_id: str, body: PendingRequest):
     else:
         updated["pendingRed"] = body.map
 
-    await save_room(room_id, updated)
+    await save_room(room_id, updated, DRAFTS_TABLE)
     await manager.broadcast(room_id, updated)
     return updated
 
 
 @router.post("/rooms/{room_id}/action")
 async def apply_action(room_id: str, body: ActionRequest):
-    state = await get_room(room_id)
+    state = await get_room(room_id, DRAFTS_TABLE)
     if state is None:
         raise HTTPException(status_code=404, detail="Room not found")
 
@@ -198,7 +122,7 @@ async def apply_action(room_id: str, body: ActionRequest):
     new_actions = state["actions"] + [{"map": body.map, "team": team_name, "action": seq_step["action"]}]
     done = new_step >= len(currentSequence)
     if done:
-        new_actions = _append_decider(state["maps"], new_actions, state["bestOf"])
+        new_actions = append_decider(state["maps"], new_actions, state["bestOf"])
 
     updated = {
         **state,
@@ -209,13 +133,13 @@ async def apply_action(room_id: str, body: ActionRequest):
         "pendingRed": None,
         "stepStartedAt": None if done else time.time(),
     }
-    await save_room(room_id, updated)
+    await save_room(room_id, updated, DRAFTS_TABLE)
 
-    _cancel_timer(room_id)
+    cancel_timer(room_id)
     await manager.broadcast(room_id, updated)
 
     if not done:
-        _spawn_timer(room_id, new_step)
+        spawn_timer(room_id, new_step)
 
     return updated
 
@@ -224,11 +148,11 @@ async def apply_action(room_id: str, body: ActionRequest):
 async def websocket_endpoint(room_id: str, ws: WebSocket):
     await manager.connect(room_id, ws)
     try:
-        state = await get_room(room_id)
+        state = await get_room(room_id, DRAFTS_TABLE)
         if state is not None:
             await ws.send_json(state)
             # Re-spawn timer on reconnect if a step is in progress and no active task exists
-            existing = _timers.get(room_id)
+            existing = timers.get(room_id)
             if (
                 not state.get("done")
                 and state.get("readyBlue")
@@ -238,7 +162,7 @@ async def websocket_endpoint(room_id: str, ws: WebSocket):
             ):
                 elapsed = time.time() - state["stepStartedAt"]
                 remaining = max(0.0, TIMER_SECONDS - elapsed)
-                _spawn_timer(room_id, state["step"], delay=remaining)
+                spawn_timer(room_id, state["step"], delay=remaining)
         while True:
             await ws.receive_text()
     except WebSocketDisconnect:

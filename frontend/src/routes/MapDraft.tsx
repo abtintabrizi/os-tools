@@ -1,10 +1,10 @@
 import { Outlet } from "react-router-dom";
-import { DraftProvider } from "@/features/map-drafter/context/DraftContext";
+import { MapDraftProvider } from "@/features/map-drafter/context/MapDraftContext";
 
 export default function MapDrafter() {
   return (
-    <DraftProvider>
+    <MapDraftProvider>
       <Outlet />
-    </DraftProvider>
+    </MapDraftProvider>
   );
 }

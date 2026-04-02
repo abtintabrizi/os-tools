@@ -1,0 +1,1 @@
+TIMER_SECONDS = 30.0

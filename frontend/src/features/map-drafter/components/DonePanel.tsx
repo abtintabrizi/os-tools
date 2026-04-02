@@ -1,11 +1,11 @@
-import { DraftAction } from "@/features/map-drafter/types";
-import { ALL_MAPS } from "@/common/constants";
+import { MapDraftAction } from "@/features/map-drafter/types";
+import { ALL_MAPS } from "@/features/common/constants";
 
 export default function DonePanel({
   actions,
   blueName,
 }: {
-  actions: DraftAction[];
+  actions: MapDraftAction[];
   blueName: string;
 }) {
   const picks = actions.filter((a) => a.action === "pick" && a.team !== null);

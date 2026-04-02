@@ -23,17 +23,17 @@ def generate_room_id() -> str:
     return "".join(random.choices(chars, k=6))
 
 
-async def get_room(room_id: str) -> dict | None:
+async def get_room(room_id: str, table: str) -> dict | None:
     def _fetch() -> dict | None:
-        result = _get_client().table("drafts").select("state").eq("room_id", room_id).maybe_single().execute()
+        result = _get_client().table(table).select("state").eq("room_id", room_id).maybe_single().execute()
         return result.data["state"] if result.data else None
 
     return await asyncio.to_thread(_fetch)
 
 
-async def save_room(room_id: str, state: dict) -> None:
+async def save_room(room_id: str, state: dict, table: str) -> None:
     def _save() -> None:
-        _get_client().table("drafts").upsert(
+        _get_client().table(table).upsert(
             {"room_id": room_id, "state": state},
             on_conflict="room_id",
         ).execute()

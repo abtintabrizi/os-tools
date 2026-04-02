@@ -1,7 +1,7 @@
-import { DraftState, MapStatus } from "@/features/map-drafter/types";
+import { MapDraftState, MapStatus } from "@/features/map-drafter/types";
 
 export function deriveMapStatuses(
-  state: DraftState,
+  state: MapDraftState,
 ): Record<string, MapStatus> {
   const statuses: Record<string, MapStatus> = {};
   state.maps.forEach((m) => (statuses[m] = "available"));
