@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 
 from app.constants.common import TIMER_SECONDS
 from app.constants.map_draft import MIN_MAPS, SEQUENCES
-from app.constants.tables import DRAFTS_TABLE
+from app.constants.tables import Table
 from app.models.common import ReadyRequest
 from app.models.map_draft import ActionRequest, CreateRoomRequest, PendingRequest
 from app.utils.supabase import generate_room_id, get_room, save_room
@@ -35,13 +35,13 @@ async def create_room(body: CreateRoomRequest):
         "pendingRed": None,
         "stepStartedAt": None,
     }
-    await save_room(room_id, state, DRAFTS_TABLE)
+    await save_room(room_id, state, Table.MAP_DRAFTS)
     return state
 
 
 @router.get("/rooms/{room_id}")
 async def get_room_route(room_id: str):
-    state = await get_room(room_id, DRAFTS_TABLE)
+    state = await get_room(room_id, Table.MAP_DRAFTS)
     if state is None:
         raise HTTPException(status_code=404, detail="Room not found")
     return state
@@ -49,7 +49,7 @@ async def get_room_route(room_id: str):
 
 @router.post("/rooms/{room_id}/ready")
 async def set_ready(room_id: str, body: ReadyRequest):
-    state = await get_room(room_id, DRAFTS_TABLE)
+    state = await get_room(room_id, Table.MAP_DRAFTS)
     if state is None:
         raise HTTPException(status_code=404, detail="Room not found")
     if body.side not in ("blue", "red"):
@@ -64,7 +64,7 @@ async def set_ready(room_id: str, body: ReadyRequest):
     if updated["readyBlue"] and updated["readyRed"]:
         updated["stepStartedAt"] = time.time()
 
-    await save_room(room_id, updated, DRAFTS_TABLE)
+    await save_room(room_id, updated, Table.MAP_DRAFTS)
     await manager.broadcast(room_id, updated)
 
     if updated["readyBlue"] and updated["readyRed"]:
@@ -75,7 +75,7 @@ async def set_ready(room_id: str, body: ReadyRequest):
 
 @router.post("/rooms/{room_id}/pending")
 async def set_pending(room_id: str, body: PendingRequest):
-    state = await get_room(room_id, DRAFTS_TABLE)
+    state = await get_room(room_id, Table.MAP_DRAFTS)
     if state is None:
         raise HTTPException(status_code=404, detail="Room not found")
     if body.side not in ("blue", "red"):
@@ -87,14 +87,14 @@ async def set_pending(room_id: str, body: PendingRequest):
     else:
         updated["pendingRed"] = body.map
 
-    await save_room(room_id, updated, DRAFTS_TABLE)
+    await save_room(room_id, updated, Table.MAP_DRAFTS)
     await manager.broadcast(room_id, updated)
     return updated
 
 
 @router.post("/rooms/{room_id}/action")
 async def apply_action(room_id: str, body: ActionRequest):
-    state = await get_room(room_id, DRAFTS_TABLE)
+    state = await get_room(room_id, Table.MAP_DRAFTS)
     if state is None:
         raise HTTPException(status_code=404, detail="Room not found")
 
@@ -133,7 +133,7 @@ async def apply_action(room_id: str, body: ActionRequest):
         "pendingRed": None,
         "stepStartedAt": None if done else time.time(),
     }
-    await save_room(room_id, updated, DRAFTS_TABLE)
+    await save_room(room_id, updated, Table.MAP_DRAFTS)
 
     cancel_timer(room_id)
     await manager.broadcast(room_id, updated)
@@ -148,7 +148,7 @@ async def apply_action(room_id: str, body: ActionRequest):
 async def websocket_endpoint(room_id: str, ws: WebSocket):
     await manager.connect(room_id, ws)
     try:
-        state = await get_room(room_id, DRAFTS_TABLE)
+        state = await get_room(room_id, Table.MAP_DRAFTS)
         if state is not None:
             await ws.send_json(state)
             # Re-spawn timer on reconnect if a step is in progress and no active task exists

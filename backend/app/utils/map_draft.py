@@ -4,7 +4,7 @@ import time
 
 from app.constants.common import TIMER_SECONDS
 from app.constants.map_draft import SEQUENCES
-from app.constants.tables import DRAFTS_TABLE
+from app.constants.tables import Table
 from app.utils.supabase import get_room, save_room
 from app.utils.ws import manager
 
@@ -39,7 +39,7 @@ async def _auto_advance(room_id: str, expected_step: int, delay: float) -> None:
     except asyncio.CancelledError:
         return
 
-    state = await get_room(room_id, DRAFTS_TABLE)
+    state = await get_room(room_id, Table.MAP_DRAFTS)
     if state is None or state["done"] or state["step"] != expected_step:
         return
 
@@ -74,7 +74,7 @@ async def _auto_advance(room_id: str, expected_step: int, delay: float) -> None:
         "stepStartedAt": None if done else time.time(),
     }
 
-    await save_room(room_id, updated, DRAFTS_TABLE)
+    await save_room(room_id, updated, Table.MAP_DRAFTS)
     await manager.broadcast(room_id, updated)
 
     if not done:
