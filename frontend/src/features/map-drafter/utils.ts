@@ -2,6 +2,7 @@ import { MapDraftState, MapStatus } from "@/features/map-drafter/types";
 
 export function deriveMapStatuses(
   state: MapDraftState,
+  totalPicks: number,
 ): Record<string, MapStatus> {
   const statuses: Record<string, MapStatus> = {};
   state.maps.forEach((m) => (statuses[m] = "available"));
@@ -14,7 +15,7 @@ export function deriveMapStatuses(
       statuses[a.map] = "decider";
     } else {
       pickCount++;
-      statuses[a.map] = `picked-g${pickCount}` as MapStatus;
+      statuses[a.map] = `picked-g${totalPicks - pickCount + 1}` as MapStatus;
     }
   });
 

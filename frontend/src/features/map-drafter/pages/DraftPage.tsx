@@ -88,7 +88,7 @@ export default function DraftPage() {
         : null;
   const pending = localPending ?? serverPending;
 
-  const mapStatuses = deriveMapStatuses(state);
+  const mapStatuses = deriveMapStatuses(state, sequence.filter((s) => s.action === "pick").length);
 
   const blueActions = actions.filter((a) => a.team === blueName);
   const redActions = actions.filter((a) => a.team === redName);
@@ -206,6 +206,8 @@ export default function DraftPage() {
             const n =
               blueSeqSteps.slice(0, i).filter((p) => p.action === s.action)
                 .length + 1;
+            const totalPicks = sequence.filter((p) => p.action === "pick").length;
+            const gameNum = totalPicks - sequence.slice(0, s.globalIdx).filter((p) => p.action === "pick").length;
             const filled = blueActions[i];
             const status = filled
               ? "filled"
@@ -217,7 +219,7 @@ export default function DraftPage() {
                 key={i}
                 value={filled?.map}
                 type={s.action}
-                label={s.action === "ban" ? `Ban ${n}` : `Pick ${n}`}
+                label={s.action === "ban" ? `Ban ${n}` : `Pick ${gameNum}`}
                 status={status}
               />
             );
@@ -469,8 +471,9 @@ export default function DraftPage() {
                     const isBan = s.action === "ban";
                     const teamName = isBlue ? blueName : redName;
                     const isCurrent = !done && i === step;
+                    const totalPicks = sequence.filter((p) => p.action === "pick").length;
                     const pickNumber = !isBan
-                      ? sequence.slice(0, i).filter((p) => p.action === "pick").length + 1
+                      ? totalPicks - sequence.slice(0, i).filter((p) => p.action === "pick").length
                       : null;
 
                     return (
@@ -566,6 +569,8 @@ export default function DraftPage() {
             const n =
               redSeqSteps.slice(0, i).filter((p) => p.action === s.action)
                 .length + 1;
+            const totalPicks = sequence.filter((p) => p.action === "pick").length;
+            const gameNum = totalPicks - sequence.slice(0, s.globalIdx).filter((p) => p.action === "pick").length;
             const filled = redActions[i];
             const status = filled
               ? "filled"
@@ -577,7 +582,7 @@ export default function DraftPage() {
                 key={i}
                 value={filled?.map}
                 type={s.action}
-                label={s.action === "ban" ? `Ban ${n}` : `Pick ${n}`}
+                label={s.action === "ban" ? `Ban ${n}` : `Pick ${gameNum}`}
                 status={status}
               />
             );

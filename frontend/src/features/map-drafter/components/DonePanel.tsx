@@ -8,7 +8,7 @@ export default function DonePanel({
   actions: MapDraftAction[];
   blueName: string;
 }) {
-  const picks = actions.filter((a) => a.action === "pick" && a.team !== null);
+  const picks = [...actions.filter((a) => a.action === "pick" && a.team !== null)].reverse();
   const decider = actions.find((a) => a.action === "pick" && a.team === null);
   const deciderImage = decider
     ? ALL_MAPS.find((m) => m.name === decider.map)?.image
