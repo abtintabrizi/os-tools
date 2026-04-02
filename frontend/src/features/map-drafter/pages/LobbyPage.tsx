@@ -1,17 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import type { Side } from "@map-drafter/types";
-import { useDraftContext } from "@/features/map-drafter/context/DraftContext";
-
-function buildUrl(roomId: string, side: Side): string {
-  const url = new URL(window.location.origin + "/map-draft/draft");
-  url.searchParams.set("room", roomId);
-  url.searchParams.set("side", side);
-  return url.toString();
-}
+import type { Side } from "@/features/common/types";
+import { useMapDraftContext } from "@/features/map-drafter/context/MapDraftContext";
 
 export default function LobbyPage() {
-  const { lobbyState, state, handleSidePick } = useDraftContext();
+  const { lobbyState, state, handleSidePick } = useMapDraftContext();
   const [copied, setCopied] = useState<Side | null>(null);
   const navigate = useNavigate();
 
@@ -23,14 +16,24 @@ export default function LobbyPage() {
 
   if (!room) return null;
 
-  const blueUrl = buildUrl(room.roomId, "blue");
-  const redUrl = buildUrl(room.roomId, "red");
+  const { roomId, bestOf, blueName, redName } = room;
+
+  function buildUrl(side: Side): string {
+    const url = new URL(window.location.origin + "/map-draft/draft");
+    url.searchParams.set("room", roomId);
+    url.searchParams.set("side", side);
+    return url.toString();
+  }
 
   async function copy(url: string, side: Side) {
     await navigator.clipboard.writeText(url);
     setCopied(side);
     setTimeout(() => setCopied(null), 2000);
   }
+
+  const blueUrl = buildUrl("blue");
+  const redUrl = buildUrl("red");
+  const spectatorUrl = buildUrl("spectator");
 
   const baseBtn =
     "px-2.5 py-2.5 rounded-lg font-head text-sm font-bold transition-all duration-150";
@@ -39,7 +42,7 @@ export default function LobbyPage() {
   const redBtn =
     "border border-tools-red/35 text-tools-red bg-tools-red/6 hover:bg-tools-red/14";
   const neutralBtn =
-    "border border-white/7 bg-transparent hover:border-white/15";
+    "border border-white/7 bg-transparent hover:border-white/15 hover:bg-white/5";
 
   return (
     <div className="h-screen flex items-center justify-center">
@@ -49,70 +52,83 @@ export default function LobbyPage() {
         </h2>
 
         <p className="font-mono text-xs tracking-wider uppercase">
-          // Room {room.roomId} · {room.bestOf} · Share links below
+          // Room {roomId} · {bestOf} · Share links below
         </p>
 
         <div className="flex flex-col gap-3 bg-tools-carbon border border-white/7 rounded-2xl p-6">
-          <div className="text-sm font-mono tracking-[0.2em] uppercase">
-            Share with teams
-          </div>
-
           <div className="flex flex-col gap-2">
             <div className="text-xs font-mono font-bold tracking-widest text-tools-blue">
-              {room.blueName} — Blue side
+              {blueName} — Blue side
             </div>
             <div className="bg-tools-graphite border border-white/7 rounded-lg py-2.5 px-3 font-mono text-xs break-all leading-relaxed">
               {blueUrl}
             </div>
-            <button
-              className={`${baseBtn} ${blueBtn} self-start`}
-              onClick={() => copy(blueUrl, "blue")}
-            >
-              {copied === "blue" ? "Copied!" : "Copy blue link"}
-            </button>
+            <div className="flex gap-2.5 flex-wrap">
+              <button
+                className={`${baseBtn} ${blueBtn}`}
+                onClick={() => copy(blueUrl, "blue")}
+              >
+                {copied === "blue" ? "Copied!" : "Copy blue link"}
+              </button>
+              <button
+                className={`${baseBtn} ${blueBtn}`}
+                onClick={() => handleSidePick("blue")}
+              >
+                Enter as {blueName}
+              </button>
+            </div>
           </div>
 
           <div className="h-px bg-tools-gold my-3" />
 
           <div className="flex flex-col gap-2">
             <div className="text-xs font-mono font-bold tracking-widest text-tools-red">
-              {room.redName} — Red side
+              {redName} — Red side
             </div>
             <div className="bg-tools-graphite border border-white/7 rounded-lg py-2.5 px-3 font-mono text-xs break-all leading-relaxed">
               {redUrl}
             </div>
-            <button
-              className={`${baseBtn} ${redBtn} self-start`}
-              onClick={() => copy(redUrl, "red")}
-            >
-              {copied === "red" ? "Copied!" : "Copy red link"}
-            </button>
+            <div className="flex gap-2.5 flex-wrap">
+              <button
+                className={`${baseBtn} ${redBtn}`}
+                onClick={() => copy(redUrl, "red")}
+              >
+                {copied === "red" ? "Copied!" : "Copy red link"}
+              </button>
+              <button
+                className={`${baseBtn} ${redBtn}`}
+                onClick={() => handleSidePick("red")}
+              >
+                Enter as {redName}
+              </button>
+            </div>
           </div>
-        </div>
 
-        <div className="flex flex-col gap-4 bg-tools-carbon border border-white/7 rounded-2xl p-6">
-          <div className="text-sm font-mono tracking-[0.2em] uppercase">
-            You are the organiser — enter as:
-          </div>
-          <div className="flex gap-2.5 flex-wrap">
-            <button
-              className={`${baseBtn} ${blueBtn} flex-1 min-w-30`}
-              onClick={() => handleSidePick("blue")}
-            >
-              Enter as {room.blueName}
-            </button>
-            <button
-              className={`${baseBtn} ${redBtn} flex-1 min-w-30`}
-              onClick={() => handleSidePick("red")}
-            >
-              Enter as {room.redName}
-            </button>
-            <button
-              className={`${baseBtn} ${neutralBtn} flex-1 min-w-30`}
-              onClick={() => handleSidePick("spectator")}
-            >
-              Spectate
-            </button>
+          <div className="h-px bg-tools-gold my-3" />
+
+          <div className="flex flex-col gap-2">
+            <div className="text-xs font-mono font-bold tracking-widest">
+              Spectator
+            </div>
+            <div className="bg-tools-graphite border border-white/7 rounded-lg py-2.5 px-3 font-mono text-xs break-all leading-relaxed">
+              {spectatorUrl}
+            </div>
+            <div className="flex gap-2.5 flex-wrap">
+              <button
+                className={`${baseBtn} ${neutralBtn}`}
+                onClick={() => copy(spectatorUrl, "spectator")}
+              >
+                {copied === "spectator" ? "Copied!" : "Copy spectator link"}
+              </button>
+              <div className="flex gap-2.5 flex-wrap">
+                <button
+                  className={`${baseBtn} ${neutralBtn}`}
+                  onClick={() => handleSidePick("spectator")}
+                >
+                  Enter as Spectator
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

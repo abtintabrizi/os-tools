@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { SEQUENCE_MAP } from "@map-drafter/constants.ts";
-import { ALL_MAPS, TIMER_SECONDS } from "@/common/constants";
-import { deriveMapStatuses } from "@/utils";
-import LoadingScreen from "@/components/LoadingScreen";
+import { ALL_MAPS, TIMER_SECONDS } from "@/features/common/constants";
+import { deriveMapStatuses } from "@/features/map-drafter/utils";
+import LoadingScreen from "@/features/common/components/LoadingScreen";
 import ErrorScreen from "@/features/map-drafter/components/ErrorScreen";
-import { useDraftContext } from "@/features/map-drafter/context/DraftContext";
-import { StepTracker } from "@/features/map-drafter/components/StepTracker";
-import ResultCard from "@/features/map-drafter/components/ResultCard";
+import { useMapDraftContext } from "@/features/map-drafter/context/MapDraftContext";
+import { StepTracker } from "@/features/common/components/StepTracker";
+import ResultCard from "@/features/common/components/ResultCard";
 import DonePanel from "@/features/map-drafter/components/DonePanel";
 
 export default function DraftPage() {
@@ -19,7 +19,7 @@ export default function DraftPage() {
     handlePending,
     handleReady,
     handleReset,
-  } = useDraftContext();
+  } = useMapDraftContext();
   const [timeLeft, setTimeLeft] = useState<number>(TIMER_SECONDS);
   const [localPending, setLocalPending] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -43,8 +43,14 @@ export default function DraftPage() {
     }
     // Use server elapsed (clamped to ≥0) as the starting point, then count
     // down with local clock to avoid clock-skew causing a frozen/stuttering display.
-    const serverElapsed = Math.max(0, Date.now() / 1000 - state!.stepStartedAt!);
-    const initialTimeLeft = Math.max(0, Math.ceil(TIMER_SECONDS - serverElapsed));
+    const serverElapsed = Math.max(
+      0,
+      Date.now() / 1000 - state!.stepStartedAt!,
+    );
+    const initialTimeLeft = Math.max(
+      0,
+      Math.ceil(TIMER_SECONDS - serverElapsed),
+    );
     setTimeLeft(initialTimeLeft);
     const localStart = Date.now();
     function tick() {
@@ -130,7 +136,11 @@ export default function DraftPage() {
         </div>
 
         <div className="flex items-center justify-center">
-          <StepTracker step={step} sequence={state.bestOf} done={done} />
+          <StepTracker
+            step={step}
+            sequence={SEQUENCE_MAP[state.bestOf]}
+            done={done}
+          />
         </div>
 
         <div className="flex justify-end items-center gap-3">
@@ -205,7 +215,7 @@ export default function DraftPage() {
             return (
               <ResultCard
                 key={i}
-                map={filled?.map}
+                value={filled?.map}
                 type={s.action}
                 label={s.action === "ban" ? `Ban ${n}` : `Pick ${n}`}
                 status={status}
@@ -276,10 +286,7 @@ export default function DraftPage() {
             </div>
           ) : done ? (
             <div className="flex flex-col h-full">
-              <DonePanel
-                actions={actions}
-                blueName={blueName}
-              />
+              <DonePanel actions={actions} blueName={blueName} />
               <div className="flex-1" />
               <button
                 className="py-3 px-3 bg-transparent border border-white/7 rounded-lg font-head text-[13px] font-semibold text-white transition-all duration-150 w-full hover:border-white/15 hover:text-white"
@@ -432,7 +439,7 @@ export default function DraftPage() {
             return (
               <ResultCard
                 key={i}
-                map={filled?.map}
+                value={filled?.map}
                 type={s.action}
                 label={s.action === "ban" ? `Ban ${n}` : `Pick ${n}`}
                 status={status}

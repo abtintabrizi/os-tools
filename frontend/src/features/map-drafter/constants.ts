@@ -1,4 +1,4 @@
-import { SequenceStep } from "@/features/map-drafter/types";
+import { SequenceStep } from "@/features/common/types";
 import { SequenceKey } from "./types/index";
 
 export const BO3_SEQUENCE: SequenceStep[] = [

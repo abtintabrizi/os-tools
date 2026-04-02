@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import type { DraftState, SequenceKey } from "@map-drafter/types";
+import type { MapDraftState, SequenceKey } from "@map-drafter/types";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 const WS_BASE = API_BASE.replace(/^http/, "ws");
@@ -13,8 +13,8 @@ export interface CreateRoomConfig {
   maps: string[];
 }
 
-export function useDraftApi(roomId: string | null) {
-  const [state, setState] = useState<DraftState | null>(null);
+export function useMapDraftApi(roomId: string | null) {
+  const [state, setState] = useState<MapDraftState | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
@@ -29,12 +29,12 @@ export function useDraftApi(roomId: string | null) {
     setLoading(true);
     setError(null);
 
-    fetch(`${API_BASE}/rooms/${roomId}`)
+    fetch(`${API_BASE}/map-draft/rooms/${roomId}`)
       .then((r) => {
         if (!r.ok) throw new Error("Room not found");
         return r.json();
       })
-      .then((data: DraftState) => {
+      .then((data: MapDraftState) => {
         if (!cancelled) {
           setState(data);
           setLoading(false);
@@ -50,12 +50,12 @@ export function useDraftApi(roomId: string | null) {
     function connect() {
       if (cancelled) return;
 
-      const ws = new WebSocket(`${WS_BASE}/ws/rooms/${roomId}`);
+      const ws = new WebSocket(`${WS_BASE}/map-draft/ws/rooms/${roomId}`);
       wsRef.current = ws;
 
       ws.onmessage = (evt) => {
         if (!cancelled) {
-          setState(JSON.parse(evt.data) as DraftState);
+          setState(JSON.parse(evt.data) as MapDraftState);
           setLoading(false);
         }
       };
@@ -81,8 +81,8 @@ export function useDraftApi(roomId: string | null) {
   }, [roomId]);
 
   const create = useCallback(
-    async (config: CreateRoomConfig): Promise<DraftState> => {
-      const resp = await fetch(`${API_BASE}/rooms`, {
+    async (config: CreateRoomConfig): Promise<MapDraftState> => {
+      const resp = await fetch(`${API_BASE}/map-draft/rooms`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(config),
@@ -91,7 +91,7 @@ export function useDraftApi(roomId: string | null) {
         const err = await resp.json();
         throw new Error(err.detail ?? "Failed to create room");
       }
-      const data: DraftState = await resp.json();
+      const data: MapDraftState = await resp.json();
       setState(data);
       return data;
     },
@@ -101,7 +101,7 @@ export function useDraftApi(roomId: string | null) {
   const applyAction = useCallback(
     async (map: string): Promise<void> => {
       if (!roomId) return;
-      const resp = await fetch(`${API_BASE}/rooms/${roomId}/action`, {
+      const resp = await fetch(`${API_BASE}/map-draft/rooms/${roomId}/action`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ map }),
@@ -118,7 +118,7 @@ export function useDraftApi(roomId: string | null) {
   const setPending = useCallback(
     async (side: "blue" | "red", map: string | null): Promise<void> => {
       if (!roomId) return;
-      await fetch(`${API_BASE}/rooms/${roomId}/pending`, {
+      await fetch(`${API_BASE}/map-draft/rooms/${roomId}/pending`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ side, map }),
@@ -131,7 +131,7 @@ export function useDraftApi(roomId: string | null) {
   const ready = useCallback(
     async (side: "blue" | "red"): Promise<void> => {
       if (!roomId) return;
-      const resp = await fetch(`${API_BASE}/rooms/${roomId}/ready`, {
+      const resp = await fetch(`${API_BASE}/map-draft/rooms/${roomId}/ready`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ side }),

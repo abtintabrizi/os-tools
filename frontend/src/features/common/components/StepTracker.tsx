@@ -1,5 +1,4 @@
-import { SEQUENCE_MAP } from "@/features/map-drafter/constants";
-import { SequenceKey } from "@/features/map-drafter/types";
+import { SequenceStep } from "@/features/common/types";
 
 export function StepTracker({
   step,
@@ -7,12 +6,12 @@ export function StepTracker({
   done,
 }: {
   step: number;
-  sequence: SequenceKey;
+  sequence: SequenceStep[];
   done: boolean;
 }) {
   return (
     <div className="flex items-center gap-1">
-      {SEQUENCE_MAP[sequence].map((s, i) => {
+      {sequence.map((s, i) => {
         const base = "w-5 h-1 rounded-sm transition-colors duration-300";
         let color: string;
         if (i < step || done) {

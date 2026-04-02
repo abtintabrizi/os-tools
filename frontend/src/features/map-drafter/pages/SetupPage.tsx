@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { ALL_MAPS, CURRENT_MAP_POOL } from "@/common/constants";
-import { useDraftContext } from "@/features/map-drafter/context/DraftContext";
-import { useToast } from "@/common/components/Toast";
-import Spinner from "@/common/components/Spinner";
+import { ALL_MAPS, CURRENT_MAP_POOL } from "@/features/common/constants";
+import { useMapDraftContext } from "@/features/map-drafter/context/MapDraftContext";
+import { useToast } from "@/features/common/components/Toast";
+import Spinner from "@/features/common/components/Spinner";
 import { SEQUENCE_MAP } from "@map-drafter/constants.ts";
 import { SequenceKey } from "@/features/map-drafter/types";
 
 export default function SetupPage() {
   const { toast } = useToast();
-  const { handleLaunch } = useDraftContext();
+  const { handleLaunch } = useMapDraftContext();
   const [blueName, setBlueName] = useState("");
   const [redName, setRedName] = useState("");
   const [bestOf, setBestOf] = useState<SequenceKey>("bo3");

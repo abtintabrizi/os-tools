@@ -6,15 +6,16 @@ import {
   type ReactNode,
 } from "react";
 import { useNavigate } from "react-router-dom";
-import type { DraftState, Side } from "@map-drafter/types";
+import type { MapDraftState } from "@map-drafter/types";
+import type { Side } from "@/features/common/types";
 import {
-  useDraftApi,
+  useMapDraftApi,
   type CreateRoomConfig,
-} from "@map-drafter/hooks/useDraftApi";
+} from "@map-drafter/hooks/useMapDraftApi";
 
-interface DraftContextValue {
-  state: DraftState | null;
-  lobbyState: DraftState | null;
+interface MapDraftContextValue {
+  state: MapDraftState | null;
+  lobbyState: MapDraftState | null;
   loading: boolean;
   error: string | null;
   side: Side;
@@ -27,12 +28,12 @@ interface DraftContextValue {
   handleReset: () => void;
 }
 
-const DraftContext = createContext<DraftContextValue | null>(null);
+const MapDraftContext = createContext<MapDraftContextValue | null>(null);
 
-export function useDraftContext(): DraftContextValue {
-  const ctx = useContext(DraftContext);
+export function useMapDraftContext(): MapDraftContextValue {
+  const ctx = useContext(MapDraftContext);
   if (!ctx)
-    throw new Error("useDraftContext must be used inside DraftProvider");
+    throw new Error("useMapDraftContext must be used inside MapDraftProvider");
   return ctx;
 }
 
@@ -44,16 +45,16 @@ function getUrlParams() {
   };
 }
 
-export function DraftProvider({ children }: { children: ReactNode }) {
+export function MapDraftProvider({ children }: { children: ReactNode }) {
   const { roomId: urlRoom, side: urlSide } = getUrlParams();
   const navigate = useNavigate();
 
   const [side, setSide] = useState<Side>(urlSide ?? "spectator");
   const [roomId, setRoomId] = useState<string | null>(urlRoom);
-  const [lobbyState, setLobbyState] = useState<DraftState | null>(null);
+  const [lobbyState, setLobbyState] = useState<MapDraftState | null>(null);
 
   const { state, loading, error, create, applyAction, setPending, ready } =
-    useDraftApi(roomId);
+    useMapDraftApi(roomId);
 
   // Redirect from base path when URL has room+side params (e.g. from a shared lobby link)
   useEffect(() => {
@@ -107,7 +108,7 @@ export function DraftProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <DraftContext.Provider
+    <MapDraftContext.Provider
       value={{
         state,
         lobbyState,
@@ -124,6 +125,6 @@ export function DraftProvider({ children }: { children: ReactNode }) {
       }}
     >
       {children}
-    </DraftContext.Provider>
+    </MapDraftContext.Provider>
   );
 }

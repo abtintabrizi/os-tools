@@ -1,10 +1,10 @@
 export default function ResultCard({
-  map,
+  value,
   type,
   label,
   status = "filled",
 }: {
-  map?: string;
+  value?: string;
   type: "ban" | "pick";
   label: string;
   status?: "filled" | "active" | "pending";
@@ -31,7 +31,7 @@ export default function ResultCard({
         : "bg-tools-green/12 text-tools-green-light",
   ].join(" ");
 
-  const mapClass =
+  const valueClass =
     status === "filled"
       ? type === "ban"
         ? "text-sm font-semibold flex-1 text-tools-red-light line-through decoration-tools-red/40"
@@ -41,7 +41,7 @@ export default function ResultCard({
   return (
     <div className={slotClass}>
       <span className={iconClass}>{type === "ban" ? "✕" : "✓"}</span>
-      <span className={mapClass}>{map ?? "—"}</span>
+      <span className={valueClass}>{value ?? "—"}</span>
       <span className="text-xs font-mono tracking-widest uppercase opacity-50">
         {label}
       </span>
