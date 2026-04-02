@@ -1,7 +1,9 @@
-export type Side = "blue" | "red" | "spectator";
-export type ActionType = "ban" | "pick";
+import { Team, DraftAction } from "@/features/common/constants";
+
+export type Side = Team;
+export type ActionType = DraftAction;
 
 export interface SequenceStep {
-  team: string;
-  action: ActionType;
+  team: Team;
+  action: DraftAction;
 }

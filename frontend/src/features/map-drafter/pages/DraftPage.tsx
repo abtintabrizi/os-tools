@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { SEQUENCE_MAP } from "@map-drafter/constants.ts";
-import { ALL_MAPS, TIMER_SECONDS } from "@/features/common/constants";
+import { ALL_MAPS, TIMER_SECONDS, Team, DraftAction } from "@/features/common/constants";
 import { deriveMapStatuses } from "@/features/map-drafter/utils";
 import LoadingScreen from "@/features/common/components/LoadingScreen";
 import ErrorScreen from "@/features/map-drafter/components/ErrorScreen";
@@ -74,31 +74,31 @@ export default function DraftPage() {
   const currentSeqStep =
     !done && step < sequence.length ? sequence[step] : null;
   const currentTeam = currentSeqStep
-    ? currentSeqStep.team === "blue"
+    ? currentSeqStep.team === Team.Blue
       ? blueName
       : redName
     : null;
   const isMyTurn = currentSeqStep !== null && currentSeqStep.team === side;
 
   const serverPending =
-    side === "blue"
+    side === Team.Blue
       ? state.pendingBlue
-      : side === "red"
+      : side === Team.Red
         ? state.pendingRed
         : null;
   const pending = localPending ?? serverPending;
 
-  const mapStatuses = deriveMapStatuses(state, sequence.filter((s) => s.action === "pick").length);
+  const mapStatuses = deriveMapStatuses(state, sequence.filter((s) => s.action === DraftAction.Pick).length);
 
   const blueActions = actions.filter((a) => a.team === blueName);
   const redActions = actions.filter((a) => a.team === redName);
 
   const blueSeqSteps = sequence
     .map((s, globalIdx) => ({ ...s, globalIdx }))
-    .filter((s) => s.team === "blue");
+    .filter((s) => s.team === Team.Blue);
   const redSeqSteps = sequence
     .map((s, globalIdx) => ({ ...s, globalIdx }))
-    .filter((s) => s.team === "red");
+    .filter((s) => s.team === Team.Red);
 
   function handleMapClick(map: string) {
     if (!isMyTurn || mapStatuses[map] !== "available") return;
@@ -112,8 +112,8 @@ export default function DraftPage() {
   }
 
   function sideLabel() {
-    if (side === "blue") return blueName;
-    if (side === "red") return redName;
+    if (side === Team.Blue) return blueName;
+    if (side === Team.Red) return redName;
     return "Spectating";
   }
 
@@ -125,11 +125,11 @@ export default function DraftPage() {
       {/* Header */}
       <header className="grid grid-cols-3 px-6 border-b border-white/7 bg-tools-void/70 h-16 items-center">
         <div className="flex items-center gap-2.5">
-          {side !== "spectator" && (
+          {side !== Team.Spectator && (
             <span
-              className={`font-mono text-xs font-bold tracking-widest uppercase py-1 px-2.5 rounded ${side === "blue" ? blueBadgeClass : redBadgeClass}`}
+              className={`font-mono text-xs font-bold tracking-widest uppercase py-1 px-2.5 rounded ${side === Team.Blue ? blueBadgeClass : redBadgeClass}`}
             >
-              {side === "blue" ? "Blue" : "Red"}
+              {side === Team.Blue ? "Blue" : "Red"}
             </span>
           )}
           <span className="text-sm font-bold">{sideLabel()}</span>
@@ -170,9 +170,9 @@ export default function DraftPage() {
           ) : currentSeqStep ? (
             <>
               <span
-                className={`font-mono text-xs font-bold tracking-widest uppercase py-1 px-2.5 rounded ${currentSeqStep.team === "blue" ? blueBadgeClass : redBadgeClass}`}
+                className={`font-mono text-xs font-bold tracking-widest uppercase py-1 px-2.5 rounded ${currentSeqStep.team === Team.Blue ? blueBadgeClass : redBadgeClass}`}
               >
-                {currentSeqStep.team === "blue" ? "Blue" : "Red"}
+                {currentSeqStep.team === Team.Blue ? "Blue" : "Red"}
               </span>
               <span className="font-mono text-sm tracking-widest">
                 <strong>{currentTeam}</strong>
@@ -180,7 +180,7 @@ export default function DraftPage() {
               </span>
               <span
                 className={`font-mono text-xs tracking-widest py-0.75 px-2.5 rounded uppercase ${
-                  currentSeqStep.action === "ban"
+                  currentSeqStep.action === DraftAction.Ban
                     ? "bg-tools-red/12 text-tools-red-light"
                     : "bg-tools-green/10 text-tools-green-light"
                 }`}
@@ -206,8 +206,8 @@ export default function DraftPage() {
             const n =
               blueSeqSteps.slice(0, i).filter((p) => p.action === s.action)
                 .length + 1;
-            const totalPicks = sequence.filter((p) => p.action === "pick").length;
-            const gameNum = totalPicks - sequence.slice(0, s.globalIdx).filter((p) => p.action === "pick").length;
+            const totalPicks = sequence.filter((p) => p.action === DraftAction.Pick).length;
+            const gameNum = totalPicks - sequence.slice(0, s.globalIdx).filter((p) => p.action === DraftAction.Pick).length;
             const filled = blueActions[i];
             const status = filled
               ? "filled"
@@ -219,7 +219,7 @@ export default function DraftPage() {
                 key={i}
                 value={filled?.map}
                 type={s.action}
-                label={s.action === "ban" ? `Ban ${n}` : `Pick ${gameNum}`}
+                label={s.action === DraftAction.Ban ? `Ban ${n}` : `Pick ${gameNum}`}
                 status={status}
               />
             );
@@ -245,7 +245,7 @@ export default function DraftPage() {
                     <span className="font-mono text-xs tracking-widest uppercase text-tools-green-light bg-tools-green/10 px-3 py-1.5 rounded border border-tools-green/20">
                       Ready
                     </span>
-                  ) : side === "blue" ? (
+                  ) : side === Team.Blue ? (
                     <button
                       onClick={handleReady}
                       className="font-mono text-xs tracking-widest uppercase px-4 py-1.5 rounded border border-tools-blue/40 text-tools-blue hover:border-tools-blue/70 hover:bg-tools-blue/10 transition"
@@ -272,7 +272,7 @@ export default function DraftPage() {
                     <span className="font-mono text-xs tracking-widest uppercase text-tools-green-light bg-tools-green/10 px-3 py-1.5 rounded border border-tools-green/20">
                       Ready
                     </span>
-                  ) : side === "red" ? (
+                  ) : side === Team.Red ? (
                     <button
                       onClick={handleReady}
                       className="font-mono text-xs tracking-widest uppercase px-4 py-1.5 rounded border border-tools-red/40 text-tools-red hover:border-tools-red/70 hover:bg-tools-red/10 transition"
@@ -291,7 +291,7 @@ export default function DraftPage() {
             <div className="flex flex-col h-full">
               <DonePanel actions={actions} blueName={blueName} />
               <div className="flex-1" />
-              {side !== "spectator" && (
+              {side !== Team.Spectator && (
                 <button
                   className="py-3 px-3 bg-transparent border border-white/7 rounded-lg font-head text-[13px] font-semibold text-white transition-all duration-150 w-full hover:border-white/15 hover:text-white"
                   onClick={handleReset}
@@ -324,16 +324,16 @@ export default function DraftPage() {
                     : null;
                   const image = ALL_MAPS.find((m) => m.name === map)?.image;
                   const pickAction = isPick
-                    ? actions.find((a) => a.map === map && a.action === "pick")
+                    ? actions.find((a) => a.map === map && a.action === DraftAction.Pick)
                     : null;
                   const pickTeam = pickAction?.team ?? null;
                   const banTeam =
                     status === "banned"
                       ? (actions.find(
-                          (a) => a.map === map && a.action === "ban",
+                          (a) => a.map === map && a.action === DraftAction.Ban,
                         )?.team ?? null)
                       : null;
-                  const isBanning = currentSeqStep?.action === "ban";
+                  const isBanning = currentSeqStep?.action === DraftAction.Ban;
 
                   const isSelected = pending === map;
 
@@ -409,14 +409,14 @@ export default function DraftPage() {
               {isMyTurn && currentSeqStep && (
                 <button
                   className={`py-3 px-3 border rounded-lg font-head font-semibold transition-all duration-150 w-1/3 disabled:opacity-30 disabled:cursor-default! ${
-                    currentSeqStep.action === "ban"
+                    currentSeqStep.action === DraftAction.Ban
                       ? "bg-tools-red/10 border-tools-red/30 text-tools-red-light hover:bg-tools-red/20 hover:border-tools-red/50"
                       : "bg-tools-green/10 border-tools-green/30 text-tools-green-light hover:bg-tools-green/20 hover:border-tools-green/50"
                   }`}
                   disabled={!pending}
                   onClick={handleConfirm}
                 >
-                  {currentSeqStep.action === "ban" ? "Ban" : "Pick"}
+                  {currentSeqStep.action === DraftAction.Ban ? "Ban" : "Pick"}
                   {pending ? ` ${pending}` : ""}
                 </button>
               )}
@@ -424,7 +424,7 @@ export default function DraftPage() {
           )}
           </div>
 
-          {side === "spectator" && (
+          {side === Team.Spectator && (
             <div className="pt-4 border-t border-white/7 h-34 flex items-center justify-center">
               {!bothReady ? (
                 <div className="flex items-center gap-6">
@@ -467,13 +467,13 @@ export default function DraftPage() {
                     const mapEntry = completedAction
                       ? ALL_MAPS.find((m) => m.name === completedAction.map)
                       : null;
-                    const isBlue = s.team === "blue";
-                    const isBan = s.action === "ban";
+                    const isBlue = s.team === Team.Blue;
+                    const isBan = s.action === DraftAction.Ban;
                     const teamName = isBlue ? blueName : redName;
                     const isCurrent = !done && i === step;
-                    const totalPicks = sequence.filter((p) => p.action === "pick").length;
+                    const totalPicks = sequence.filter((p) => p.action === DraftAction.Pick).length;
                     const pickNumber = !isBan
-                      ? totalPicks - sequence.slice(0, i).filter((p) => p.action === "pick").length
+                      ? totalPicks - sequence.slice(0, i).filter((p) => p.action === DraftAction.Pick).length
                       : null;
 
                     return (
@@ -569,8 +569,8 @@ export default function DraftPage() {
             const n =
               redSeqSteps.slice(0, i).filter((p) => p.action === s.action)
                 .length + 1;
-            const totalPicks = sequence.filter((p) => p.action === "pick").length;
-            const gameNum = totalPicks - sequence.slice(0, s.globalIdx).filter((p) => p.action === "pick").length;
+            const totalPicks = sequence.filter((p) => p.action === DraftAction.Pick).length;
+            const gameNum = totalPicks - sequence.slice(0, s.globalIdx).filter((p) => p.action === DraftAction.Pick).length;
             const filled = redActions[i];
             const status = filled
               ? "filled"
@@ -582,7 +582,7 @@ export default function DraftPage() {
                 key={i}
                 value={filled?.map}
                 type={s.action}
-                label={s.action === "ban" ? `Ban ${n}` : `Pick ${gameNum}`}
+                label={s.action === DraftAction.Ban ? `Ban ${n}` : `Pick ${gameNum}`}
                 status={status}
               />
             );

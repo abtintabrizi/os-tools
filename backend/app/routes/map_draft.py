@@ -6,7 +6,7 @@ from app.constants.common import TIMER_SECONDS
 from app.constants.map_draft import MIN_MAPS, SEQUENCES
 from app.constants.tables import Table
 from app.models.common import ReadyRequest
-from app.models.map_draft import ActionRequest, CreateRoomRequest, PendingRequest
+from app.models.map_draft import MapDraftActionRequest, CreateMapDraftRoomRequest, MapDraftPendingRequest
 from app.utils.supabase import generate_room_id, get_room, save_room
 from app.utils.map_draft import append_decider, cancel_timer, spawn_timer, timers
 from app.utils.ws import manager
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/map-draft")
 
 
 @router.post("/rooms")
-async def create_room(body: CreateRoomRequest):
+async def create_room(body: CreateMapDraftRoomRequest):
     if len(body.maps) != MIN_MAPS:
         raise HTTPException(status_code=400, detail=f"Exactly {MIN_MAPS} maps required to draft")
 
@@ -74,7 +74,7 @@ async def set_ready(room_id: str, body: ReadyRequest):
 
 
 @router.post("/rooms/{room_id}/pending")
-async def set_pending(room_id: str, body: PendingRequest):
+async def set_pending(room_id: str, body: MapDraftPendingRequest):
     state = await get_room(room_id, Table.MAP_DRAFTS)
     if state is None:
         raise HTTPException(status_code=404, detail="Room not found")
@@ -93,7 +93,7 @@ async def set_pending(room_id: str, body: PendingRequest):
 
 
 @router.post("/rooms/{room_id}/action")
-async def apply_action(room_id: str, body: ActionRequest):
+async def apply_action(room_id: str, body: MapDraftActionRequest):
     state = await get_room(room_id, Table.MAP_DRAFTS)
     if state is None:
         raise HTTPException(status_code=404, detail="Room not found")

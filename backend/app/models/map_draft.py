@@ -1,17 +1,17 @@
 from pydantic import BaseModel
 
 
-class CreateRoomRequest(BaseModel):
+class CreateMapDraftRoomRequest(BaseModel):
     bestOf: str
     blueName: str
     redName: str
     maps: list[str]
 
 
-class ActionRequest(BaseModel):
+class MapDraftActionRequest(BaseModel):
     map: str
 
 
-class PendingRequest(BaseModel):
+class MapDraftPendingRequest(BaseModel):
     side: str
     map: str | None = None
