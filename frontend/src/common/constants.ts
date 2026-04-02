@@ -41,4 +41,14 @@ export const ALL_MAPS = [
   },
 ];
 
+export const CURRENT_MAP_POOL = [
+  "Ahten City",
+  "Aimi's App",
+  "Atlas's Lab",
+  "Clarion Test Chamber",
+  "Demon Dais",
+  "Gates of Obscura",
+  "Inky's Splash Zone",
+];
+
 export const TIMER_SECONDS = 30;

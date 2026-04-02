@@ -4,7 +4,7 @@ import time
 
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 
-from .constants import SEQUENCES, TIMER_SECONDS
+from .constants import MIN_MAPS, SEQUENCES, TIMER_SECONDS
 from .models import ActionRequest, CreateRoomRequest, PendingRequest, ReadyRequest
 from .store import generate_room_id, get_room, save_room
 from .ws import manager
@@ -80,9 +80,8 @@ async def root():
 
 @router.post("/rooms")
 async def create_room(body: CreateRoomRequest):
-    minMaps = len(SEQUENCES[body.bestOf]) + 1
-    if len(body.maps) < minMaps:
-        raise HTTPException(status_code=400, detail=f"At least {minMaps} maps required for a {body.bestOf} draft")
+    if len(body.maps) != MIN_MAPS:
+        raise HTTPException(status_code=400, detail=f"Exactly {MIN_MAPS} maps required to draft")
 
     room_id = generate_room_id()
     state = {
