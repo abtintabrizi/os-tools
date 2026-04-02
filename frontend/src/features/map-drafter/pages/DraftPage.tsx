@@ -88,7 +88,7 @@ export default function DraftPage() {
         : null;
   const pending = localPending ?? serverPending;
 
-  const mapStatuses = deriveMapStatuses(state);
+  const mapStatuses = deriveMapStatuses(state, sequence.filter((s) => s.action === "pick").length);
 
   const blueActions = actions.filter((a) => a.team === blueName);
   const redActions = actions.filter((a) => a.team === redName);
@@ -123,7 +123,7 @@ export default function DraftPage() {
   return (
     <div className="h-screen flex flex-col">
       {/* Header */}
-      <header className="grid grid-cols-3 px-6 py-4 border-b border-white/7 bg-tools-void/70">
+      <header className="grid grid-cols-3 px-6 border-b border-white/7 bg-tools-void/70 h-16 items-center">
         <div className="flex items-center gap-2.5">
           {side !== "spectator" && (
             <span
@@ -206,6 +206,8 @@ export default function DraftPage() {
             const n =
               blueSeqSteps.slice(0, i).filter((p) => p.action === s.action)
                 .length + 1;
+            const totalPicks = sequence.filter((p) => p.action === "pick").length;
+            const gameNum = totalPicks - sequence.slice(0, s.globalIdx).filter((p) => p.action === "pick").length;
             const filled = blueActions[i];
             const status = filled
               ? "filled"
@@ -217,7 +219,7 @@ export default function DraftPage() {
                 key={i}
                 value={filled?.map}
                 type={s.action}
-                label={s.action === "ban" ? `Ban ${n}` : `Pick ${n}`}
+                label={s.action === "ban" ? `Ban ${n}` : `Pick ${gameNum}`}
                 status={status}
               />
             );
@@ -226,6 +228,7 @@ export default function DraftPage() {
 
         {/* Center */}
         <div className="p-5 flex flex-col flex-1">
+          <div className="flex-1 flex flex-col">
           {!bothReady ? (
             <div className="flex flex-col items-center justify-center h-full gap-8">
               <div className="flex gap-6">
@@ -288,12 +291,14 @@ export default function DraftPage() {
             <div className="flex flex-col h-full">
               <DonePanel actions={actions} blueName={blueName} />
               <div className="flex-1" />
-              <button
-                className="py-3 px-3 bg-transparent border border-white/7 rounded-lg font-head text-[13px] font-semibold text-white transition-all duration-150 w-full hover:border-white/15 hover:text-white"
-                onClick={handleReset}
-              >
-                New draft
-              </button>
+              {side !== "spectator" && (
+                <button
+                  className="py-3 px-3 bg-transparent border border-white/7 rounded-lg font-head text-[13px] font-semibold text-white transition-all duration-150 w-full hover:border-white/15 hover:text-white"
+                  onClick={handleReset}
+                >
+                  New draft
+                </button>
+              )}
             </div>
           ) : (
             <div className="flex flex-col justify-center items-center">
@@ -417,6 +422,140 @@ export default function DraftPage() {
               )}
             </div>
           )}
+          </div>
+
+          {side === "spectator" && (
+            <div className="pt-4 border-t border-white/7 h-34 flex items-center justify-center">
+              {!bothReady ? (
+                <div className="flex items-center gap-6">
+                  <div className="flex flex-col items-center gap-2">
+                    <span className={`font-mono text-xs font-bold tracking-widest uppercase py-1 px-2.5 rounded ${blueBadgeClass}`}>
+                      Blue
+                    </span>
+                    <span className="font-mono text-sm font-bold">{blueName}</span>
+                    {state.readyBlue ? (
+                      <span className="font-mono text-xs tracking-widest uppercase text-tools-green-light bg-tools-green/10 px-3 py-1 rounded border border-tools-green/20">
+                        Ready
+                      </span>
+                    ) : (
+                      <span className="font-mono text-xs tracking-widest uppercase text-white/25 px-3 py-1">
+                        Not ready
+                      </span>
+                    )}
+                  </div>
+                  <div className="w-px bg-white/7 self-stretch" />
+                  <div className="flex flex-col items-center gap-2">
+                    <span className={`font-mono text-xs font-bold tracking-widest uppercase py-1 px-2.5 rounded ${redBadgeClass}`}>
+                      Red
+                    </span>
+                    <span className="font-mono text-sm font-bold">{redName}</span>
+                    {state.readyRed ? (
+                      <span className="font-mono text-xs tracking-widest uppercase text-tools-green-light bg-tools-green/10 px-3 py-1 rounded border border-tools-green/20">
+                        Ready
+                      </span>
+                    ) : (
+                      <span className="font-mono text-xs tracking-widest uppercase text-white/25 px-3 py-1">
+                        Not ready
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex gap-3 justify-center">
+                  {sequence.map((s, i) => {
+                    const completedAction = actions[i];
+                    const mapEntry = completedAction
+                      ? ALL_MAPS.find((m) => m.name === completedAction.map)
+                      : null;
+                    const isBlue = s.team === "blue";
+                    const isBan = s.action === "ban";
+                    const teamName = isBlue ? blueName : redName;
+                    const isCurrent = !done && i === step;
+                    const totalPicks = sequence.filter((p) => p.action === "pick").length;
+                    const pickNumber = !isBan
+                      ? totalPicks - sequence.slice(0, i).filter((p) => p.action === "pick").length
+                      : null;
+
+                    return (
+                      <div key={i} className="flex flex-col items-center gap-1 w-20">
+                        <span
+                          className={`font-mono text-[10px] font-bold tracking-widest uppercase text-center ${isBlue ? "text-tools-blue" : "text-tools-red"}`}
+                        >
+                          {teamName}
+                        </span>
+                        <div
+                          className={`relative w-20 h-20 rounded border-2 overflow-hidden ${isBlue ? "border-tools-blue" : "border-tools-red"} ${isCurrent ? "ring-1 ring-white/30" : ""} ${!completedAction && !isCurrent ? "opacity-30" : ""}`}
+                        >
+                          {mapEntry?.icon ? (
+                            <img
+                              src={mapEntry.icon}
+                              alt={completedAction?.map}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-white/5" />
+                          )}
+                          {isBan && completedAction && (
+                            <div
+                              className="absolute inset-0"
+                              style={{
+                                background: `linear-gradient(to bottom right, transparent 49%, ${isBlue ? "#3b82f6" : "#ef4444"} 49%, ${isBlue ? "#3b82f6" : "#ef4444"} 51%, transparent 51%)`,
+                              }}
+                            />
+                          )}
+                          {isCurrent && !completedAction && (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <span
+                                className={`font-mono font-bold tabular-nums text-2xl ${
+                                  timeLeft <= 5
+                                    ? "text-tools-red"
+                                    : timeLeft <= 10
+                                      ? "text-amber-400"
+                                      : "text-white/70"
+                                }`}
+                              >
+                                {timeLeft}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <span className="font-mono text-[9px] text-white/40 text-center leading-tight w-20">
+                          {completedAction?.map ?? (isBan ? "Ban" : `G${pickNumber}`)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                  {state.bestOf === "bo3" && (() => {
+                    const deciderMap = Object.entries(mapStatuses).find(([, s]) => s === "decider")?.[0];
+                    const deciderEntry = deciderMap ? ALL_MAPS.find((m) => m.name === deciderMap) : null;
+                    return (
+                      <div className="flex flex-col items-center gap-1 w-20">
+                        <span className="font-mono text-[10px] font-bold tracking-widest uppercase text-center text-tools-gold">
+                          Decider
+                        </span>
+                        <div
+                          className={`relative w-20 h-20 rounded border-2 overflow-hidden border-tools-gold ${!deciderMap ? "opacity-30" : ""}`}
+                        >
+                          {deciderEntry?.icon ? (
+                            <img
+                              src={deciderEntry.icon}
+                              alt={deciderMap}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-white/5" />
+                          )}
+                        </div>
+                        <span className="font-mono text-[9px] text-white/40 text-center leading-tight w-20">
+                          {deciderMap ?? "G3"}
+                        </span>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Red sidebar */}
@@ -430,6 +569,8 @@ export default function DraftPage() {
             const n =
               redSeqSteps.slice(0, i).filter((p) => p.action === s.action)
                 .length + 1;
+            const totalPicks = sequence.filter((p) => p.action === "pick").length;
+            const gameNum = totalPicks - sequence.slice(0, s.globalIdx).filter((p) => p.action === "pick").length;
             const filled = redActions[i];
             const status = filled
               ? "filled"
@@ -441,7 +582,7 @@ export default function DraftPage() {
                 key={i}
                 value={filled?.map}
                 type={s.action}
-                label={s.action === "ban" ? `Ban ${n}` : `Pick ${n}`}
+                label={s.action === "ban" ? `Ban ${n}` : `Pick ${gameNum}`}
                 status={status}
               />
             );
