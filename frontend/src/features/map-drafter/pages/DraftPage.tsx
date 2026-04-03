@@ -62,7 +62,7 @@ export default function DraftPage() {
     }
     const id = setInterval(tick, 250);
     return () => clearInterval(id);
-  }, [state?.stepStartedAt, state?.done, state?.readyBlue, state?.readyRed]);
+  }, [state?.stepStartedAt, state?.done, state?.readyBlue, state?.readyRed]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     setLocalPending(null);

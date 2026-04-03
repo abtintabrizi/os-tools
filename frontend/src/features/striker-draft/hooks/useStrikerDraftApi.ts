@@ -16,18 +16,18 @@ export function useStrikerDraftApi(roomId: string | null) {
 
   const create = useCallback(
     (config: CreateStrikerRoomConfig) => api.create(config),
-    [api.create],
+    [api.create], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const applyAction = useCallback(
     (striker: string | null) => api.applyAction({ striker }),
-    [api.applyAction],
+    [api.applyAction], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const setPending = useCallback(
     (side: Team.Blue | Team.Red, striker: string | null) =>
       api.setPending({ side, striker }),
-    [api.setPending],
+    [api.setPending], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   return { ...api, create, applyAction, setPending };

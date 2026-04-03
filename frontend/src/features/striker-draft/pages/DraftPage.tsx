@@ -53,7 +53,7 @@ export default function DraftPage() {
     ALL_AWAKENINGS.forEach((a) => {
       new Image().src = a.icon;
     });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (
