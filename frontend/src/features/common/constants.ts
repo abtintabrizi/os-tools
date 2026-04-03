@@ -154,7 +154,7 @@ export const ALL_AWAKENINGS = [
   { name: Awakening.BigFish, icon: "/awakenings/Big_Fish.png" },
   { name: Awakening.BuiltDifferent, icon: "/awakenings/Built_Different.png" },
   { name: Awakening.BulkUp, icon: "/awakenings/Bulk_Up.png" },
-  { name: Awakening.CastToLast, icon: "/awakenings/Cast_To_Last.png" },
+  { name: Awakening.CastToLast, icon: "/awakenings/Cast_to_Last.png" },
   { name: Awakening.Catalyst, icon: "/awakenings/Catalyst.png" },
   { name: Awakening.Chronoboost, icon: "/awakenings/Chronoboost.png" },
   { name: Awakening.Deadeye, icon: "/awakenings/Deadeye.png" },
