@@ -1,6 +1,11 @@
 import { useState } from "react";
 import Spinner from "@/features/common/components/Spinner";
-import { ALL_MAPS } from "@/features/common/constants";
+import {
+  ALL_MAPS,
+  AWAKENING_CONFLICTS,
+  Awakening,
+} from "@/features/common/constants";
+import AwakeningPicker from "@/features/striker-draft/components/AwakeningPicker";
 
 export default function SetupPage() {
   const [blueName, setBlueName] = useState("");
@@ -12,6 +17,10 @@ export default function SetupPage() {
     first: "",
     second: "",
   });
+
+  const handleAwakeningChange = (key: "first" | "second", value: string) => {
+    setCustomAwakenings((prev) => ({ ...prev, [key]: value }));
+  };
 
   return (
     <div className="h-screen flex justify-center items-center">
@@ -101,18 +110,54 @@ export default function SetupPage() {
                 Custom
               </button>
             </div>
-            {awakening === "custom" && <div>Awakening selection area</div>}
+            {awakening === "custom" && (
+              <div className="flex gap-3">
+                <AwakeningPicker
+                  value={customAwakenings.first}
+                  onChange={(v) => handleAwakeningChange("first", v)}
+                  exclude={
+                    customAwakenings.second
+                      ? [
+                          customAwakenings.second,
+                          ...(AWAKENING_CONFLICTS[
+                            customAwakenings.second as Awakening
+                          ] ?? []),
+                        ]
+                      : []
+                  }
+                />
+                <AwakeningPicker
+                  value={customAwakenings.second}
+                  onChange={(v) => handleAwakeningChange("second", v)}
+                  exclude={
+                    customAwakenings.first
+                      ? [
+                          customAwakenings.first,
+                          ...(AWAKENING_CONFLICTS[
+                            customAwakenings.first as Awakening
+                          ] ?? []),
+                        ]
+                      : []
+                  }
+                />
+              </div>
+            )}
           </div>
         </div>
 
         <button
-          className="flex justify-center items-center w-full h-14 bg-tools-gold text-black rounded-2xl font-head text-xl font-bold disabled:cursor-default! disabled:opacity-50"
-          disabled={loading}
+          className="flex justify-center items-center w-full h-14 bg-tools-gold text-black rounded-2xl font-head text-xl font-bold disabled:cursor-default! disabled:opacity-50 transition-opacity duration-300"
+          disabled={
+            loading ||
+            !map ||
+            (awakening === "custom" &&
+              (!customAwakenings.first || !customAwakenings.second))
+          }
         >
           {loading ? (
             <Spinner size="lg" primary="white" secondary="black" />
           ) : (
-            "Create Draft Room →"
+            "Create Striker Draft Room →"
           )}
         </button>
       </div>

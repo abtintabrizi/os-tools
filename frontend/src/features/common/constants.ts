@@ -266,7 +266,7 @@ export const CURRENT_AWAKENING_POOL = [
   Awakening.TwinDrive,
 ];
 
-export const AWAKENING_CONFLICTS = {
+export const AWAKENING_CONFLICTS: Partial<Record<Awakening, Awakening[]>> = {
   [Awakening.SparkOfResilience]: [
     Awakening.SparkOfStrength,
     Awakening.SparkOfAgility,

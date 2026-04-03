@@ -2,8 +2,8 @@ import time
 
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 
-from app.constants.common import TIMER_SECONDS
-from app.constants.map_draft import MIN_MAPS, SEQUENCES
+from app.constants.common import TIMER_SECONDS, Team
+from app.constants.map_draft import MIN_MAPS, SEQUENCE_MAPPING
 from app.constants.tables import Table
 from app.models.common import ReadyRequest
 from app.models.map_draft import MapDraftActionRequest, CreateMapDraftRoomRequest, MapDraftPendingRequest
@@ -52,11 +52,11 @@ async def set_ready(room_id: str, body: ReadyRequest):
     state = await get_room(room_id, Table.MAP_DRAFTS)
     if state is None:
         raise HTTPException(status_code=404, detail="Room not found")
-    if body.side not in ("blue", "red"):
+    if body.side not in (Team.BLUE, Team.RED):
         raise HTTPException(status_code=400, detail="Invalid side")
 
     updated = {**state}
-    if body.side == "blue":
+    if body.side == Team.BLUE:
         updated["readyBlue"] = True
     else:
         updated["readyRed"] = True
@@ -78,11 +78,11 @@ async def set_pending(room_id: str, body: MapDraftPendingRequest):
     state = await get_room(room_id, Table.MAP_DRAFTS)
     if state is None:
         raise HTTPException(status_code=404, detail="Room not found")
-    if body.side not in ("blue", "red"):
+    if body.side not in (Team.BLUE, Team.RED):
         raise HTTPException(status_code=400, detail="Invalid side")
 
     updated = {**state}
-    if body.side == "blue":
+    if body.side == Team.BLUE:
         updated["pendingBlue"] = body.map
     else:
         updated["pendingRed"] = body.map
@@ -105,7 +105,7 @@ async def apply_action(room_id: str, body: MapDraftActionRequest):
         raise HTTPException(status_code=400, detail="Draft is already complete")
 
     step = state["step"]
-    currentSequence = SEQUENCES[state["bestOf"]]
+    currentSequence = SEQUENCE_MAPPING[state["bestOf"]]
     if step >= len(currentSequence):
         raise HTTPException(status_code=400, detail="No more steps remaining")
 
@@ -118,7 +118,7 @@ async def apply_action(room_id: str, body: MapDraftActionRequest):
 
     seq_step = currentSequence[step]
     new_step = step + 1
-    team_name = state["blueName"] if seq_step["team"] == "blue" else state["redName"]
+    team_name = state["blueName"] if seq_step["team"] == Team.BLUE else state["redName"]
     new_actions = state["actions"] + [{"map": body.map, "team": team_name, "action": seq_step["action"]}]
     done = new_step >= len(currentSequence)
     if done:

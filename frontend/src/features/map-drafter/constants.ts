@@ -1,5 +1,5 @@
 import { SequenceStep } from "@/features/common/types";
-import { SequenceKey } from "@/features/map-drafter/types";
+import { Sequence, SequenceKey } from "@/features/map-drafter/types";
 import { Team, DraftAction } from "@/features/common/constants";
 
 export const BO3_SEQUENCE: SequenceStep[] = [
@@ -19,6 +19,6 @@ export const BO1_SEQUENCE: SequenceStep[] = [
 ];
 
 export const SEQUENCE_MAP: Record<SequenceKey, SequenceStep[]> = {
-  bo1: BO1_SEQUENCE,
-  bo3: BO3_SEQUENCE,
+  [Sequence.BO1]: BO1_SEQUENCE,
+  [Sequence.BO3]: BO3_SEQUENCE,
 };

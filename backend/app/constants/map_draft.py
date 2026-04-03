@@ -1,20 +1,30 @@
+from enum import StrEnum
+
+from app.constants.common import Team, DraftAction
+
 BO3_SEQUENCE = [
-    {"team": "blue", "action": "ban"},
-    {"team": "red", "action": "ban"},
-    {"team": "blue", "action": "pick"},
-    {"team": "red", "action": "pick"},
-    {"team": "blue", "action": "ban"},
-    {"team": "red", "action": "ban"},
+    {"team": Team.BLUE, "action": DraftAction.BAN},
+    {"team": Team.RED, "action": DraftAction.BAN},
+    {"team": Team.BLUE, "action": DraftAction.PICK},
+    {"team": Team.RED, "action": DraftAction.PICK},
+    {"team": Team.BLUE, "action": DraftAction.BAN},
+    {"team": Team.RED, "action": DraftAction.BAN},
 ]
 
 BO1_SEQUENCE = [
-    {"team": "blue", "action": "ban"},
-    {"team": "blue", "action": "ban"},
-    {"team": "blue", "action": "ban"},
-    {"team": "red", "action": "pick"},
+    {"team": Team.BLUE, "action": DraftAction.BAN},
+    {"team": Team.BLUE, "action": DraftAction.BAN},
+    {"team": Team.BLUE, "action": DraftAction.BAN},
+    {"team": Team.RED, "action": DraftAction.PICK},
 ]
 
-SEQUENCES = {"bo3": BO3_SEQUENCE, "bo1": BO1_SEQUENCE}
+
+class Sequence(StrEnum):
+    BO3 = "bo3"
+    BO1 = "bo1"
+
+
+SEQUENCE_MAPPING = {Sequence.BO3: BO3_SEQUENCE, Sequence.BO1: BO1_SEQUENCE}
 
 
 MIN_MAPS = 7

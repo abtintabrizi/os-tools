@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 
+from app.constants.common import Team
+
 
 class CreateMapDraftRoomRequest(BaseModel):
     bestOf: str
@@ -13,5 +15,5 @@ class MapDraftActionRequest(BaseModel):
 
 
 class MapDraftPendingRequest(BaseModel):
-    side: str
+    side: Team
     map: str | None = None

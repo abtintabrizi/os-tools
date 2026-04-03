@@ -1,10 +1,12 @@
+from app.constants.common import Team, DraftAction
+
 STRIKER_SEQUENCE = [
-    {"team": "blue", "action": "ban"},
-    {"team": "red", "action": "ban"},
-    {"team": "blue", "action": "pick"},
-    {"team": "red", "action": "pick"},
-    {"team": "red", "action": "pick"},
-    {"team": "blue", "action": "pick"},
-    {"team": "blue", "action": "pick"},
-    {"team": "red", "action": "pick"},
+    {"team": Team.BLUE, "action": DraftAction.BAN},
+    {"team": Team.RED, "action": DraftAction.BAN},
+    {"team": Team.BLUE, "action": DraftAction.PICK},
+    {"team": Team.RED, "action": DraftAction.PICK},
+    {"team": Team.RED, "action": DraftAction.PICK},
+    {"team": Team.BLUE, "action": DraftAction.PICK},
+    {"team": Team.BLUE, "action": DraftAction.PICK},
+    {"team": Team.RED, "action": DraftAction.PICK},
 ]
