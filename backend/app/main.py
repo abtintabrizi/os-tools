@@ -9,10 +9,7 @@ from app.routes.routes import router
 
 app = FastAPI()
 
-ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "https://os-tools-theta.vercel.app",
-]
+ALLOWED_ORIGINS = ["http://localhost:5173", "https://os-tools-theta.vercel.app", "https://drafter2.bestieinslot.com"]
 
 app.add_middleware(
     CORSMiddleware,
