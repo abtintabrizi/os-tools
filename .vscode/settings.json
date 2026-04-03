@@ -9,5 +9,7 @@
     "editor.defaultFormatter": "ms-python.black-formatter",
     "editor.formatOnSave": true
   },
-  "python.analysis.extraPaths": ["backend"]
+  "python.analysis.extraPaths": ["backend"],
+  "eslint.useFlatConfig": true,
+  "eslint.workingDirectories": ["frontend"]
 }

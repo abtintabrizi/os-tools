@@ -9,6 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 npm run dev      # Dev server on http://localhost:5173
 npm run build    # tsc + vite build (type-check included)
 npm run preview  # Preview production build
+npx prettier --write .  # Format all frontend files
 ```
 
 ### Backend (`backend/`)
@@ -18,9 +19,19 @@ source .venv/Scripts/activate
 
 python app/main.py                                          # Dev server on http://127.0.0.1:8000
 uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload # Equivalent
+black .                                                     # Format all backend Python files
 ```
 
 No test suite exists in either package.
+
+## Formatting & Linting
+
+Always run after making changes to frontend files:
+1. `npx prettier --write <file>` — format changed `.ts` / `.tsx` files. Config is in `frontend/.prettierrc`.
+2. `npx eslint <file>` — check for lint errors. Fix any warnings/errors before finishing.
+
+Always run after making changes to backend files:
+- `black <file>` — format changed `.py` files. Black is in `requirements.txt` and available when the venv is active.
 
 ## Architecture
 

@@ -15,18 +15,18 @@ export function useMapDraftApi(roomId: string | null) {
 
   const create = useCallback(
     (config: CreateRoomConfig) => api.create(config),
-    [api.create],
+    [api.create], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const applyAction = useCallback(
     (map: string) => api.applyAction({ map }),
-    [api.applyAction],
+    [api.applyAction], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const setPending = useCallback(
     (side: Team.Blue | Team.Red, map: string | null) =>
       api.setPending({ side, map }),
-    [api.setPending],
+    [api.setPending], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   return { ...api, create, applyAction, setPending };
