@@ -2,7 +2,13 @@ import asyncio
 import random
 import time
 
-from app.constants.common import TIMER_SECONDS, Team, DraftAction, CURRENT_AWAKENING_POOL, AWAKENING_CONFLICTS
+from app.constants.common import (
+    TIMER_SECONDS,
+    Team,
+    DraftAction,
+    CURRENT_AWAKENING_POOL,
+    AWAKENING_CONFLICTS,
+)
 from app.constants.striker_draft import STRIKER_SEQUENCE, STRIKER_POOL
 from app.constants.tables import Table
 from app.utils.supabase import get_room, save_room
@@ -43,17 +49,25 @@ async def _auto_advance(room_id: str, expected_step: int, delay: float) -> None:
 
     seq_step = STRIKER_SEQUENCE[expected_step]
 
+    banned_strikers = {
+        a["striker"]
+        for a in state["actions"]
+        if a["action"] == DraftAction.BAN and a["striker"] is not None
+    }
+    used_strikers = {a["striker"] for a in state["actions"] if a["striker"] is not None}
+    pending_key = "pendingBlue" if seq_step["team"] == Team.BLUE else "pendingRed"
+    pending = state.get(pending_key)
+
     if seq_step["action"] == DraftAction.BAN:
-        chosen_striker = None
+        available_to_ban = [s for s in STRIKER_POOL if s not in banned_strikers]
+        chosen_striker = pending if pending and pending in available_to_ban else None
     else:
-        used_strikers = {a["striker"] for a in state["actions"] if a["striker"] is not None}
         available = [s for s in STRIKER_POOL if s not in used_strikers]
         if not available:
             return
-        pending_key = "pendingBlue" if seq_step["team"] == Team.BLUE else "pendingRed"
-        chosen_striker = state.get(pending_key)
-        if not chosen_striker or chosen_striker not in available:
-            chosen_striker = random.choice(available)
+        chosen_striker = (
+            pending if pending and pending in available else random.choice(available)
+        )
 
     team_name = state["blueName"] if seq_step["team"] == Team.BLUE else state["redName"]
     new_actions = state["actions"] + [
