@@ -15,7 +15,10 @@ import { StepTracker } from "@/features/common/components/StepTracker";
 import ResultCard from "@/features/common/components/ResultCard";
 import DonePanel from "@/features/map-drafter/components/DonePanel";
 import { Sequence } from "@/features/map-drafter/types";
-import { BackButton, HomeButton } from "@/features/common/components/NavButtons";
+import {
+  BackButton,
+  HomeButton,
+} from "@/features/common/components/NavButtons";
 
 export default function DraftPage() {
   const { state, side, loading, handleAction, handlePending, handleReady } =
@@ -241,7 +244,7 @@ export default function DraftPage() {
         </div>
 
         {/* Center */}
-        <div className="p-5 flex flex-col flex-1">
+        <div className="px-5 pt-5 flex flex-col flex-1">
           <div className="flex-1 flex flex-col">
             {!bothReady ? (
               <div className="flex flex-col items-center justify-center h-full gap-8">
@@ -434,7 +437,7 @@ export default function DraftPage() {
           </div>
 
           {side === Team.Spectator && (
-            <div className="pt-4 border-t border-white/7 h-34 flex items-center justify-center">
+            <div className="px-5 border-t border-white/7 h-40 flex items-center gap-5 shrink-0 justify-center">
               {!bothReady ? (
                 <div className="flex items-center gap-6">
                   <div className="flex flex-col items-center gap-2">
@@ -532,7 +535,7 @@ export default function DraftPage() {
                           )}
                           {!isBan && completedAction && pickNumber && (
                             <div className="absolute inset-0 flex items-center justify-center">
-                              <span className="font-mono text-sm font-bold tracking-widest uppercase bg-tools-gold text-black px-2 py-0.5 rounded">
+                              <span className="font-mono text-sm font-bold tracking-widest uppercase bg-tools-gold/70 text-black px-2 py-0.5 rounded">
                                 G{pickNumber}
                               </span>
                             </div>
@@ -553,7 +556,7 @@ export default function DraftPage() {
                             </div>
                           )}
                         </div>
-                        <span className="font-mono text-[9px] text-white/40 text-center leading-tight w-20 truncate">
+                        <span className="font-mono text-xs text-white/40 text-center leading-tight w-20 line-clamp-2">
                           {completedAction?.map ??
                             (isBan ? "Ban" : `G${pickNumber}`)}
                         </span>
@@ -587,13 +590,13 @@ export default function DraftPage() {
                             )}
                             {deciderMap && (
                               <div className="absolute inset-0 flex items-center justify-center">
-                                <span className="font-mono text-sm font-bold tracking-widest uppercase bg-tools-gold text-black px-2 py-0.5 rounded">
+                                <span className="font-mono text-sm font-bold tracking-widest uppercase bg-tools-gold/70 text-black px-2 py-0.5 rounded">
                                   G3
                                 </span>
                               </div>
                             )}
                           </div>
-                          <span className="font-mono text-[9px] text-white/40 text-center leading-tight w-20">
+                          <span className="font-mono text-xs text-white/40 text-center leading-tight w-20 line-clamp-2">
                             {deciderMap ?? "G3"}
                           </span>
                         </div>
