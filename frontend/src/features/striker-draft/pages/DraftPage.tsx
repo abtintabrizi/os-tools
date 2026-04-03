@@ -15,6 +15,7 @@ import { StepTracker } from "@/features/common/components/StepTracker";
 import { STRIKER_SEQUENCE } from "@/features/striker-draft/constants";
 import type { IndexedStep } from "@/features/striker-draft/types";
 import { SidebarCard } from "@/features/striker-draft/components/SidebarCard";
+import { BackButton, HomeButton } from "@/features/common/components/NavButtons";
 
 export default function DraftPage() {
   const {
@@ -43,8 +44,12 @@ export default function DraftPage() {
       new Image().src = s.splash;
       new Image().src = s.icon;
     });
-    ALL_MAPS.forEach((m) => { new Image().src = m.icon; });
-    ALL_AWAKENINGS.forEach((a) => { new Image().src = a.icon; });
+    ALL_MAPS.forEach((m) => {
+      new Image().src = m.icon;
+    });
+    ALL_AWAKENINGS.forEach((a) => {
+      new Image().src = a.icon;
+    });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -147,7 +152,10 @@ export default function DraftPage() {
     <div className="h-screen flex flex-col">
       {/* Header */}
       <header className="grid grid-cols-3 px-6 border-b border-white/7 bg-tools-void/70 h-16 items-center shrink-0">
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-3">
+          <BackButton />
+          <HomeButton />
+          <div className="w-px h-4 bg-white/15" />
           {side !== Team.Spectator && (
             <span
               className={`font-mono text-xs font-bold tracking-widest uppercase py-1 px-2.5 rounded ${side === Team.Blue ? blueBadgeClass : redBadgeClass}`}
@@ -597,15 +605,15 @@ export default function DraftPage() {
                     return (
                       <div
                         key={i}
-                        className="flex flex-col items-center gap-1 w-16"
+                        className="flex flex-col items-center gap-1 w-20"
                       >
                         <span
-                          className={`font-mono text-xs font-bold tracking-widest uppercase text-center ${isBlue ? "text-tools-blue" : "text-tools-red"}`}
+                          className={`font-mono text-xs font-bold tracking-widest uppercase text-center truncate w-full ${isBlue ? "text-tools-blue" : "text-tools-red"}`}
                         >
                           {isBlue ? blueName : redName}
                         </span>
                         <div
-                          className={`relative w-16 h-16 rounded border-2 overflow-hidden ${isBlue ? "border-tools-blue" : "border-tools-red"} ${isCurrent ? "ring-1 ring-white/30" : ""} ${!completedAction && !isCurrent ? "opacity-30" : ""}`}
+                          className={`relative w-20 h-20 rounded border-2 overflow-hidden ${isBlue ? "border-tools-blue" : "border-tools-red"} ${isCurrent ? "ring-1 ring-white/30" : ""} ${!completedAction && !isCurrent ? "opacity-30" : ""}`}
                         >
                           {strikerEntry ? (
                             <img
@@ -644,7 +652,7 @@ export default function DraftPage() {
                             </div>
                           )}
                         </div>
-                        <span className="font-mono text-xs text-white/40 text-center leading-tight w-16 truncate">
+                        <span className="font-mono text-xs text-white/40 text-center leading-tight w-20 truncate">
                           {completedAction
                             ? (completedAction.striker ?? "No Ban")
                             : isBan

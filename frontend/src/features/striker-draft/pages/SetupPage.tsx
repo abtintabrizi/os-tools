@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Spinner from "@/features/common/components/Spinner";
+import { HomeButton } from "@/features/common/components/NavButtons";
 import {
   ALL_MAPS,
   AWAKENING_CONFLICTS,
@@ -66,10 +67,11 @@ export default function SetupPage() {
   return (
     <div className="h-screen flex justify-center items-center">
       <div className="w-full max-w-160 flex flex-col gap-3">
-        <h1 className="text-7xl font-extrabold leading-none tracking-tight">
-          Striker
-          <br />
-          <span className="text-tools-gold">Draft</span>
+        <div>
+          <HomeButton />
+        </div>
+        <h1 className="text-6xl font-extrabold leading-none tracking-tight">
+          Striker <span className="text-tools-gold">Draft</span>
         </h1>
 
         <div className="flex flex-col gap-4 bg-tools-carbon border border-white/7 rounded-2xl p-6">
