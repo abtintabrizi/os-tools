@@ -2,8 +2,8 @@ import asyncio
 import random
 import time
 
-from app.constants.common import TIMER_SECONDS
-from app.constants.map_draft import SEQUENCES
+from app.constants.common import TIMER_SECONDS, Team, DraftAction
+from app.constants.map_draft import SEQUENCE_MAPPING, Sequence
 from app.constants.tables import Table
 from app.utils.supabase import get_room, save_room
 from app.utils.ws import manager
@@ -13,12 +13,12 @@ timers: dict[str, asyncio.Task] = {}
 
 
 def append_decider(maps: list[str], actions: list[dict], best_of: str) -> list[dict]:
-    if best_of != "bo3":
+    if best_of != Sequence.BO3:
         return actions
     used = {a["map"] for a in actions}
     remaining = [m for m in maps if m not in used]
     if len(remaining) == 1:
-        return actions + [{"map": remaining[0], "team": None, "action": "pick"}]
+        return actions + [{"map": remaining[0], "team": None, "action": DraftAction.PICK}]
     return actions
 
 
@@ -43,10 +43,10 @@ async def _auto_advance(room_id: str, expected_step: int, delay: float) -> None:
     if state is None or state["done"] or state["step"] != expected_step:
         return
 
-    sequence = SEQUENCES[state["bestOf"]]
+    sequence = SEQUENCE_MAPPING[state["bestOf"]]
     seq_step = sequence[expected_step]
 
-    pending_key = "pendingBlue" if seq_step["team"] == "blue" else "pendingRed"
+    pending_key = "pendingBlue" if seq_step["team"] == Team.BLUE else "pendingRed"
     chosen_map = state.get(pending_key)
 
     used_maps = {a["map"] for a in state["actions"]}
@@ -57,7 +57,7 @@ async def _auto_advance(room_id: str, expected_step: int, delay: float) -> None:
     if not chosen_map or chosen_map not in available:
         chosen_map = random.choice(available)
 
-    team_name = state["blueName"] if seq_step["team"] == "blue" else state["redName"]
+    team_name = state["blueName"] if seq_step["team"] == Team.BLUE else state["redName"]
     new_actions = state["actions"] + [{"map": chosen_map, "team": team_name, "action": seq_step["action"]}]
     new_step = expected_step + 1
     done = new_step >= len(sequence)

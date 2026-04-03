@@ -1,4 +1,5 @@
 import { MapDraftState, MapStatus } from "@/features/map-drafter/types";
+import { DraftAction } from "@/features/common/constants";
 
 export function deriveMapStatuses(
   state: MapDraftState,
@@ -9,7 +10,7 @@ export function deriveMapStatuses(
 
   let pickCount = 0;
   state.actions.forEach((a) => {
-    if (a.action === "ban") {
+    if (a.action === DraftAction.Ban) {
       statuses[a.map] = "banned";
     } else if (a.team === null) {
       statuses[a.map] = "decider";

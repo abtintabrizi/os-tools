@@ -4,14 +4,14 @@ import { useMapDraftContext } from "@/features/map-drafter/context/MapDraftConte
 import { useToast } from "@/features/common/components/Toast";
 import Spinner from "@/features/common/components/Spinner";
 import { SEQUENCE_MAP } from "@map-drafter/constants.ts";
-import { SequenceKey } from "@/features/map-drafter/types";
+import { Sequence, SequenceKey } from "@/features/map-drafter/types";
 
 export default function SetupPage() {
   const { toast } = useToast();
   const { handleLaunch } = useMapDraftContext();
   const [blueName, setBlueName] = useState("");
   const [redName, setRedName] = useState("");
-  const [bestOf, setBestOf] = useState<SequenceKey>("bo3");
+  const [bestOf, setBestOf] = useState<SequenceKey>(Sequence.BO3);
   const [enabledMaps, setEnabledMaps] = useState<Set<string>>(
     new Set(CURRENT_MAP_POOL),
   );
@@ -158,14 +158,14 @@ export default function SetupPage() {
         </div>
 
         <button
-          className="flex justify-center items-center w-full h-14 bg-tools-gold text-black rounded-2xl font-head text-xl font-bold disabled:cursor-default! disabled:opacity-50"
+          className="flex justify-center items-center w-full h-14 bg-tools-gold text-black rounded-2xl font-head text-xl font-bold disabled:cursor-default! disabled:opacity-50 transition-opacity duration-300"
           onClick={handleSubmit}
           disabled={loading || enabledMaps.size !== 7}
         >
           {loading ? (
             <Spinner size="lg" primary="white" secondary="black" />
           ) : (
-            "Create Draft Room →"
+            "Create Map Draft Room →"
           )}
         </button>
       </div>

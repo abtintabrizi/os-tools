@@ -19,7 +19,10 @@ export default function Home() {
             <Map size={60} />
             Map Draft
           </button>
-          <button className={btnBase}>
+          <button
+            className={btnBase}
+            onClick={() => navigate("/striker-draft")}
+          >
             <PersonStanding size={60} />
             Striker Select
           </button>

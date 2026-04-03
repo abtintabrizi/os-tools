@@ -2,11 +2,11 @@ import time
 
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 
-from app.constants.common import TIMER_SECONDS
-from app.constants.map_draft import MIN_MAPS, SEQUENCES
+from app.constants.common import TIMER_SECONDS, Team
+from app.constants.map_draft import MIN_MAPS, SEQUENCE_MAPPING
 from app.constants.tables import Table
 from app.models.common import ReadyRequest
-from app.models.map_draft import ActionRequest, CreateRoomRequest, PendingRequest
+from app.models.map_draft import MapDraftActionRequest, CreateMapDraftRoomRequest, MapDraftPendingRequest
 from app.utils.supabase import generate_room_id, get_room, save_room
 from app.utils.map_draft import append_decider, cancel_timer, spawn_timer, timers
 from app.utils.ws import manager
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/map-draft")
 
 
 @router.post("/rooms")
-async def create_room(body: CreateRoomRequest):
+async def create_room(body: CreateMapDraftRoomRequest):
     if len(body.maps) != MIN_MAPS:
         raise HTTPException(status_code=400, detail=f"Exactly {MIN_MAPS} maps required to draft")
 
@@ -52,11 +52,11 @@ async def set_ready(room_id: str, body: ReadyRequest):
     state = await get_room(room_id, Table.MAP_DRAFTS)
     if state is None:
         raise HTTPException(status_code=404, detail="Room not found")
-    if body.side not in ("blue", "red"):
+    if body.side not in (Team.BLUE, Team.RED):
         raise HTTPException(status_code=400, detail="Invalid side")
 
     updated = {**state}
-    if body.side == "blue":
+    if body.side == Team.BLUE:
         updated["readyBlue"] = True
     else:
         updated["readyRed"] = True
@@ -74,15 +74,15 @@ async def set_ready(room_id: str, body: ReadyRequest):
 
 
 @router.post("/rooms/{room_id}/pending")
-async def set_pending(room_id: str, body: PendingRequest):
+async def set_pending(room_id: str, body: MapDraftPendingRequest):
     state = await get_room(room_id, Table.MAP_DRAFTS)
     if state is None:
         raise HTTPException(status_code=404, detail="Room not found")
-    if body.side not in ("blue", "red"):
+    if body.side not in (Team.BLUE, Team.RED):
         raise HTTPException(status_code=400, detail="Invalid side")
 
     updated = {**state}
-    if body.side == "blue":
+    if body.side == Team.BLUE:
         updated["pendingBlue"] = body.map
     else:
         updated["pendingRed"] = body.map
@@ -93,7 +93,7 @@ async def set_pending(room_id: str, body: PendingRequest):
 
 
 @router.post("/rooms/{room_id}/action")
-async def apply_action(room_id: str, body: ActionRequest):
+async def apply_action(room_id: str, body: MapDraftActionRequest):
     state = await get_room(room_id, Table.MAP_DRAFTS)
     if state is None:
         raise HTTPException(status_code=404, detail="Room not found")
@@ -105,7 +105,7 @@ async def apply_action(room_id: str, body: ActionRequest):
         raise HTTPException(status_code=400, detail="Draft is already complete")
 
     step = state["step"]
-    currentSequence = SEQUENCES[state["bestOf"]]
+    currentSequence = SEQUENCE_MAPPING[state["bestOf"]]
     if step >= len(currentSequence):
         raise HTTPException(status_code=400, detail="No more steps remaining")
 
@@ -118,7 +118,7 @@ async def apply_action(room_id: str, body: ActionRequest):
 
     seq_step = currentSequence[step]
     new_step = step + 1
-    team_name = state["blueName"] if seq_step["team"] == "blue" else state["redName"]
+    team_name = state["blueName"] if seq_step["team"] == Team.BLUE else state["redName"]
     new_actions = state["actions"] + [{"map": body.map, "team": team_name, "action": seq_step["action"]}]
     done = new_step >= len(currentSequence)
     if done:

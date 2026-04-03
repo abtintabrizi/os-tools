@@ -8,6 +8,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import type { MapDraftState } from "@map-drafter/types";
 import type { Side } from "@/features/common/types";
+import { Team } from "@/features/common/constants";
 import {
   useMapDraftApi,
   type CreateRoomConfig,
@@ -49,7 +50,7 @@ export function MapDraftProvider({ children }: { children: ReactNode }) {
   const { roomId: urlRoom, side: urlSide } = getUrlParams();
   const navigate = useNavigate();
 
-  const [side, setSide] = useState<Side>(urlSide ?? "spectator");
+  const [side, setSide] = useState<Side>(urlSide ?? Team.Spectator);
   const [roomId, setRoomId] = useState<string | null>(urlRoom);
   const [lobbyState, setLobbyState] = useState<MapDraftState | null>(null);
 
@@ -88,13 +89,13 @@ export function MapDraftProvider({ children }: { children: ReactNode }) {
   }
 
   async function handlePending(map: string | null) {
-    if (side === "blue" || side === "red") {
+    if (side === Team.Blue || side === Team.Red) {
       await setPending(side, map);
     }
   }
 
   async function handleReady() {
-    if (side === "blue" || side === "red") {
+    if (side === Team.Blue || side === Team.Red) {
       await ready(side);
     }
   }
@@ -103,7 +104,7 @@ export function MapDraftProvider({ children }: { children: ReactNode }) {
     window.history.replaceState({}, "", "/map-draft");
     setRoomId(null);
     setLobbyState(null);
-    setSide("spectator");
+    setSide(Team.Spectator);
     navigate("/map-draft");
   }
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Side } from "@/features/common/types";
+import { Team } from "@/features/common/constants";
 import { useMapDraftContext } from "@/features/map-drafter/context/MapDraftContext";
 
 export default function LobbyPage() {
@@ -31,9 +32,9 @@ export default function LobbyPage() {
     setTimeout(() => setCopied(null), 2000);
   }
 
-  const blueUrl = buildUrl("blue");
-  const redUrl = buildUrl("red");
-  const spectatorUrl = buildUrl("spectator");
+  const blueUrl = buildUrl(Team.Blue);
+  const redUrl = buildUrl(Team.Red);
+  const spectatorUrl = buildUrl(Team.Spectator);
 
   const baseBtn =
     "px-2.5 py-2.5 rounded-lg font-head text-sm font-bold transition-all duration-150";
@@ -52,7 +53,7 @@ export default function LobbyPage() {
         </h2>
 
         <p className="font-mono text-xs tracking-wider uppercase">
-          // Room {roomId} · {bestOf} · Share links below
+          // Room {roomId} · Map Draft · {bestOf} · Share links below
         </p>
 
         <div className="flex flex-col gap-3 bg-tools-carbon border border-white/7 rounded-2xl p-6">
@@ -66,13 +67,13 @@ export default function LobbyPage() {
             <div className="flex gap-2.5 flex-wrap">
               <button
                 className={`${baseBtn} ${blueBtn}`}
-                onClick={() => copy(blueUrl, "blue")}
+                onClick={() => copy(blueUrl, Team.Blue)}
               >
-                {copied === "blue" ? "Copied!" : "Copy blue link"}
+                {copied === Team.Blue ? "Copied!" : "Copy blue link"}
               </button>
               <button
                 className={`${baseBtn} ${blueBtn}`}
-                onClick={() => handleSidePick("blue")}
+                onClick={() => handleSidePick(Team.Blue)}
               >
                 Enter as {blueName}
               </button>
@@ -91,13 +92,13 @@ export default function LobbyPage() {
             <div className="flex gap-2.5 flex-wrap">
               <button
                 className={`${baseBtn} ${redBtn}`}
-                onClick={() => copy(redUrl, "red")}
+                onClick={() => copy(redUrl, Team.Red)}
               >
-                {copied === "red" ? "Copied!" : "Copy red link"}
+                {copied === Team.Red ? "Copied!" : "Copy red link"}
               </button>
               <button
                 className={`${baseBtn} ${redBtn}`}
-                onClick={() => handleSidePick("red")}
+                onClick={() => handleSidePick(Team.Red)}
               >
                 Enter as {redName}
               </button>
@@ -116,14 +117,14 @@ export default function LobbyPage() {
             <div className="flex gap-2.5 flex-wrap">
               <button
                 className={`${baseBtn} ${neutralBtn}`}
-                onClick={() => copy(spectatorUrl, "spectator")}
+                onClick={() => copy(spectatorUrl, Team.Spectator)}
               >
-                {copied === "spectator" ? "Copied!" : "Copy spectator link"}
+                {copied === Team.Spectator ? "Copied!" : "Copy spectator link"}
               </button>
               <div className="flex gap-2.5 flex-wrap">
                 <button
                   className={`${baseBtn} ${neutralBtn}`}
-                  onClick={() => handleSidePick("spectator")}
+                  onClick={() => handleSidePick(Team.Spectator)}
                 >
                   Enter as Spectator
                 </button>

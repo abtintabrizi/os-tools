@@ -1,5 +1,10 @@
 import { ActionType } from "@/features/common/types";
 
+export enum Sequence {
+  BO1 = "bo1",
+  BO3 = "bo3",
+}
+
 export interface MapDraftAction {
   map: string;
   team: string | null;
@@ -30,4 +35,4 @@ export type MapStatus =
   | "picked-g3"
   | "decider";
 
-export type SequenceKey = "bo1" | "bo3";
+export type SequenceKey = `${Sequence}`;

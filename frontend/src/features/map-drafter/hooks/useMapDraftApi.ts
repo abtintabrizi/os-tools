@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { MapDraftState, SequenceKey } from "@map-drafter/types";
+import type { Team } from "@/features/common/constants";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 const WS_BASE = API_BASE.replace(/^http/, "ws");
@@ -116,7 +117,7 @@ export function useMapDraftApi(roomId: string | null) {
   );
 
   const setPending = useCallback(
-    async (side: "blue" | "red", map: string | null): Promise<void> => {
+    async (side: Team.Blue | Team.Red, map: string | null): Promise<void> => {
       if (!roomId) return;
       await fetch(`${API_BASE}/map-draft/rooms/${roomId}/pending`, {
         method: "POST",
@@ -129,7 +130,7 @@ export function useMapDraftApi(roomId: string | null) {
   );
 
   const ready = useCallback(
-    async (side: "blue" | "red"): Promise<void> => {
+    async (side: Team.Blue | Team.Red): Promise<void> => {
       if (!roomId) return;
       const resp = await fetch(`${API_BASE}/map-draft/rooms/${roomId}/ready`, {
         method: "POST",

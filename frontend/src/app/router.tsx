@@ -1,9 +1,9 @@
 import { createBrowserRouter } from "react-router-dom";
 import Home from "@/routes/Home";
 import MapDraft from "@/routes/MapDraft";
-import SetupPage from "@/features/map-drafter/pages/SetupPage";
-import LobbyPage from "@/features/map-drafter/pages/LobbyPage";
-import DraftPage from "@/features/map-drafter/pages/DraftPage";
+import StrikerDraft from "@/routes/StrikerDraft";
+import MapDraftPages from "@/features/map-drafter/pages";
+import StrikerDraftPages from "@/features/striker-draft/pages";
 
 export const router = createBrowserRouter([
   {
@@ -14,9 +14,18 @@ export const router = createBrowserRouter([
     path: "/map-draft",
     element: <MapDraft />,
     children: [
-      { path: "", element: <SetupPage /> },
-      { path: "lobby", element: <LobbyPage /> },
-      { path: "draft", element: <DraftPage /> },
+      { path: "", element: <MapDraftPages.SetupPage /> },
+      { path: "lobby", element: <MapDraftPages.LobbyPage /> },
+      { path: "draft", element: <MapDraftPages.DraftPage /> },
+    ],
+  },
+  {
+    path: "/striker-draft",
+    element: <StrikerDraft />,
+    children: [
+      { path: "", element: <StrikerDraftPages.SetupPage /> },
+      { path: "lobby", element: <StrikerDraftPages.LobbyPage /> },
+      { path: "draft", element: <StrikerDraftPages.DraftPage /> },
     ],
   },
 ]);
