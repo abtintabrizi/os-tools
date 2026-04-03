@@ -15,7 +15,10 @@ import { StepTracker } from "@/features/common/components/StepTracker";
 import { STRIKER_SEQUENCE } from "@/features/striker-draft/constants";
 import type { IndexedStep } from "@/features/striker-draft/types";
 import { SidebarCard } from "@/features/striker-draft/components/SidebarCard";
-import { BackButton, HomeButton } from "@/features/common/components/NavButtons";
+import {
+  BackButton,
+  HomeButton,
+} from "@/features/common/components/NavButtons";
 
 export default function DraftPage() {
   const {
@@ -512,7 +515,7 @@ export default function DraftPage() {
 
           {/* Spectator sequence tracker */}
           {side === Team.Spectator && (
-            <div className="px-5 border-t border-white/7 h-34 flex items-center gap-5 shrink-0 justify-center">
+            <div className="px-5 border-t border-white/7 h-40 flex items-center gap-5 shrink-0 justify-center">
               {/* Map + awakenings */}
               <div className="flex items-center gap-4 shrink-0">
                 {mapEntry && (
@@ -608,7 +611,7 @@ export default function DraftPage() {
                         className="flex flex-col items-center gap-1 w-20"
                       >
                         <span
-                          className={`font-mono text-xs font-bold tracking-widest uppercase text-center truncate w-full ${isBlue ? "text-tools-blue" : "text-tools-red"}`}
+                          className={`font-mono font-bold tracking-widest uppercase text-center truncate w-full ${isBlue ? "text-tools-blue" : "text-tools-red"}`}
                         >
                           {isBlue ? blueName : redName}
                         </span>
@@ -652,7 +655,7 @@ export default function DraftPage() {
                             </div>
                           )}
                         </div>
-                        <span className="font-mono text-xs text-white/40 text-center leading-tight w-20 truncate">
+                        <span className="font-mono text-xs text-white/40 text-center leading-tight w-20 line-clamp-2">
                           {completedAction
                             ? (completedAction.striker ?? "No Ban")
                             : isBan
