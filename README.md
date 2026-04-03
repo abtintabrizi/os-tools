@@ -3,6 +3,7 @@
 A real-time draft tool for competitive play, supporting both map selection and striker (character) drafts. Teams join shared rooms and alternate banning/picking in sync via WebSockets.
 
 Live at: [drafter2.bestieinslot.com](https://drafter2.bestieinslot.com)
+
 Live at: [https://os-tools-theta.vercel.app/](https://https://os-tools-theta.vercel.app/)
 
 ---
