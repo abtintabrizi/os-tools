@@ -15,6 +15,7 @@ import { StepTracker } from "@/features/common/components/StepTracker";
 import ResultCard from "@/features/common/components/ResultCard";
 import DonePanel from "@/features/map-drafter/components/DonePanel";
 import { Sequence } from "@/features/map-drafter/types";
+import { BackButton, HomeButton } from "@/features/common/components/NavButtons";
 
 export default function DraftPage() {
   const { state, side, loading, handleAction, handlePending, handleReady } =
@@ -126,7 +127,10 @@ export default function DraftPage() {
     <div className="h-screen flex flex-col">
       {/* Header */}
       <header className="grid grid-cols-3 px-6 border-b border-white/7 bg-tools-void/70 h-16 items-center">
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-3">
+          <BackButton />
+          <HomeButton />
+          <div className="w-px h-4 bg-white/15" />
           {side !== Team.Spectator && (
             <span
               className={`font-mono text-xs font-bold tracking-widest uppercase py-1 px-2.5 rounded ${side === Team.Blue ? blueBadgeClass : redBadgeClass}`}
@@ -500,7 +504,7 @@ export default function DraftPage() {
                         className="flex flex-col items-center gap-1 w-20"
                       >
                         <span
-                          className={`font-mono text-[10px] font-bold tracking-widest uppercase text-center ${isBlue ? "text-tools-blue" : "text-tools-red"}`}
+                          className={`font-mono font-bold tracking-widest uppercase text-center truncate w-full ${isBlue ? "text-tools-blue" : "text-tools-red"}`}
                         >
                           {teamName}
                         </span>
@@ -528,7 +532,7 @@ export default function DraftPage() {
                           )}
                           {!isBan && completedAction && pickNumber && (
                             <div className="absolute inset-0 flex items-center justify-center">
-                              <span className="font-mono text-sm font-bold tracking-widest uppercase bg-black/60 text-white px-2 py-0.5 rounded">
+                              <span className="font-mono text-sm font-bold tracking-widest uppercase bg-tools-gold text-black px-2 py-0.5 rounded">
                                 G{pickNumber}
                               </span>
                             </div>
@@ -550,7 +554,8 @@ export default function DraftPage() {
                           )}
                         </div>
                         <span className="font-mono text-[9px] text-white/40 text-center leading-tight w-20 truncate">
-                          {completedAction?.map ?? (isBan ? "Ban" : `G${pickNumber}`)}
+                          {completedAction?.map ??
+                            (isBan ? "Ban" : `G${pickNumber}`)}
                         </span>
                       </div>
                     );
@@ -565,7 +570,7 @@ export default function DraftPage() {
                         : null;
                       return (
                         <div className="flex flex-col items-center gap-1 w-20">
-                          <span className="font-mono text-[10px] font-bold tracking-widest uppercase text-center text-tools-gold">
+                          <span className="font-mono font-bold tracking-widest uppercase text-center text-tools-gold">
                             Decider
                           </span>
                           <div
@@ -579,6 +584,13 @@ export default function DraftPage() {
                               />
                             ) : (
                               <div className="w-full h-full bg-white/5" />
+                            )}
+                            {deciderMap && (
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <span className="font-mono text-sm font-bold tracking-widest uppercase bg-tools-gold text-black px-2 py-0.5 rounded">
+                                  G3
+                                </span>
+                              </div>
                             )}
                           </div>
                           <span className="font-mono text-[9px] text-white/40 text-center leading-tight w-20">

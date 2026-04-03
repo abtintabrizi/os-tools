@@ -5,6 +5,7 @@ import { useToast } from "@/features/common/components/Toast";
 import Spinner from "@/features/common/components/Spinner";
 import { SEQUENCE_MAP } from "@map-drafter/constants.ts";
 import { Sequence, SequenceKey } from "@/features/map-drafter/types";
+import { HomeButton } from "@/features/common/components/NavButtons";
 
 export default function SetupPage() {
   const { toast } = useToast();
@@ -59,10 +60,11 @@ export default function SetupPage() {
   return (
     <div className="h-screen flex justify-center items-center">
       <div className="w-full max-w-160 flex flex-col gap-3">
+        <div>
+          <HomeButton />
+        </div>
         <h1 className="text-7xl font-extrabold leading-none tracking-tight">
-          Map
-          <br />
-          <span className="text-tools-gold">Draft</span>
+          Map <span className="text-tools-gold">Draft</span>
         </h1>
 
         <div className="flex flex-col gap-4 bg-tools-carbon border border-white/7 rounded-2xl p-6">

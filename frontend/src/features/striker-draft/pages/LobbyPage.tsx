@@ -3,19 +3,20 @@ import { useNavigate } from "react-router-dom";
 import type { Side } from "@/features/common/types";
 import { Team } from "@/features/common/constants";
 import { useStrikerDraftContext } from "@/features/striker-draft/context/StrikerDraftContext";
+import { BackButton, HomeButton } from "@/features/common/components/NavButtons";
 
 export default function LobbyPage() {
-  const { lobbyState, state, handleSidePick } = useStrikerDraftContext();
-  const [copied, setCopied] = useState<Side | null>(null);
+  const { lobbyState, state, loading, handleSidePick } = useStrikerDraftContext();
+  const [copied, setCopied] = useState<Side | "all" | null>(null);
   const navigate = useNavigate();
 
   const room = lobbyState ?? state;
 
   useEffect(() => {
-    if (!room) navigate("/striker-draft", { replace: true });
-  }, [room, navigate]);
+    if (!loading && !room) navigate("/striker-draft", { replace: true });
+  }, [loading, room, navigate]);
 
-  if (!room) return null;
+  if (loading || !room) return null;
 
   const { roomId, blueName, redName } = room;
 
@@ -29,6 +30,13 @@ export default function LobbyPage() {
   async function copy(url: string, side: Side) {
     await navigator.clipboard.writeText(url);
     setCopied(side);
+    setTimeout(() => setCopied(null), 2000);
+  }
+
+  async function copyAll() {
+    const text = `${blueName} - ${blueUrl}\n${redName} - ${redUrl}\nSPECTATOR - ${spectatorUrl}`;
+    await navigator.clipboard.writeText(text);
+    setCopied("all");
     setTimeout(() => setCopied(null), 2000);
   }
 
@@ -48,13 +56,22 @@ export default function LobbyPage() {
   return (
     <div className="h-screen flex items-center justify-center">
       <div className="flex flex-col gap-3 w-full max-w-160">
+        <div className="flex gap-3"><BackButton /><HomeButton /></div>
         <h2 className="text-6xl font-extrabold leading-tight tracking-tight">
           Room <span className="text-tools-gold">Ready</span>
         </h2>
 
-        <p className="font-mono text-xs tracking-wider uppercase">
-          // Room {roomId} · Striker Draft · Share links below
-        </p>
+        <div className="flex items-center justify-between">
+          <p className="font-mono text-xs tracking-wider uppercase">
+            // Room {roomId} · Striker Draft · Share links below
+          </p>
+          <button
+            className={`${baseBtn} border border-tools-gold/40 text-tools-gold bg-tools-gold/6 hover:bg-tools-gold/14`}
+            onClick={copyAll}
+          >
+            {copied === "all" ? "Copied!" : "Copy all links"}
+          </button>
+        </div>
 
         <div className="flex flex-col gap-3 bg-tools-carbon border border-white/7 rounded-2xl p-6">
           <div className="flex flex-col gap-2">
