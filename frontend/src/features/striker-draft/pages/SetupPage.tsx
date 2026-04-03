@@ -6,8 +6,12 @@ import {
   Awakening,
 } from "@/features/common/constants";
 import AwakeningPicker from "@/features/striker-draft/components/AwakeningPicker";
+import { useStrikerDraftContext } from "@/features/striker-draft/context/StrikerDraftContext";
+import { useToast } from "@/features/common/components/Toast";
 
 export default function SetupPage() {
+  const { toast } = useToast();
+  const { handleLaunch } = useStrikerDraftContext();
   const [blueName, setBlueName] = useState("");
   const [redName, setRedName] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,6 +25,43 @@ export default function SetupPage() {
   const handleAwakeningChange = (key: "first" | "second", value: string) => {
     setCustomAwakenings((prev) => ({ ...prev, [key]: value }));
   };
+
+  async function handleSubmit() {
+    setLoading(true);
+    try {
+      toast({
+        message:
+          "I'm using free server hosting right now so this can take up to 1 min if there hasn't been any usage within 15 minutes, but don't worry it is working",
+        variant: "info",
+        position: "bottom-center",
+      });
+      await handleLaunch({
+        blueName,
+        redName,
+        map,
+        awakeningMode: awakening,
+        customAwakenings:
+          awakening === "custom"
+            ? [customAwakenings.first, customAwakenings.second]
+            : undefined,
+      });
+    } catch (e) {
+      toast({
+        message:
+          e instanceof Error ? e.message : "An unexpected error occurred",
+        variant: "error",
+        position: "top-center",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const isDisabled =
+    loading ||
+    !map ||
+    (awakening === "custom" &&
+      (!customAwakenings.first || !customAwakenings.second));
 
   return (
     <div className="h-screen flex justify-center items-center">
@@ -147,12 +188,8 @@ export default function SetupPage() {
 
         <button
           className="flex justify-center items-center w-full h-14 bg-tools-gold text-black rounded-2xl font-head text-xl font-bold disabled:cursor-default! disabled:opacity-50 transition-opacity duration-300"
-          disabled={
-            loading ||
-            !map ||
-            (awakening === "custom" &&
-              (!customAwakenings.first || !customAwakenings.second))
-          }
+          disabled={isDisabled}
+          onClick={handleSubmit}
         >
           {loading ? (
             <Spinner size="lg" primary="white" secondary="black" />

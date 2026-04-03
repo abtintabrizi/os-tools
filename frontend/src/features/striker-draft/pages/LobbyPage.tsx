@@ -2,25 +2,25 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Side } from "@/features/common/types";
 import { Team } from "@/features/common/constants";
-import { useMapDraftContext } from "@/features/map-drafter/context/MapDraftContext";
+import { useStrikerDraftContext } from "@/features/striker-draft/context/StrikerDraftContext";
 
 export default function LobbyPage() {
-  const { lobbyState, state, handleSidePick } = useMapDraftContext();
+  const { lobbyState, state, handleSidePick } = useStrikerDraftContext();
   const [copied, setCopied] = useState<Side | null>(null);
   const navigate = useNavigate();
 
   const room = lobbyState ?? state;
 
   useEffect(() => {
-    if (!room) navigate("/map-draft", { replace: true });
+    if (!room) navigate("/striker-draft", { replace: true });
   }, [room, navigate]);
 
   if (!room) return null;
 
-  const { roomId, bestOf, blueName, redName } = room;
+  const { roomId, blueName, redName } = room;
 
   function buildUrl(side: Side): string {
-    const url = new URL(window.location.origin + "/map-draft/draft");
+    const url = new URL(window.location.origin + "/striker-draft/draft");
     url.searchParams.set("room", roomId);
     url.searchParams.set("side", side);
     return url.toString();
@@ -53,7 +53,7 @@ export default function LobbyPage() {
         </h2>
 
         <p className="font-mono text-xs tracking-wider uppercase">
-          // Room {roomId} · {bestOf} · Share links below
+          // Room {roomId} · Striker Draft · Share links below
         </p>
 
         <div className="flex flex-col gap-3 bg-tools-carbon border border-white/7 rounded-2xl p-6">

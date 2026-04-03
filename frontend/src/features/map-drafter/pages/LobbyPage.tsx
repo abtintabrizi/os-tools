@@ -53,7 +53,7 @@ export default function LobbyPage() {
         </h2>
 
         <p className="font-mono text-xs tracking-wider uppercase">
-          // Room {roomId} · {bestOf} · Share links below
+          // Room {roomId} · Map Draft · {bestOf} · Share links below
         </p>
 
         <div className="flex flex-col gap-3 bg-tools-carbon border border-white/7 rounded-2xl p-6">

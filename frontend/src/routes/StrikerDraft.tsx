@@ -1,10 +1,10 @@
-import { MapDraftProvider } from "@/features/map-drafter/context/MapDraftContext";
+import { StrikerDraftProvider } from "@/features/striker-draft/context/StrikerDraftContext";
 import { Outlet } from "react-router-dom";
 
 export default function StrikerDraft() {
   return (
-    <MapDraftProvider>
+    <StrikerDraftProvider>
       <Outlet />
-    </MapDraftProvider>
+    </StrikerDraftProvider>
   );
 }

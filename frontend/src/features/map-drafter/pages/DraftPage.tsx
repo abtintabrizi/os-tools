@@ -17,15 +17,8 @@ import DonePanel from "@/features/map-drafter/components/DonePanel";
 import { Sequence } from "@/features/map-drafter/types";
 
 export default function DraftPage() {
-  const {
-    state,
-    side,
-    loading,
-    handleAction,
-    handlePending,
-    handleReady,
-    handleReset,
-  } = useMapDraftContext();
+  const { state, side, loading, handleAction, handlePending, handleReady } =
+    useMapDraftContext();
   const [timeLeft, setTimeLeft] = useState<number>(TIMER_SECONDS);
   const [localPending, setLocalPending] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -307,18 +300,7 @@ export default function DraftPage() {
                 </div>
               </div>
             ) : done ? (
-              <div className="flex flex-col h-full">
-                <DonePanel actions={actions} blueName={blueName} />
-                <div className="flex-1" />
-                {side !== Team.Spectator && (
-                  <button
-                    className="py-3 px-3 bg-transparent border border-white/7 rounded-lg font-head text-[13px] font-semibold text-white transition-all duration-150 w-full hover:border-white/15 hover:text-white"
-                    onClick={handleReset}
-                  >
-                    New draft
-                  </button>
-                )}
-              </div>
+              <DonePanel actions={actions} blueName={blueName} />
             ) : (
               <div className="flex flex-col justify-center items-center">
                 <div
@@ -535,12 +517,21 @@ export default function DraftPage() {
                             <div className="w-full h-full bg-white/5" />
                           )}
                           {isBan && completedAction && (
-                            <div
-                              className="absolute inset-0"
-                              style={{
-                                background: `linear-gradient(to bottom right, transparent 49%, ${isBlue ? "#3b82f6" : "#ef4444"} 49%, ${isBlue ? "#3b82f6" : "#ef4444"} 51%, transparent 51%)`,
-                              }}
-                            />
+                            <>
+                              <div className="absolute inset-0 bg-black/50 grayscale" />
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <span className="font-mono text-[9px] font-bold tracking-widest uppercase bg-tools-red/50 text-white px-1 py-0.5 rounded">
+                                  Banned
+                                </span>
+                              </div>
+                            </>
+                          )}
+                          {!isBan && completedAction && pickNumber && (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <span className="font-mono text-sm font-bold tracking-widest uppercase bg-black/60 text-white px-2 py-0.5 rounded">
+                                G{pickNumber}
+                              </span>
+                            </div>
                           )}
                           {isCurrent && !completedAction && (
                             <div className="absolute inset-0 flex items-center justify-center">
@@ -558,9 +549,8 @@ export default function DraftPage() {
                             </div>
                           )}
                         </div>
-                        <span className="font-mono text-[9px] text-white/40 text-center leading-tight w-20">
-                          {completedAction?.map ??
-                            (isBan ? "Ban" : `G${pickNumber}`)}
+                        <span className="font-mono text-[9px] text-white/40 text-center leading-tight w-20 truncate">
+                          {completedAction?.map ?? (isBan ? "Ban" : `G${pickNumber}`)}
                         </span>
                       </div>
                     );
