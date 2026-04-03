@@ -3,10 +3,15 @@ import { useNavigate } from "react-router-dom";
 import type { Side } from "@/features/common/types";
 import { Team } from "@/features/common/constants";
 import { useStrikerDraftContext } from "@/features/striker-draft/context/StrikerDraftContext";
-import { BackButton, HomeButton } from "@/features/common/components/NavButtons";
+import {
+  BackButton,
+  HomeButton,
+} from "@/features/common/components/NavButtons";
+import LoadingScreen from "@/features/common/components/LoadingScreen";
 
 export default function LobbyPage() {
-  const { lobbyState, state, loading, handleSidePick } = useStrikerDraftContext();
+  const { lobbyState, state, loading, handleSidePick } =
+    useStrikerDraftContext();
   const [copied, setCopied] = useState<Side | "all" | null>(null);
   const navigate = useNavigate();
 
@@ -16,7 +21,8 @@ export default function LobbyPage() {
     if (!loading && !room) navigate("/striker-draft", { replace: true });
   }, [loading, room, navigate]);
 
-  if (loading || !room) return null;
+  if (loading || !room)
+    return <LoadingScreen message="Connecting to draft..." />;
 
   const { roomId, blueName, redName } = room;
 
@@ -56,7 +62,10 @@ export default function LobbyPage() {
   return (
     <div className="h-screen flex items-center justify-center">
       <div className="flex flex-col gap-3 w-full max-w-160">
-        <div className="flex gap-3"><BackButton /><HomeButton /></div>
+        <div className="flex gap-3">
+          <BackButton />
+          <HomeButton />
+        </div>
         <h2 className="text-6xl font-extrabold leading-tight tracking-tight">
           Room <span className="text-tools-gold">Ready</span>
         </h2>

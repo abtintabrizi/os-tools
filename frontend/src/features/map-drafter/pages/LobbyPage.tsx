@@ -3,7 +3,11 @@ import { useNavigate } from "react-router-dom";
 import type { Side } from "@/features/common/types";
 import { Team } from "@/features/common/constants";
 import { useMapDraftContext } from "@/features/map-drafter/context/MapDraftContext";
-import { BackButton, HomeButton } from "@/features/common/components/NavButtons";
+import {
+  BackButton,
+  HomeButton,
+} from "@/features/common/components/NavButtons";
+import LoadingScreen from "@/features/common/components/LoadingScreen";
 
 export default function LobbyPage() {
   const { lobbyState, state, loading, handleSidePick } = useMapDraftContext();
@@ -16,7 +20,8 @@ export default function LobbyPage() {
     if (!loading && !room) navigate("/map-draft", { replace: true });
   }, [loading, room, navigate]);
 
-  if (loading || !room) return null;
+  if (loading || !room)
+    return <LoadingScreen message="Connecting to draft..." />;
 
   const { roomId, bestOf, blueName, redName } = room;
 
@@ -56,7 +61,10 @@ export default function LobbyPage() {
   return (
     <div className="h-screen flex items-center justify-center">
       <div className="flex flex-col gap-3 w-full max-w-160">
-        <div className="flex gap-3"><BackButton /><HomeButton /></div>
+        <div className="flex gap-3">
+          <BackButton />
+          <HomeButton />
+        </div>
         <h2 className="text-6xl font-extrabold leading-tight tracking-tight">
           Room <span className="text-tools-gold">Ready</span>
         </h2>
