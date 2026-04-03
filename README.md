@@ -73,6 +73,14 @@ os-tools/
 - Python 3.11+
 - A [Supabase](https://supabase.com) project with `map_drafts` and `striker_drafts` tables
 
+### Run both together
+
+```bash
+# From the repo root — starts backend + frontend concurrently
+npm install
+npm run dev
+```
+
 ### Backend
 
 ```bash
@@ -107,9 +115,12 @@ npm install
 cp .env.default .env
 # Set VITE_API_BASE_URL=http://127.0.0.1:8000 (or leave empty for default)
 
-# Run development server
+# Run development server (includes ESLint warnings in console)
 npm run dev
 # App starts at http://localhost:5173
+
+# Lint
+npm run lint
 
 # Build for production
 npm run build
