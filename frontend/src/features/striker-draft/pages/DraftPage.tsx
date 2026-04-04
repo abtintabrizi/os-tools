@@ -259,7 +259,7 @@ export default function DraftPage() {
                       <img
                         src={mapEntry.icon}
                         alt={map}
-                        className="w-14 h-14 rounded-lg object-cover"
+                        className="w-16 h-16 rounded-lg object-cover"
                       />
                       <span className="font-mono text-xs font-semibold text-white/60">
                         {map}
@@ -279,7 +279,7 @@ export default function DraftPage() {
                         <img
                           src={awEntry.icon}
                           alt={aw}
-                          className="w-14 h-14 object-contain"
+                          className="w-16 h-16 object-contain"
                         />
                         <span className="font-mono text-xs text-white/60">
                           {aw}
@@ -353,7 +353,7 @@ export default function DraftPage() {
                       <img
                         src={mapEntry.icon}
                         alt={map}
-                        className="w-14 h-14 rounded-lg object-cover"
+                        className="w-16 h-16 rounded-lg object-cover"
                       />
                       <span className="font-mono text-xs font-semibold text-white/60">
                         {map}
@@ -373,7 +373,7 @@ export default function DraftPage() {
                         <img
                           src={awEntry.icon}
                           alt={aw}
-                          className="w-14 h-14 object-contain"
+                          className="w-16 h-16 object-contain"
                         />
                         <span className="font-mono text-xs text-white/60">
                           {aw}
@@ -519,13 +519,13 @@ export default function DraftPage() {
               {/* Map + awakenings */}
               <div className="flex items-center gap-4 shrink-0">
                 {mapEntry && (
-                  <div className="flex flex-col items-center gap-1">
+                  <div className="w-20 flex flex-col items-center gap-1">
                     <img
                       src={mapEntry.icon}
                       alt={map}
-                      className="w-12 h-12 rounded-lg object-cover"
+                      className="w-16 h-16 rounded-lg object-cover"
                     />
-                    <span className="font-mono text-xs font-semibold text-white/60 text-center max-w-28 leading-tight">
+                    <span className="font-mono text-[10px] font-semibold text-white/60 text-center w-full line-clamp-2 leading-tight">
                       {map}
                     </span>
                   </div>
@@ -536,13 +536,16 @@ export default function DraftPage() {
                 {awakenings.map((aw) => {
                   const awEntry = ALL_AWAKENINGS.find((a) => a.name === aw);
                   return awEntry ? (
-                    <div key={aw} className="flex flex-col items-center gap-1">
+                    <div
+                      key={aw}
+                      className="w-20 flex flex-col items-center gap-1"
+                    >
                       <img
                         src={awEntry.icon}
                         alt={aw}
-                        className="w-12 h-12 object-contain"
+                        className="w-16 h-16 object-contain"
                       />
-                      <span className="font-mono text-xs text-white/50 text-center max-w-28 leading-tight">
+                      <span className="font-mono text-[10px] text-white/50 text-center w-full line-clamp-2 leading-tight">
                         {aw}
                       </span>
                     </div>
@@ -638,6 +641,15 @@ export default function DraftPage() {
                                   </span>
                                 </div>
                               </>
+                            )}
+                          {isBan &&
+                            completedAction &&
+                            !completedAction.striker && (
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <span className="font-mono text-[9px] font-bold tracking-widest uppercase bg-white/10 text-white/50 px-1 py-0.5 rounded">
+                                  No Ban
+                                </span>
+                              </div>
                             )}
                           {isCurrent && !completedAction && (
                             <div className="absolute inset-0 flex items-center justify-center">
