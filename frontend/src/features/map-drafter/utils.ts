@@ -1,13 +1,15 @@
 import { MapDraftState, MapStatus } from "@/features/map-drafter/types";
 import { DraftAction } from "@/features/common/constants";
+import { SequenceStep } from "@/features/common/types";
 
 export function deriveMapStatuses(
   state: MapDraftState,
-  totalPicks: number,
+  sequence: SequenceStep[],
 ): Record<string, MapStatus> {
   const statuses: Record<string, MapStatus> = {};
   state.maps.forEach((m) => (statuses[m] = "available"));
 
+  const pickSteps = sequence.filter((s) => s.action === DraftAction.Pick);
   let pickCount = 0;
   state.actions.forEach((a) => {
     if (a.action === DraftAction.Ban) {
@@ -15,8 +17,9 @@ export function deriveMapStatuses(
     } else if (a.team === null) {
       statuses[a.map] = "decider";
     } else {
+      const gameNum = pickSteps[pickCount].gameNum ?? pickCount + 1;
       pickCount++;
-      statuses[a.map] = `picked-g${totalPicks - pickCount + 1}` as MapStatus;
+      statuses[a.map] = `picked-g${gameNum}` as MapStatus;
     }
   });
 

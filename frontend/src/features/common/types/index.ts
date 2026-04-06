@@ -6,4 +6,5 @@ export type ActionType = DraftAction;
 export interface SequenceStep {
   team: Team;
   action: DraftAction;
+  gameNum?: number;
 }

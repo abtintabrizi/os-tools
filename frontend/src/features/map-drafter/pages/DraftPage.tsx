@@ -91,10 +91,7 @@ export default function DraftPage() {
         : null;
   const pending = localPending ?? serverPending;
 
-  const mapStatuses = deriveMapStatuses(
-    state,
-    sequence.filter((s) => s.action === DraftAction.Pick).length,
-  );
+  const mapStatuses = deriveMapStatuses(state, sequence);
 
   const blueActions = actions.filter((a) => a.team === blueName);
   const redActions = actions.filter((a) => a.team === redName);
@@ -215,14 +212,7 @@ export default function DraftPage() {
             const n =
               blueSeqSteps.slice(0, i).filter((p) => p.action === s.action)
                 .length + 1;
-            const totalPicks = sequence.filter(
-              (p) => p.action === DraftAction.Pick,
-            ).length;
-            const gameNum =
-              totalPicks -
-              sequence
-                .slice(0, s.globalIdx)
-                .filter((p) => p.action === DraftAction.Pick).length;
+            const gameNum = s.gameNum ?? 1;
             const filled = blueActions[i];
             const status = filled
               ? "filled"
@@ -249,13 +239,13 @@ export default function DraftPage() {
             {!bothReady ? (
               <div className="flex flex-col items-center justify-center h-full gap-8">
                 <div className="flex gap-6">
-                  <div className="flex flex-col items-center gap-3">
+                  <div className="flex flex-col items-center gap-3 w-26">
                     <span
                       className={`font-mono text-xs font-bold tracking-widest uppercase py-1 px-2.5 rounded ${blueBadgeClass}`}
                     >
                       Blue
                     </span>
-                    <span className="font-mono text-sm font-bold">
+                    <span className="font-mono text-sm font-bold max-w-full truncate">
                       {blueName}
                     </span>
                     {state.readyBlue ? (
@@ -278,13 +268,13 @@ export default function DraftPage() {
 
                   <div className="w-px bg-white/7 self-stretch" />
 
-                  <div className="flex flex-col items-center gap-3">
+                  <div className="flex flex-col items-center gap-3 w-26">
                     <span
                       className={`font-mono text-xs font-bold tracking-widest uppercase py-1 px-2.5 rounded ${redBadgeClass}`}
                     >
                       Red
                     </span>
-                    <span className="font-mono text-sm font-bold">
+                    <span className="font-mono text-sm font-bold max-w-full truncate">
                       {redName}
                     </span>
                     {state.readyRed ? (
@@ -307,7 +297,11 @@ export default function DraftPage() {
                 </div>
               </div>
             ) : done ? (
-              <DonePanel actions={actions} blueName={blueName} />
+              <DonePanel
+                actions={actions}
+                blueName={blueName}
+                mapStatuses={mapStatuses}
+              />
             ) : (
               <div className="flex flex-col justify-center items-center">
                 <div
@@ -440,13 +434,13 @@ export default function DraftPage() {
             <div className="px-5 border-t border-white/7 h-40 flex items-center gap-5 shrink-0 justify-center">
               {!bothReady ? (
                 <div className="flex items-center gap-6">
-                  <div className="flex flex-col items-center gap-2">
+                  <div className="flex flex-col items-center gap-2 w-26">
                     <span
                       className={`font-mono text-xs font-bold tracking-widest uppercase py-1 px-2.5 rounded ${blueBadgeClass}`}
                     >
                       Blue
                     </span>
-                    <span className="font-mono text-sm font-bold">
+                    <span className="font-mono text-sm font-bold max-w-full truncate">
                       {blueName}
                     </span>
                     {state.readyBlue ? (
@@ -460,13 +454,13 @@ export default function DraftPage() {
                     )}
                   </div>
                   <div className="w-px bg-white/7 self-stretch" />
-                  <div className="flex flex-col items-center gap-2">
+                  <div className="flex flex-col items-center gap-2 w-26">
                     <span
                       className={`font-mono text-xs font-bold tracking-widest uppercase py-1 px-2.5 rounded ${redBadgeClass}`}
                     >
                       Red
                     </span>
-                    <span className="font-mono text-sm font-bold">
+                    <span className="font-mono text-sm font-bold max-w-full truncate">
                       {redName}
                     </span>
                     {state.readyRed ? (
@@ -491,14 +485,8 @@ export default function DraftPage() {
                     const isBan = s.action === DraftAction.Ban;
                     const teamName = isBlue ? blueName : redName;
                     const isCurrent = !done && i === step;
-                    const totalPicks = sequence.filter(
-                      (p) => p.action === DraftAction.Pick,
-                    ).length;
                     const pickNumber = !isBan
-                      ? totalPicks -
-                        sequence
-                          .slice(0, i)
-                          .filter((p) => p.action === DraftAction.Pick).length
+                      ? (sequence[i].gameNum ?? 1)
                       : null;
 
                     return (
@@ -563,7 +551,8 @@ export default function DraftPage() {
                       </div>
                     );
                   })}
-                  {state.bestOf === Sequence.BO3 &&
+                  {(state.bestOf === Sequence.BO3 ||
+                    state.bestOf === Sequence.BO3EU) &&
                     (() => {
                       const deciderMap = Object.entries(mapStatuses).find(
                         ([, s]) => s === "decider",
@@ -619,14 +608,7 @@ export default function DraftPage() {
             const n =
               redSeqSteps.slice(0, i).filter((p) => p.action === s.action)
                 .length + 1;
-            const totalPicks = sequence.filter(
-              (p) => p.action === DraftAction.Pick,
-            ).length;
-            const gameNum =
-              totalPicks -
-              sequence
-                .slice(0, s.globalIdx)
-                .filter((p) => p.action === DraftAction.Pick).length;
+            const gameNum = s.gameNum ?? 1;
             const filled = redActions[i];
             const status = filled
               ? "filled"

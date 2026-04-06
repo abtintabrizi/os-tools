@@ -1,14 +1,26 @@
-import { MapDraftAction } from "@/features/map-drafter/types";
+import { MapDraftAction, MapStatus } from "@/features/map-drafter/types";
 import { ALL_MAPS } from "@/features/common/constants";
 
 export default function DonePanel({
   actions,
   blueName,
+  mapStatuses,
 }: {
   actions: MapDraftAction[];
   blueName: string;
+  mapStatuses: Record<string, MapStatus>;
 }) {
-  const picks = [...actions.filter((a) => a.action === "pick" && a.team !== null)].reverse();
+  const picks = actions
+    .filter((a) => a.action === "pick" && a.team !== null)
+    .map((a) => {
+      const status = mapStatuses[a.map];
+      const gameNum = status?.startsWith("picked-g")
+        ? parseInt(status.replace("picked-g", ""), 10)
+        : 0;
+      return { ...a, gameNum };
+    })
+    .sort((a, b) => a.gameNum - b.gameNum);
+
   const decider = actions.find((a) => a.action === "pick" && a.team === null);
   const deciderImage = decider
     ? ALL_MAPS.find((m) => m.name === decider.map)?.image
@@ -16,7 +28,7 @@ export default function DonePanel({
 
   return (
     <div className="flex flex-row flex-wrap justify-center gap-3 py-2">
-      {picks.map((pick, i) => {
+      {picks.map((pick) => {
         const isBlue = pick.team === blueName;
         const borderClass = isBlue
           ? "border-tools-blue/40"
@@ -26,7 +38,7 @@ export default function DonePanel({
 
         return (
           <div
-            key={i}
+            key={pick.map}
             className={`relative w-[calc(33.333%-0.5rem)] border-2 ${borderClass} rounded-xl overflow-hidden aspect-video`}
           >
             {image && (
@@ -39,7 +51,7 @@ export default function DonePanel({
             <div className="absolute inset-0 bg-linear-to-t from-black/80 to-transparent" />
             <div className="absolute bottom-0 left-0 right-0 p-3">
               <div className="font-mono tracking-widest uppercase text-white/60">
-                Game {i + 1}
+                Game {pick.gameNum}
               </div>
               <div className="font-bold leading-tight">{pick.map}</div>
               <div className={`font-mono tracking-widest ${teamClass}`}>
