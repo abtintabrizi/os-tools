@@ -12,7 +12,12 @@ from app.models.striker_draft import (
     StrikerDraftPendingRequest,
 )
 from app.utils.supabase import generate_room_id, get_room, save_room
-from app.utils.striker_draft import cancel_timer, generate_random_awakenings, spawn_timer, timers
+from app.utils.striker_draft import (
+    cancel_timer,
+    generate_random_awakenings,
+    spawn_timer,
+    timers,
+)
 from app.utils.ws import manager
 
 router = APIRouter(prefix="/striker-draft")
@@ -25,7 +30,10 @@ async def create_room(body: CreateStrikerDraftRoomRequest):
             raise HTTPException(status_code=400, detail="Exactly 2 custom awakenings required")
         awakenings = body.customAwakenings
     else:
-        awakenings = generate_random_awakenings()
+        try:
+            awakenings = generate_random_awakenings(body.bannedStarts)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
 
     room_id = generate_room_id()
     state = {
@@ -42,6 +50,7 @@ async def create_room(body: CreateStrikerDraftRoomRequest):
         "pendingBlue": None,
         "pendingRed": None,
         "stepStartedAt": None,
+        "bannedStarts": body.bannedStarts,
     }
     await save_room(room_id, state, Table.STRIKER_DRAFTS)
     return state
@@ -107,7 +116,10 @@ async def apply_action(room_id: str, body: StrikerDraftActionRequest):
         raise HTTPException(status_code=404, detail="Room not found")
 
     if not state.get("readyBlue") or not state.get("readyRed"):
-        raise HTTPException(status_code=400, detail="Both teams must be ready before the draft can start")
+        raise HTTPException(
+            status_code=400,
+            detail="Both teams must be ready before the draft can start",
+        )
 
     if state["done"]:
         raise HTTPException(status_code=400, detail="Draft is already complete")
@@ -130,9 +142,7 @@ async def apply_action(room_id: str, body: StrikerDraftActionRequest):
 
     new_step = step + 1
     team_name = state["blueName"] if seq_step["team"] == Team.BLUE else state["redName"]
-    new_actions = state["actions"] + [
-        {"striker": body.striker, "team": team_name, "action": seq_step["action"]}
-    ]
+    new_actions = state["actions"] + [{"striker": body.striker, "team": team_name, "action": seq_step["action"]}]
     done = new_step >= len(STRIKER_SEQUENCE)
 
     updated = {

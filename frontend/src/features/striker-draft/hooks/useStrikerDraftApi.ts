@@ -9,6 +9,7 @@ export interface CreateStrikerRoomConfig {
   map: string;
   awakeningMode: string;
   customAwakenings?: string[];
+  bannedStarts?: string[];
 }
 
 export function useStrikerDraftApi(roomId: string | null) {

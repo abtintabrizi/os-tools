@@ -8,6 +8,7 @@ class CreateStrikerDraftRoomRequest(BaseModel):
     redName: str
     map: str
     awakeningMode: str  # "random" or "custom"
+    bannedStarts: list[str] | None = []
     customAwakenings: list[str] | None = None
 
 
