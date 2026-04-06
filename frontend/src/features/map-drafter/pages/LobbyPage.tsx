@@ -8,6 +8,7 @@ import {
   HomeButton,
 } from "@/features/common/components/NavButtons";
 import LoadingScreen from "@/features/common/components/LoadingScreen";
+import { SEQUENCE_LABELS } from "@/features/map-drafter/constants";
 
 export default function LobbyPage() {
   const { lobbyState, state, loading, handleSidePick } = useMapDraftContext();
@@ -71,7 +72,8 @@ export default function LobbyPage() {
 
         <div className="flex items-center justify-between">
           <p className="font-mono text-xs tracking-wider uppercase">
-            // Room {roomId} · Map Draft · {bestOf} · Share links below
+            // Room {roomId} · Map Draft · {SEQUENCE_LABELS[bestOf]} · Share
+            links below
           </p>
           <button
             className={`${baseBtn} border border-tools-gold/40 text-tools-gold bg-tools-gold/6 hover:bg-tools-gold/14`}
