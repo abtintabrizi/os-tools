@@ -18,10 +18,21 @@ from app.utils.ws import manager
 timers: dict[str, asyncio.Task] = {}
 
 
-def generate_random_awakenings() -> list[str]:
-    first = random.choice(CURRENT_AWAKENING_POOL)
+def generate_random_awakenings(bannedStarts: list[str]) -> list[str]:
+    first_pool = [a for a in CURRENT_AWAKENING_POOL if a not in bannedStarts]
+    if not first_pool:
+        raise ValueError("No awakenings available: all are banned.")
+    first = random.choice(first_pool)
     conflicts = AWAKENING_CONFLICTS.get(first, [])
-    available = [a for a in CURRENT_AWAKENING_POOL if a != first and a not in conflicts]
+    available = [
+        a
+        for a in CURRENT_AWAKENING_POOL
+        if a != first and a not in conflicts and a not in bannedStarts
+    ]
+    if not available:
+        raise ValueError(
+            f"No compatible second awakening available after choosing '{first}'."
+        )
     second = random.choice(available)
     return [str(first), str(second)]
 

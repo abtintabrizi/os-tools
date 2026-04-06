@@ -73,7 +73,7 @@ export const ALL_MAPS = [
     image: "/maps/Taiko_Temple.png",
     icon: "/maps/Taiko_Temple_Icon.png",
   },
-];
+].sort((a, b) => a.name.localeCompare(b.name));
 
 export const CURRENT_MAP_POOL = [
   GameMap.AhtenCity,
@@ -227,7 +227,7 @@ export const ALL_AWAKENINGS = [
   { name: Awakening.TimelessCreator, icon: "/awakenings/Timeless_Creator.png" },
   { name: Awakening.TwinDrive, icon: "/awakenings/Twin_Drive.png" },
   { name: Awakening.Unstoppable, icon: "/awakenings/Unstoppable.png" },
-];
+].sort((a, b) => a.name.localeCompare(b.name));
 
 export const CURRENT_AWAKENING_POOL = [
   Awakening.AmongTitans,
@@ -264,7 +264,7 @@ export const CURRENT_AWAKENING_POOL = [
   Awakening.TempoSwing,
   Awakening.TimelessCreator,
   Awakening.TwinDrive,
-];
+].sort((a, b) => a.localeCompare(b));
 
 export const AWAKENING_CONFLICTS: Partial<Record<Awakening, Awakening[]>> = {
   [Awakening.SparkOfResilience]: [
@@ -925,6 +925,12 @@ export const AWAKENING_CONFLICTS: Partial<Record<Awakening, Awakening[]>> = {
   ],
 };
 
+export const DEFAULT_BANNED_AWAKENINGS = [
+  Awakening.SparkOfLeadership,
+  Awakening.TeamPlayer,
+  Awakening.FireUp,
+];
+
 export enum StrikerDirection {
   Left = "left",
   Right = "right",
@@ -1081,4 +1087,4 @@ export const ALL_STRIKERS = [
     icon: "/strikers/Zentaro_icon.png",
     facing: StrikerDirection.Left,
   },
-];
+].sort((a, b) => a.name.localeCompare(b.name));
