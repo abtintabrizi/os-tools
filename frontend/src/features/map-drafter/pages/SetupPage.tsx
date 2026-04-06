@@ -3,7 +3,7 @@ import { ALL_MAPS, CURRENT_MAP_POOL } from "@/features/common/constants";
 import { useMapDraftContext } from "@/features/map-drafter/context/MapDraftContext";
 import { useToast } from "@/features/common/components/Toast";
 import Spinner from "@/features/common/components/Spinner";
-import { SEQUENCE_MAP } from "@map-drafter/constants.ts";
+import { SEQUENCE_MAP, SEQUENCE_LABELS } from "@map-drafter/constants.ts";
 import { Sequence, SequenceKey } from "@/features/map-drafter/types";
 import { HomeButton } from "@/features/common/components/NavButtons";
 
@@ -112,7 +112,7 @@ export default function SetupPage() {
                   }`}
                   onClick={() => setBestOf(seq)}
                 >
-                  {seq}
+                  {SEQUENCE_LABELS[seq]}
                 </button>
               );
             })}

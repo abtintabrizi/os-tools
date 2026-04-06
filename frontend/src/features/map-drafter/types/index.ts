@@ -3,6 +3,7 @@ import { ActionType } from "@/features/common/types";
 export enum Sequence {
   BO1 = "bo1",
   BO3 = "bo3",
+  BO3EU = "bo3eu",
 }
 
 export interface MapDraftAction {

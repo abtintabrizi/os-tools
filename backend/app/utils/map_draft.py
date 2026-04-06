@@ -13,7 +13,7 @@ timers: dict[str, asyncio.Task] = {}
 
 
 def append_decider(maps: list[str], actions: list[dict], best_of: str) -> list[dict]:
-    if best_of != Sequence.BO3:
+    if best_of == Sequence.BO1:
         return actions
     used = {a["map"] for a in actions}
     remaining = [m for m in maps if m not in used]

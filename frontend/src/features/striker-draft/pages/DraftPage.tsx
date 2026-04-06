@@ -289,13 +289,13 @@ export default function DraftPage() {
                   })}
                 </div>
                 <div className="flex gap-6">
-                  <div className="flex flex-col items-center gap-3">
+                  <div className="flex flex-col items-center gap-3 w-26">
                     <span
                       className={`font-mono text-xs font-bold tracking-widest uppercase py-1 px-2.5 rounded ${blueBadgeClass}`}
                     >
                       Blue
                     </span>
-                    <span className="font-mono text-sm font-bold">
+                    <span className="font-mono text-sm font-bold max-w-full truncate">
                       {blueName}
                     </span>
                     {state.readyBlue ? (
@@ -316,13 +316,13 @@ export default function DraftPage() {
                     )}
                   </div>
                   <div className="w-px bg-white/7 self-stretch" />
-                  <div className="flex flex-col items-center gap-3">
+                  <div className="flex flex-col items-center gap-3 w-26">
                     <span
                       className={`font-mono text-xs font-bold tracking-widest uppercase py-1 px-2.5 rounded ${redBadgeClass}`}
                     >
                       Red
                     </span>
-                    <span className="font-mono text-sm font-bold">
+                    <span className="font-mono text-sm font-bold max-w-full truncate">
                       {redName}
                     </span>
                     {state.readyRed ? (
@@ -515,7 +515,7 @@ export default function DraftPage() {
 
           {/* Spectator sequence tracker */}
           {side === Team.Spectator && (
-            <div className="px-5 border-t border-white/7 h-40 flex items-center gap-5 shrink-0 justify-center">
+            <div className="px-5 mx-5 border-t border-white/7 h-40 flex items-center gap-5 shrink-0 justify-center">
               {/* Map + awakenings */}
               <div className="flex items-center gap-4 shrink-0">
                 {mapEntry && (
@@ -555,41 +555,41 @@ export default function DraftPage() {
               <div className="w-px bg-white/7 h-3/5" />
               {!bothReady ? (
                 <div className="flex items-center gap-6">
-                  <div className="flex flex-col items-center gap-1">
+                  <div className="flex flex-col items-center gap-2 w-26">
                     <span
-                      className={`font-mono text-xs font-bold tracking-widest uppercase py-0.5 px-2 rounded ${blueBadgeClass}`}
+                      className={`font-mono text-xs font-bold tracking-widest uppercase py-1 px-2.5 rounded ${blueBadgeClass}`}
                     >
                       Blue
                     </span>
-                    <span className="font-mono text-xs font-bold">
+                    <span className="font-mono text-sm font-bold max-w-full truncate">
                       {blueName}
                     </span>
                     {state.readyBlue ? (
-                      <span className="font-mono text-xs tracking-widest uppercase text-tools-green-light">
+                      <span className="font-mono text-xs tracking-widest uppercase text-tools-green-light bg-tools-green/10 px-3 py-1 rounded border border-tools-green/20">
                         Ready
                       </span>
                     ) : (
-                      <span className="font-mono text-xs tracking-widest uppercase text-white/25">
+                      <span className="font-mono text-xs tracking-widest uppercase text-white/25 px-3 py-1">
                         Not ready
                       </span>
                     )}
                   </div>
-                  <div className="w-px bg-white/7 h-10" />
-                  <div className="flex flex-col items-center gap-1">
+                  <div className="w-px bg-white/7 self-stretch" />
+                  <div className="flex flex-col items-center gap-2 w-26">
                     <span
-                      className={`font-mono text-xs font-bold tracking-widest uppercase py-0.5 px-2 rounded ${redBadgeClass}`}
+                      className={`font-mono text-xs font-bold tracking-widest uppercase py-1 px-2.5 rounded ${redBadgeClass}`}
                     >
                       Red
                     </span>
-                    <span className="font-mono text-xs font-bold">
+                    <span className="font-mono text-sm font-bold max-w-full truncate">
                       {redName}
                     </span>
                     {state.readyRed ? (
-                      <span className="font-mono text-xs tracking-widest uppercase text-tools-green-light">
+                      <span className="font-mono text-xs tracking-widest uppercase text-tools-green-light bg-tools-green/10 px-3 py-1 rounded border border-tools-green/20">
                         Ready
                       </span>
                     ) : (
-                      <span className="font-mono text-xs tracking-widest uppercase text-white/25">
+                      <span className="font-mono text-xs tracking-widest uppercase text-white/25 px-3 py-1">
                         Not ready
                       </span>
                     )}
