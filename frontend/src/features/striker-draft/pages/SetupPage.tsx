@@ -26,18 +26,26 @@ export default function SetupPage() {
     first: "",
     second: "",
   });
-  const [bannedAwakenings, setBannedAwakenings] = useState(
-    DEFAULT_BANNED_AWAKENINGS,
-  );
+  const [bannedAwakenings, setBannedAwakenings] = useState<Awakening[]>(() => {
+    try {
+      const stored = localStorage.getItem("bannedAwakenings");
+      if (stored) return JSON.parse(stored) as Awakening[];
+    } catch {
+      // ignore parse errors, fall back to default
+    }
+    return DEFAULT_BANNED_AWAKENINGS;
+  });
 
   const handleAwakeningChange = (key: "first" | "second", value: string) => {
     setCustomAwakenings((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleBannedAwakeningToggle = (a: Awakening) => {
-    setBannedAwakenings((prev) =>
-      prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a],
-    );
+    setBannedAwakenings((prev) => {
+      const next = prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a];
+      localStorage.setItem("bannedAwakenings", JSON.stringify(next));
+      return next;
+    });
   };
 
   async function handleSubmit() {
