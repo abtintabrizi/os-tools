@@ -107,19 +107,22 @@ async def set_ready(room_id: str, body: ReadyRequest):
 
 @router.post("/rooms/{room_id}/pending")
 async def set_pending(room_id: str, body: StrikerDraftPendingRequest):
-    state = await get_room(room_id, Table.STRIKER_DRAFTS)
-    if state is None:
-        raise HTTPException(status_code=404, detail="Room not found")
     if body.side not in (Team.BLUE, Team.RED):
         raise HTTPException(status_code=400, detail="Invalid side")
 
-    updated = {**state}
-    if body.side == Team.BLUE:
-        updated["pendingBlue"] = body.striker
-    else:
-        updated["pendingRed"] = body.striker
+    async with get_room_lock(room_id):
+        state = await get_room(room_id, Table.STRIKER_DRAFTS)
+        if state is None:
+            raise HTTPException(status_code=404, detail="Room not found")
 
-    await save_room(room_id, updated, Table.STRIKER_DRAFTS)
+        updated = {**state}
+        if body.side == Team.BLUE:
+            updated["pendingBlue"] = body.striker
+        else:
+            updated["pendingRed"] = body.striker
+
+        await save_room(room_id, updated, Table.STRIKER_DRAFTS)
+
     await manager.broadcast(room_id, updated)
     return updated
 
