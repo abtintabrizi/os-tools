@@ -12,10 +12,19 @@ export default function SetupPage() {
   const { handleLaunch } = useMapDraftContext();
   const [blueName, setBlueName] = useState("");
   const [redName, setRedName] = useState("");
-  const [bestOf, setBestOf] = useState<SequenceKey>(Sequence.BO3);
-  const [enabledMaps, setEnabledMaps] = useState<Set<string>>(
-    new Set(CURRENT_MAP_POOL),
-  );
+  const [bestOf, setBestOf] = useState<SequenceKey>(() => {
+    const stored = localStorage.getItem("mapDraftBestOf") as SequenceKey | null;
+    return stored && stored in SEQUENCE_MAP ? stored : Sequence.BO3;
+  });
+  const [enabledMaps, setEnabledMaps] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem("mapDraftEnabledMaps");
+      if (stored) return new Set(JSON.parse(stored) as string[]);
+    } catch {
+      // ignore parse errors, fall back to default
+    }
+    return new Set(CURRENT_MAP_POOL);
+  });
   const [loading, setLoading] = useState(false);
 
   function toggleMap(map: string) {
@@ -23,8 +32,22 @@ export default function SetupPage() {
       const next = new Set(prev);
       if (next.has(map)) next.delete(map);
       else next.add(map);
+      localStorage.setItem("mapDraftEnabledMaps", JSON.stringify([...next]));
       return next;
     });
+  }
+
+  function handleBestOfChange(seq: SequenceKey) {
+    setBestOf(seq);
+    localStorage.setItem("mapDraftBestOf", seq);
+  }
+
+  function resetEnabledMaps() {
+    setEnabledMaps(new Set(CURRENT_MAP_POOL));
+    localStorage.setItem(
+      "mapDraftEnabledMaps",
+      JSON.stringify(CURRENT_MAP_POOL),
+    );
   }
 
   async function handleSubmit() {
@@ -110,7 +133,7 @@ export default function SetupPage() {
                       ? "border-tools-gold/40 bg-tools-gold/6"
                       : "bg-tools-graphite border-white/7"
                   }`}
-                  onClick={() => setBestOf(seq)}
+                  onClick={() => handleBestOfChange(seq)}
                 >
                   {SEQUENCE_LABELS[seq]}
                 </button>
@@ -118,14 +141,26 @@ export default function SetupPage() {
             })}
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between h-6">
             <div className="text-sm font-mono tracking-widest uppercase">
               Map pool — click to toggle
             </div>
-            <div
-              className={`text-xs font-mono tracking-widest ${enabledMaps.size === 7 ? "text-tools-gold" : "text-tools-red"}`}
-            >
-              {enabledMaps.size} / 7
+            <div className="flex items-center gap-3">
+              {(enabledMaps.size !== CURRENT_MAP_POOL.length ||
+                !CURRENT_MAP_POOL.every((m) => enabledMaps.has(m))) && (
+                <button
+                  onClick={resetEnabledMaps}
+                  type="button"
+                  className="text-sm text-tools-red border border-tools-red px-2 py-1 rounded-md hover:bg-white/10 transition-colors duration-150"
+                >
+                  Reset
+                </button>
+              )}
+              <div
+                className={`text-xs font-mono tracking-widest ${enabledMaps.size === 7 ? "text-tools-gold" : "text-tools-red"}`}
+              >
+                {enabledMaps.size} / 7
+              </div>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-2">

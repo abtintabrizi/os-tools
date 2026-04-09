@@ -24,7 +24,7 @@ export default function Home() {
             onClick={() => navigate("/striker-draft")}
           >
             <PersonStanding size={60} />
-            Striker Select
+            Striker Draft
           </button>
         </div>
       </div>

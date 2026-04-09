@@ -42,9 +42,21 @@ export default function SetupPage() {
 
   const handleBannedAwakeningToggle = (a: Awakening) => {
     setBannedAwakenings((prev) => {
-      const next = prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a];
+      const next = prev.includes(a)
+        ? prev.filter((x) => x !== a)
+        : [...prev, a];
       localStorage.setItem("bannedAwakenings", JSON.stringify(next));
       return next;
+    });
+  };
+
+  const resetBannedAwakenings = () => {
+    setBannedAwakenings(() => {
+      localStorage.setItem(
+        "bannedAwakenings",
+        JSON.stringify(DEFAULT_BANNED_AWAKENINGS),
+      );
+      return DEFAULT_BANNED_AWAKENINGS;
     });
   };
 
@@ -85,40 +97,53 @@ export default function SetupPage() {
       <div className="grid grid-cols-3 gap-5 p-5">
         {/* Banned awakenings area */}
         {awakening === "random" && (
-          <div className="w-full max-w-160 flex flex-col gap-3 justify-center items-center">
-            <div className="flex flex-col gap-4 bg-tools-carbon border border-white/7 rounded-2xl p-6 w-full">
+          <div className="w-full max-w-160 flex flex-col gap-4 bg-tools-carbon border border-white/7 rounded-2xl p-6 justify-center items-center">
+            <div className="flex justify-between items-center w-full h-6">
               <div className="text-sm font-mono tracking-widest uppercase">
                 Starting Awakenings - Click to Toggle
               </div>
-              <div className="grid grid-cols-6 gap-1">
-                {CURRENT_AWAKENING_POOL.map((a) => {
-                  const icon = ALL_AWAKENINGS.find((b) => b.name === a)?.icon;
-                  const isBanned = bannedAwakenings.includes(a);
+              {(bannedAwakenings.length !== DEFAULT_BANNED_AWAKENINGS.length ||
+                !DEFAULT_BANNED_AWAKENINGS.every((a) =>
+                  bannedAwakenings.includes(a),
+                )) && (
+                <button
+                  onClick={resetBannedAwakenings}
+                  type="button"
+                  className="text-sm text-tools-red border border-tools-red px-2 py-1 rounded-md hover:bg-white/10 transition-colors duration-150"
+                >
+                  Reset
+                </button>
+              )}
+            </div>
 
-                  return (
-                    <button
-                      type="button"
-                      className={classNames(
-                        "flex flex-col bg-tools-graphite items-center gap-1 p-2 rounded-lg transition-all duration-150 border ",
-                        {
-                          "hover:bg-white/10 border-white/7": !isBanned,
-                          "opacity-30 grayscale border-white": isBanned,
-                        },
-                      )}
-                      onClick={() => handleBannedAwakeningToggle(a)}
-                    >
-                      <img
-                        src={icon}
-                        alt={a}
-                        className="w-12 h-12 object-contain shrink-0"
-                      />
-                      <span className="text-xs text-center leading-tight line-clamp-2">
-                        {a}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+            <div className="grid grid-cols-6 gap-1">
+              {CURRENT_AWAKENING_POOL.map((a) => {
+                const icon = ALL_AWAKENINGS.find((b) => b.name === a)?.icon;
+                const isBanned = bannedAwakenings.includes(a);
+
+                return (
+                  <button
+                    type="button"
+                    className={classNames(
+                      "flex flex-col bg-tools-graphite items-center gap-1 p-2 rounded-lg transition-all duration-150 border ",
+                      {
+                        "hover:bg-white/10 border-white/7": !isBanned,
+                        "opacity-30 grayscale border-white": isBanned,
+                      },
+                    )}
+                    onClick={() => handleBannedAwakeningToggle(a)}
+                  >
+                    <img
+                      src={icon}
+                      alt={a}
+                      className="w-12 h-12 object-contain shrink-0"
+                    />
+                    <span className="text-xs text-center leading-tight line-clamp-2">
+                      {a}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
