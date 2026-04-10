@@ -8,7 +8,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import type { MapDraftState } from "@map-drafter/types";
 import type { Side } from "@/features/common/types";
-import { Team } from "@/features/common/constants";
+import { Team } from "@/features/common/constants/constants";
 import {
   useMapDraftApi,
   type CreateRoomConfig,

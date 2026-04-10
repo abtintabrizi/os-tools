@@ -1,5 +1,5 @@
 import { SequenceStep } from "@/features/common/types";
-import { DraftAction } from "@/features/common/constants";
+import { DraftAction } from "@/features/common/constants/constants";
 
 export function StepTracker({
   step,
@@ -16,7 +16,10 @@ export function StepTracker({
         const base = "w-5 h-1 rounded-sm transition-colors duration-300";
         let color: string;
         if (i < step || done) {
-          color = s.action === DraftAction.Ban ? "bg-tools-red/50" : "bg-tools-green/50";
+          color =
+            s.action === DraftAction.Ban
+              ? "bg-tools-red/50"
+              : "bg-tools-green/50";
         } else if (i === step && !done) {
           color = "bg-tools-gold";
         } else {

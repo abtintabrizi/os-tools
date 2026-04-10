@@ -1,4 +1,4 @@
-import { Team, DraftAction } from "@/features/common/constants";
+import { Team, DraftAction } from "@/features/common/constants/constants";
 
 export type Side = Team;
 export type ActionType = DraftAction;

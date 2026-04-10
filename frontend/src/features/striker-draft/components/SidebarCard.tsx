@@ -2,7 +2,7 @@ import {
   ALL_STRIKERS,
   DraftAction,
   StrikerDirection,
-} from "@/features/common/constants";
+} from "@/features/common/constants/constants";
 import type {
   StrikerDraftAction,
   IndexedStep,

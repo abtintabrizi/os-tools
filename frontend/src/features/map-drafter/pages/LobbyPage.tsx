@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Side } from "@/features/common/types";
-import { Team } from "@/features/common/constants";
+import { Team } from "@/features/common/constants/constants";
 import { useMapDraftContext } from "@/features/map-drafter/context/MapDraftContext";
 import {
   BackButton,

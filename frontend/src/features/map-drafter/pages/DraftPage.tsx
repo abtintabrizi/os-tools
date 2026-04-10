@@ -6,7 +6,7 @@ import {
   TIMER_SECONDS,
   Team,
   DraftAction,
-} from "@/features/common/constants";
+} from "@/features/common/constants/constants";
 import { deriveMapStatuses } from "@/features/map-drafter/utils";
 import LoadingScreen from "@/features/common/components/LoadingScreen";
 import ErrorScreen from "@/features/map-drafter/components/ErrorScreen";

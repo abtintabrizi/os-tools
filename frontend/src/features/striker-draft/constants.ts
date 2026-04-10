@@ -1,4 +1,4 @@
-import { Team, DraftAction } from "@/features/common/constants";
+import { Team, DraftAction } from "@/features/common/constants/constants";
 import type { SequenceStep } from "@/features/common/types";
 
 export const STRIKER_SEQUENCE: SequenceStep[] = [

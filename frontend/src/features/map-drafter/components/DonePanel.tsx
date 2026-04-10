@@ -1,5 +1,5 @@
 import { MapDraftAction, MapStatus } from "@/features/map-drafter/types";
-import { ALL_MAPS } from "@/features/common/constants";
+import { ALL_MAPS } from "@/features/common/constants/constants";
 
 export default function DonePanel({
   actions,

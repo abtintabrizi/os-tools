@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { useRoomApi } from "@/features/common/hooks/useRoomApi";
 import type { MapDraftState, SequenceKey } from "@map-drafter/types";
-import type { Team } from "@/features/common/constants";
+import type { Team } from "@/features/common/constants/constants";
 
 export interface CreateRoomConfig {
   blueName: string;

@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { ALL_AWAKENINGS, CURRENT_AWAKENING_POOL } from "@/features/common/constants";
+import {
+  ALL_AWAKENINGS,
+  CURRENT_AWAKENING_POOL,
+} from "@/features/common/constants/constants";
 
 interface Props {
   value: string;
@@ -54,7 +57,9 @@ export default function AwakeningPicker({
             <span className="truncate flex-1 text-left">{selected.name}</span>
           </>
         ) : (
-          <span className="text-white/40 font-normal flex-1 text-left">{placeholder}</span>
+          <span className="text-white/40 font-normal flex-1 text-left">
+            {placeholder}
+          </span>
         )}
         <svg
           className={`w-4 h-4 shrink-0 text-white/40 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
@@ -63,7 +68,11 @@ export default function AwakeningPicker({
           stroke="currentColor"
           strokeWidth={2.5}
         >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M19 9l-7 7-7-7"
+          />
         </svg>
       </button>
 
