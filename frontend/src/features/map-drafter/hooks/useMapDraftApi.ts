@@ -10,8 +10,8 @@ export interface CreateRoomConfig {
   maps: string[];
 }
 
-export function useMapDraftApi(roomId: string | null) {
-  const api = useRoomApi<MapDraftState>(roomId, "map-draft");
+export function useMapDraftApi(roomId: string | null, side?: string) {
+  const api = useRoomApi<MapDraftState>(roomId, "map-draft", side);
 
   const create = useCallback(
     (config: CreateRoomConfig) => api.create(config),

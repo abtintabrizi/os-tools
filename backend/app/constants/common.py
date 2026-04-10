@@ -4,6 +4,7 @@ from enum import StrEnum
 class Team(StrEnum):
     BLUE = "blue"
     RED = "red"
+    SPECTATOR = "spectator"
 
 
 class DraftAction(StrEnum):

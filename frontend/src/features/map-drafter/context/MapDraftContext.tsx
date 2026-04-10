@@ -55,7 +55,7 @@ export function MapDraftProvider({ children }: { children: ReactNode }) {
   const [lobbyState, setLobbyState] = useState<MapDraftState | null>(null);
 
   const { state, loading, error, create, applyAction, setPending, ready } =
-    useMapDraftApi(roomId);
+    useMapDraftApi(roomId, side);
 
   // Redirect from base path when URL has room+side params (e.g. from a shared lobby link)
   useEffect(() => {

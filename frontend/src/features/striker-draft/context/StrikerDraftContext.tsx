@@ -59,7 +59,7 @@ export function StrikerDraftProvider({ children }: { children: ReactNode }) {
   const [lobbyState, setLobbyState] = useState<StrikerDraftState | null>(null);
 
   const { state, loading, error, create, applyAction, setPending, ready } =
-    useStrikerDraftApi(roomId);
+    useStrikerDraftApi(roomId, side);
 
   useEffect(() => {
     const pathname = window.location.pathname;
