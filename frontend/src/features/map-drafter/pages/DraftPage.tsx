@@ -12,8 +12,8 @@ import LoadingScreen from "@/features/common/components/LoadingScreen";
 import ErrorScreen from "@/features/map-drafter/components/ErrorScreen";
 import { useMapDraftContext } from "@/features/map-drafter/context/MapDraftContext";
 import { StepTracker } from "@/features/common/components/StepTracker";
-import ResultCard from "@/features/common/components/ResultCard";
 import DonePanel from "@/features/map-drafter/components/DonePanel";
+import { MapSidebarCard } from "@/features/map-drafter/components/MapSidebarCard";
 import { Sequence } from "@/features/map-drafter/types";
 import {
   BackButton,
@@ -200,37 +200,29 @@ export default function DraftPage() {
       </div>
 
       {/* Main body */}
-      <div className="h-full flex flex-row">
+      <div className="flex flex-row flex-1 overflow-hidden">
         {/* Blue sidebar */}
-        <div className="p-4 border-r border-white/7 flex flex-col gap-3 w-1/6">
+        <div className="p-4 border-r border-white/7 flex flex-col gap-2.5 w-1/6 shrink-0 overflow-y-auto">
           <div
             className={`text-lg font-mono tracking-widest uppercase mb-1.5 font-bold text-center border rounded-lg ${blueBadgeClass}`}
           >
             {blueName}
           </div>
-          {blueSeqSteps.map((s, i) => {
-            const n =
-              blueSeqSteps.slice(0, i).filter((p) => p.action === s.action)
-                .length + 1;
-            const gameNum = s.gameNum ?? 1;
-            const filled = blueActions[i];
-            const status = filled
-              ? "filled"
-              : s.globalIdx === step
-                ? "active"
-                : "pending";
-            return (
-              <ResultCard
-                key={i}
-                value={filled?.map}
-                type={s.action}
-                label={
-                  s.action === DraftAction.Ban ? `Ban ${n}` : `Pick ${gameNum}`
-                }
-                status={status}
-              />
-            );
-          })}
+          {blueSeqSteps.map((s, i) => (
+            <MapSidebarCard
+              key={s.globalIdx}
+              step={s}
+              cardIndex={i}
+              teamActions={blueActions}
+              teamSteps={blueSeqSteps}
+              isBlue
+              currentStep={step}
+              done={done}
+              timeLeft={timeLeft}
+              bothReady={bothReady}
+              pendingMap={state.pendingBlue}
+            />
+          ))}
         </div>
 
         {/* Center */}
@@ -598,35 +590,27 @@ export default function DraftPage() {
         </div>
 
         {/* Red sidebar */}
-        <div className="p-4 border-l border-white/7 flex flex-col gap-3 w-1/6">
+        <div className="p-4 border-l border-white/7 flex flex-col gap-2.5 w-1/6 shrink-0 overflow-y-auto">
           <div
             className={`text-lg font-mono tracking-widest uppercase mb-1.5 font-bold text-center border rounded-lg ${redBadgeClass}`}
           >
             {redName}
           </div>
-          {redSeqSteps.map((s, i) => {
-            const n =
-              redSeqSteps.slice(0, i).filter((p) => p.action === s.action)
-                .length + 1;
-            const gameNum = s.gameNum ?? 1;
-            const filled = redActions[i];
-            const status = filled
-              ? "filled"
-              : s.globalIdx === step
-                ? "active"
-                : "pending";
-            return (
-              <ResultCard
-                key={i}
-                value={filled?.map}
-                type={s.action}
-                label={
-                  s.action === DraftAction.Ban ? `Ban ${n}` : `Pick ${gameNum}`
-                }
-                status={status}
-              />
-            );
-          })}
+          {redSeqSteps.map((s, i) => (
+            <MapSidebarCard
+              key={s.globalIdx}
+              step={s}
+              cardIndex={i}
+              teamActions={redActions}
+              teamSteps={redSeqSteps}
+              isBlue={false}
+              currentStep={step}
+              done={done}
+              timeLeft={timeLeft}
+              bothReady={bothReady}
+              pendingMap={state.pendingRed}
+            />
+          ))}
         </div>
       </div>
     </div>
