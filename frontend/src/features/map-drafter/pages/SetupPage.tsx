@@ -91,7 +91,11 @@ export default function SetupPage() {
     });
     const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
     navigator.clipboard.writeText(url);
-    toast({ message: "Config link copied!", variant: "success", position: "top-center" });
+    toast({
+      message: "Config link copied!",
+      variant: "success",
+      position: "top-center",
+    });
   }
 
   async function handleSubmit() {
@@ -126,7 +130,7 @@ export default function SetupPage() {
           <button
             type="button"
             onClick={handleCopyConfigLink}
-            className="text-sm font-mono text-white/50 border border-white/10 px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors duration-150"
+            className="text-sm font-mono text-white border border-white px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors duration-150"
           >
             Copy Config Link
           </button>
