@@ -181,7 +181,7 @@ export default function DraftPage() {
       </header>
 
       {/* Status bar */}
-      <div className="py-3 px-6 bg-tools-carbon border-b border-white/7 flex items-center justify-center shrink-0">
+      <div className="py-3 px-6 bg-tools-carbon border-b border-white/7 flex items-center justify-center h-13 shrink-0">
         <div className="flex items-center gap-3">
           {!bothReady ? (
             <span className="font-mono text-sm tracking-widest">
@@ -226,7 +226,7 @@ export default function DraftPage() {
         {/* Blue sidebar */}
         <div className="p-4 border-r border-white/7 flex flex-col gap-2.5 w-1/6 shrink-0">
           <div
-            className={`text-sm font-mono tracking-widest uppercase font-bold text-center border rounded-lg py-1 shrink-0 ${blueBadgeClass}`}
+            className={`text-lg font-mono tracking-widest uppercase mb-1.5 font-bold text-center border rounded-lg ${blueBadgeClass}`}
           >
             {blueName}
           </div>
@@ -686,7 +686,7 @@ export default function DraftPage() {
         {/* Red sidebar */}
         <div className="p-4 border-l border-white/7 flex flex-col gap-2.5 w-1/6 shrink-0">
           <div
-            className={`text-sm font-mono tracking-widest uppercase font-bold text-center border rounded-lg py-1 shrink-0 ${redBadgeClass}`}
+            className={`text-lg font-mono tracking-widest uppercase mb-1.5 font-bold text-center border rounded-lg ${redBadgeClass}`}
           >
             {redName}
           </div>

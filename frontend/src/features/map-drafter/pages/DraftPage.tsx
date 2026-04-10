@@ -126,7 +126,7 @@ export default function DraftPage() {
   return (
     <div className="h-screen flex flex-col">
       {/* Header */}
-      <header className="grid grid-cols-3 px-6 border-b border-white/7 bg-tools-void/70 h-16 items-center">
+      <header className="grid grid-cols-3 px-6 border-b border-white/7 bg-tools-void/70 h-16 items-center shrink-0">
         <div className="flex items-center gap-3">
           <BackButton />
           <HomeButton />
@@ -157,7 +157,7 @@ export default function DraftPage() {
       </header>
 
       {/* Status bar */}
-      <div className="py-3 px-6 bg-tools-carbon border-b border-white/7 grid grid-cols-3 items-center">
+      <div className="py-3 px-6 bg-tools-carbon border-b border-white/7 grid grid-cols-3 items-center h-13 shrink-0">
         <div />
         <div className="flex items-center justify-center gap-3">
           {!bothReady ? (
@@ -202,7 +202,7 @@ export default function DraftPage() {
       {/* Main body */}
       <div className="h-full flex flex-row">
         {/* Blue sidebar */}
-        <div className="p-5 border-r border-white/7 flex flex-col gap-3 w-1/6">
+        <div className="p-4 border-r border-white/7 flex flex-col gap-3 w-1/6">
           <div
             className={`text-lg font-mono tracking-widest uppercase mb-1.5 font-bold text-center border rounded-lg ${blueBadgeClass}`}
           >
@@ -598,7 +598,7 @@ export default function DraftPage() {
         </div>
 
         {/* Red sidebar */}
-        <div className="p-5 border-l border-white/7 flex flex-col gap-3 w-1/6">
+        <div className="p-4 border-l border-white/7 flex flex-col gap-3 w-1/6">
           <div
             className={`text-lg font-mono tracking-widest uppercase mb-1.5 font-bold text-center border rounded-lg ${redBadgeClass}`}
           >
