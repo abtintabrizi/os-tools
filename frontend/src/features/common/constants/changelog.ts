@@ -11,6 +11,7 @@ export const changelog: ChangelogEntry[] = [
       "Removed visible pending picks for the non-picking team",
       "Updated the visuals of the sidebar cards in map draft",
       "Fixed some styling consistency across map draft and striker draft",
+      "Added functionality to copy/share map draft configs",
     ],
   },
 ];
