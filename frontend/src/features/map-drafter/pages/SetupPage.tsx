@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ALL_MAPS,
   CURRENT_MAP_POOL,
@@ -16,10 +16,34 @@ export default function SetupPage() {
   const [blueName, setBlueName] = useState("");
   const [redName, setRedName] = useState("");
   const [bestOf, setBestOf] = useState<SequenceKey>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlFormat = params.get("format");
+    if (urlFormat && urlFormat in SEQUENCE_MAP) {
+      localStorage.setItem("mapDraftBestOf", urlFormat);
+      return urlFormat as SequenceKey;
+    }
     const stored = localStorage.getItem("mapDraftBestOf") as SequenceKey | null;
     return stored && stored in SEQUENCE_MAP ? stored : Sequence.BO3;
   });
   const [enabledMaps, setEnabledMaps] = useState<Set<string>>(() => {
+    const allMapNames: Set<string> = new Set(ALL_MAPS.map((m) => m.name));
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const urlPool = params.get("pool");
+      if (urlPool) {
+        const parsed = JSON.parse(urlPool) as string[];
+        if (
+          Array.isArray(parsed) &&
+          parsed.length > 0 &&
+          parsed.every((m) => allMapNames.has(m))
+        ) {
+          localStorage.setItem("mapDraftEnabledMaps", JSON.stringify(parsed));
+          return new Set(parsed);
+        }
+      }
+    } catch {
+      // ignore parse errors
+    }
     try {
       const stored = localStorage.getItem("mapDraftEnabledMaps");
       if (stored) return new Set(JSON.parse(stored) as string[]);
@@ -29,6 +53,13 @@ export default function SetupPage() {
     return new Set(CURRENT_MAP_POOL);
   });
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("pool") || params.has("format")) {
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  }, []);
 
   function toggleMap(map: string) {
     setEnabledMaps((prev) => {
@@ -51,6 +82,16 @@ export default function SetupPage() {
       "mapDraftEnabledMaps",
       JSON.stringify(CURRENT_MAP_POOL),
     );
+  }
+
+  function handleCopyConfigLink() {
+    const params = new URLSearchParams({
+      pool: JSON.stringify([...enabledMaps]),
+      format: bestOf,
+    });
+    const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+    navigator.clipboard.writeText(url);
+    toast({ message: "Config link copied!", variant: "success", position: "top-center" });
   }
 
   async function handleSubmit() {
@@ -80,8 +121,15 @@ export default function SetupPage() {
   return (
     <div className="h-screen flex justify-center items-center">
       <div className="w-full max-w-160 flex flex-col gap-3">
-        <div>
+        <div className="flex items-center justify-between">
           <HomeButton />
+          <button
+            type="button"
+            onClick={handleCopyConfigLink}
+            className="text-sm font-mono text-white/50 border border-white/10 px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors duration-150"
+          >
+            Copy Config Link
+          </button>
         </div>
         <h1 className="text-7xl font-extrabold leading-none tracking-tight">
           Map <span className="text-tools-gold">Draft</span>
