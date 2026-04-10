@@ -16,7 +16,11 @@ export interface RoomApi<T> {
   ready: (side: Team.Blue | Team.Red) => Promise<void>;
 }
 
-export function useRoomApi<T>(roomId: string | null, path: string): RoomApi<T> {
+export function useRoomApi<T>(
+  roomId: string | null,
+  path: string,
+  side?: string,
+): RoomApi<T> {
   const [state, setState] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +57,10 @@ export function useRoomApi<T>(roomId: string | null, path: string): RoomApi<T> {
     function connect() {
       if (cancelled) return;
 
-      const ws = new WebSocket(`${WS_BASE}/${path}/ws/rooms/${roomId}`);
+      const wsUrl = side
+        ? `${WS_BASE}/${path}/ws/rooms/${roomId}?side=${side}`
+        : `${WS_BASE}/${path}/ws/rooms/${roomId}`;
+      const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
       ws.onmessage = (evt) => {
@@ -81,7 +88,7 @@ export function useRoomApi<T>(roomId: string | null, path: string): RoomApi<T> {
       wsRef.current?.close();
       wsRef.current = null;
     };
-  }, [roomId, path]);
+  }, [roomId, path, side]);
 
   const create = useCallback(
     async (config: object): Promise<T> => {

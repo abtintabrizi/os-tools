@@ -123,7 +123,7 @@ async def set_pending(room_id: str, body: StrikerDraftPendingRequest):
 
         await save_room(room_id, updated, Table.STRIKER_DRAFTS)
 
-    await manager.broadcast(room_id, updated)
+    await manager.broadcast(room_id, updated, side=body.side)
     return updated
 
 
@@ -202,11 +202,17 @@ async def apply_action(room_id: str, body: StrikerDraftActionRequest):
 
 @router.websocket("/ws/rooms/{room_id}")
 async def websocket_endpoint(room_id: str, ws: WebSocket):
-    await manager.connect(room_id, ws)
+    side = ws.query_params.get("side", Team.SPECTATOR)
+    await manager.connect(room_id, ws, side)
     try:
         state = await get_room(room_id, Table.STRIKER_DRAFTS)
         if state is not None:
-            await ws.send_json(state)
+            masked_state = {
+                **state,
+                "pendingBlue": state.get("pendingBlue") if side == Team.BLUE else None,
+                "pendingRed": state.get("pendingRed") if side == Team.RED else None,
+            }
+            await ws.send_json(masked_state)
             existing = timers.get(room_id)
             if (
                 not state.get("done")
