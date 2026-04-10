@@ -1,4 +1,4 @@
-import { DraftAction } from "@/features/common/constants";
+import { DraftAction } from "@/features/common/constants/constants";
 
 export default function ResultCard({
   value,

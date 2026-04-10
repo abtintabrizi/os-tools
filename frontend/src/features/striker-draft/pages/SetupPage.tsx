@@ -8,7 +8,7 @@ import {
   Awakening,
   CURRENT_AWAKENING_POOL,
   DEFAULT_BANNED_AWAKENINGS,
-} from "@/features/common/constants";
+} from "@/features/common/constants/constants";
 import AwakeningPicker from "@/features/striker-draft/components/AwakeningPicker";
 import { useStrikerDraftContext } from "@/features/striker-draft/context/StrikerDraftContext";
 import { useToast } from "@/features/common/components/Toast";

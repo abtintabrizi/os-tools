@@ -1,5 +1,5 @@
 import { MapDraftState, MapStatus } from "@/features/map-drafter/types";
-import { DraftAction } from "@/features/common/constants";
+import { DraftAction } from "@/features/common/constants/constants";
 import { SequenceStep } from "@/features/common/types";
 
 export function deriveMapStatuses(

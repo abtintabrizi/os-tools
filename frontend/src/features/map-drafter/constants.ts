@@ -1,6 +1,6 @@
 import { SequenceStep } from "@/features/common/types";
 import { Sequence, SequenceKey } from "@/features/map-drafter/types";
-import { Team, DraftAction } from "@/features/common/constants";
+import { Team, DraftAction } from "@/features/common/constants/constants";
 
 export const BO3EU_SEQUENCE: SequenceStep[] = [
   { team: Team.Blue, action: DraftAction.Ban },

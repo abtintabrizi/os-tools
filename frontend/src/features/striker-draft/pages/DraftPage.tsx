@@ -7,7 +7,7 @@ import {
   TIMER_SECONDS,
   Team,
   DraftAction,
-} from "@/features/common/constants";
+} from "@/features/common/constants/constants";
 import LoadingScreen from "@/features/common/components/LoadingScreen";
 import ErrorScreen from "@/features/map-drafter/components/ErrorScreen";
 import { useStrikerDraftContext } from "@/features/striker-draft/context/StrikerDraftContext";

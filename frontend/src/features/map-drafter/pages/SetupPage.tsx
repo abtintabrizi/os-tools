@@ -1,5 +1,8 @@
 import { useState } from "react";
-import { ALL_MAPS, CURRENT_MAP_POOL } from "@/features/common/constants";
+import {
+  ALL_MAPS,
+  CURRENT_MAP_POOL,
+} from "@/features/common/constants/constants";
 import { useMapDraftContext } from "@/features/map-drafter/context/MapDraftContext";
 import { useToast } from "@/features/common/components/Toast";
 import Spinner from "@/features/common/components/Spinner";

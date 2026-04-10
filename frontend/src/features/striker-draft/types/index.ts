@@ -14,7 +14,7 @@ export interface StrikerDraftState {
   stepStartedAt: number | null;
 }
 
-import type { Team, DraftAction } from "@/features/common/constants";
+import type { Team, DraftAction } from "@/features/common/constants/constants";
 
 export interface StrikerDraftAction {
   striker: string;

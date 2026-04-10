@@ -8,7 +8,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import type { StrikerDraftState } from "@/features/striker-draft/types";
 import type { Side } from "@/features/common/types";
-import { Team } from "@/features/common/constants";
+import { Team } from "@/features/common/constants/constants";
 import {
   useStrikerDraftApi,
   type CreateStrikerRoomConfig,
@@ -29,7 +29,9 @@ interface StrikerDraftContextValue {
   handleReset: () => void;
 }
 
-const StrikerDraftContext = createContext<StrikerDraftContextValue | null>(null);
+const StrikerDraftContext = createContext<StrikerDraftContextValue | null>(
+  null,
+);
 
 export function useStrikerDraftContext(): StrikerDraftContextValue {
   const ctx = useContext(StrikerDraftContext);
