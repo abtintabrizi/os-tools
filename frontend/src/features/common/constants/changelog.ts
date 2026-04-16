@@ -5,6 +5,10 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    date: "2026-04-16",
+    notes: ["Updated default awakenings and exclusions to match the new patch"],
+  },
+  {
     date: "2026-04-10",
     notes: [
       "Added a changelog to the home screen",
