@@ -176,7 +176,8 @@ export default function DonePanel() {
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <div className="text-sm font-mono tracking-widest uppercase text-white/60">
-            Starting Awakenings — click to toggle
+            Starting Awakenings —{" "}
+            {locked ? "Awakenings Chosen" : "Click to Toggle"}
           </div>
           {locked && (
             <span className="text-xs font-mono tracking-widest uppercase text-white/30">
