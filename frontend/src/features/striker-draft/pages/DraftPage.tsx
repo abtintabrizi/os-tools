@@ -45,7 +45,7 @@ export default function DraftPage() {
     if (state?.serverTime) {
       clockOffsetRef.current = state.serverTime - Date.now() / 1000;
     }
-  }, [state?.serverTime]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [state?.serverTime]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
