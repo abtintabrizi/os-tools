@@ -84,15 +84,16 @@ async def set_ready(room_id: str, body: ReadyRequest):
     else:
         updated["readyRed"] = True
 
+    COUNTDOWN_SECONDS = 5
     if updated["readyBlue"] and updated["readyRed"]:
-        updated["stepStartedAt"] = time.time()
+        updated["stepStartedAt"] = time.time() + COUNTDOWN_SECONDS
 
     await save_room(room_id, updated, Table.MAP_DRAFTS)
     await manager.broadcast(room_id, updated)
     logger.info("[room=%s] [side=%s] Ready", room_id, body.side)
 
     if updated["readyBlue"] and updated["readyRed"]:
-        spawn_timer(room_id, updated["step"])
+        spawn_timer(room_id, updated["step"], delay=TIMER_SECONDS + COUNTDOWN_SECONDS)
 
     return updated
 

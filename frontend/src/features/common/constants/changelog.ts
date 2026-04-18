@@ -6,6 +6,12 @@ export interface ChangelogEntry {
 export const changelog: ChangelogEntry[] = [
   {
     date: "2026-04-16",
+    notes: [
+      "Added a 5 second counter to map/striker draft when both teams ready up",
+    ],
+  },
+  {
+    date: "2026-04-16",
     notes: ["Updated default awakenings and exclusions to match the new patch"],
   },
   {
