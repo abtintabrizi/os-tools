@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ALL_STRIKERS,
@@ -33,6 +33,7 @@ export default function DraftPage() {
   const [timeLeft, setTimeLeft] = useState<number>(TIMER_SECONDS);
   const [countdownLeft, setCountdownLeft] = useState(0);
   const [localPending, setLocalPending] = useState<string | null>(null);
+  const clockOffsetRef = useRef(0);
   const [showNoBanModal, setShowNoBanModal] = useState(false);
   const navigate = useNavigate();
 
@@ -57,6 +58,12 @@ export default function DraftPage() {
   }, []);
 
   useEffect(() => {
+    if (state?.serverTime) {
+      clockOffsetRef.current = state.serverTime - Date.now() / 1000;
+    }
+  }, [state?.serverTime]);
+
+  useEffect(() => {
     if (
       !state?.stepStartedAt ||
       state.done ||
@@ -68,7 +75,7 @@ export default function DraftPage() {
     }
     const stepStartedAt = state.stepStartedAt;
     function tick() {
-      const now = Date.now() / 1000;
+      const now = Date.now() / 1000 + clockOffsetRef.current;
       if (now < stepStartedAt) {
         setTimeLeft(TIMER_SECONDS);
         return;
@@ -86,9 +93,8 @@ export default function DraftPage() {
     if (!state?.stepStartedAt || !state.readyBlue || !state.readyRed) return;
     const stepStartedAt = state.stepStartedAt;
     function tick() {
-      setCountdownLeft(
-        Math.max(0, Math.ceil(stepStartedAt - Date.now() / 1000)),
-      );
+      const now = Date.now() / 1000 + clockOffsetRef.current;
+      setCountdownLeft(Math.max(0, Math.ceil(stepStartedAt - now)));
     }
     tick();
     const id = setInterval(tick, 100);
@@ -213,7 +219,7 @@ export default function DraftPage() {
             <span className="font-mono text-sm tracking-widest">
               Waiting for both teams to ready up
             </span>
-          ) : countdownLeft > 0 ? (
+          ) : countdownLeft > 0 && actions.length === 0 ? (
             <span className="font-mono text-sm tracking-widest">
               Starting in{" "}
               <strong className="text-tools-gold">{countdownLeft}</strong>
@@ -375,7 +381,7 @@ export default function DraftPage() {
                   </div>
                 </div>
               </div>
-            ) : countdownLeft > 0 ? (
+            ) : countdownLeft > 0 && actions.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center gap-6">
                 <div className="flex items-end gap-6">
                   {mapEntry && (
@@ -670,7 +676,7 @@ export default function DraftPage() {
                     )}
                   </div>
                 </div>
-              ) : countdownLeft > 0 ? (
+              ) : countdownLeft > 0 && actions.length === 0 ? (
                 <span className="font-mono text-sm tracking-widest text-white/50">
                   Starting in{" "}
                   <strong className="text-tools-gold">{countdownLeft}</strong>

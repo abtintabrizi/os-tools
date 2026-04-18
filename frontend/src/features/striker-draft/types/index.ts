@@ -12,6 +12,7 @@ export interface StrikerDraftState {
   pendingBlue: string | null;
   pendingRed: string | null;
   stepStartedAt: number | null;
+  serverTime?: number;
 }
 
 import type { Team, DraftAction } from "@/features/common/constants/constants";

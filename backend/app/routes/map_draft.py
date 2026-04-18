@@ -83,6 +83,8 @@ async def set_ready(room_id: str, body: ReadyRequest):
     if body.side not in (Team.BLUE, Team.RED):
         raise HTTPException(status_code=400, detail="Invalid side")
 
+    already_both_ready = state.get("readyBlue") and state.get("readyRed")
+
     updated = {**state}
     if body.side == Team.BLUE:
         updated["readyBlue"] = True
@@ -90,14 +92,15 @@ async def set_ready(room_id: str, body: ReadyRequest):
         updated["readyRed"] = True
 
     COUNTDOWN_SECONDS = 5
-    if updated["readyBlue"] and updated["readyRed"]:
+    now_both_ready = updated["readyBlue"] and updated["readyRed"]
+    if now_both_ready and not already_both_ready:
         updated["stepStartedAt"] = time.time() + COUNTDOWN_SECONDS
 
     await save_room(room_id, updated, Table.MAP_DRAFTS)
     await manager.broadcast(room_id, updated)
     logger.info("[room=%s] [side=%s] Ready", room_id, body.side)
 
-    if updated["readyBlue"] and updated["readyRed"]:
+    if now_both_ready and not already_both_ready:
         spawn_timer(room_id, updated["step"], delay=TIMER_SECONDS + COUNTDOWN_SECONDS)
 
     return updated
@@ -236,6 +239,7 @@ async def websocket_endpoint(room_id: str, ws: WebSocket):
                 **state,
                 "pendingBlue": state.get("pendingBlue") if side == Team.BLUE else None,
                 "pendingRed": state.get("pendingRed") if side == Team.RED else None,
+                "serverTime": time.time(),
             }
             await ws.send_json(masked_state)
             # Re-spawn timer on reconnect if a step is in progress and no active task exists

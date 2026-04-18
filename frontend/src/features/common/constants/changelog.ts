@@ -5,6 +5,12 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    date: "2026-04-18",
+    notes: [
+      "Fixed a timer related bug where server/client timestamps were out of sync",
+    ],
+  },
+  {
     date: "2026-04-17",
     notes: [
       "Added a 5 second counter to map/striker draft when both teams ready up",
