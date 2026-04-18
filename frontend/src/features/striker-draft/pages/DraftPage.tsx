@@ -31,6 +31,7 @@ export default function DraftPage() {
     handleReady,
   } = useStrikerDraftContext();
   const [timeLeft, setTimeLeft] = useState<number>(TIMER_SECONDS);
+  const [countdownLeft, setCountdownLeft] = useState(0);
   const [localPending, setLocalPending] = useState<string | null>(null);
   const [showNoBanModal, setShowNoBanModal] = useState(false);
   const navigate = useNavigate();
@@ -65,20 +66,45 @@ export default function DraftPage() {
       setTimeLeft(TIMER_SECONDS);
       return;
     }
-    const serverElapsed = Math.max(0, Date.now() / 1000 - state.stepStartedAt);
-    const initialTimeLeft = Math.max(
-      0,
-      Math.ceil(TIMER_SECONDS - serverElapsed),
-    );
-    setTimeLeft(initialTimeLeft);
-    const localStart = Date.now();
+    const stepStartedAt = state.stepStartedAt;
     function tick() {
-      const localElapsed = (Date.now() - localStart) / 1000;
-      setTimeLeft(Math.max(0, Math.ceil(initialTimeLeft - localElapsed)));
+      const now = Date.now() / 1000;
+      if (now < stepStartedAt) {
+        setTimeLeft(TIMER_SECONDS);
+        return;
+      }
+      setTimeLeft(
+        Math.max(0, Math.ceil(TIMER_SECONDS - (now - stepStartedAt))),
+      );
     }
+    tick();
     const id = setInterval(tick, 250);
     return () => clearInterval(id);
   }, [state?.stepStartedAt, state?.done, state?.readyBlue, state?.readyRed]);
+
+  useEffect(() => {
+    if (!state?.stepStartedAt || !state.readyBlue || !state.readyRed) return;
+    const stepStartedAt = state.stepStartedAt;
+    function tick() {
+      setCountdownLeft(
+        Math.max(0, Math.ceil(stepStartedAt - Date.now() / 1000)),
+      );
+    }
+    tick();
+    const id = setInterval(tick, 100);
+    return () => clearInterval(id);
+  }, [state?.stepStartedAt, state?.readyBlue, state?.readyRed]);
+
+  useEffect(() => {
+    if (countdownLeft > 0) {
+      document.title = `Starting in ${countdownLeft}...`;
+    } else {
+      document.title = "OS Map Draft";
+    }
+    return () => {
+      document.title = "OS Map Draft";
+    };
+  }, [countdownLeft]);
 
   useEffect(() => {
     setLocalPending(null);
@@ -186,6 +212,11 @@ export default function DraftPage() {
           {!bothReady ? (
             <span className="font-mono text-sm tracking-widest">
               Waiting for both teams to ready up
+            </span>
+          ) : countdownLeft > 0 ? (
+            <span className="font-mono text-sm tracking-widest">
+              Starting in{" "}
+              <strong className="text-tools-gold">{countdownLeft}</strong>
             </span>
           ) : done ? (
             <>
@@ -343,6 +374,50 @@ export default function DraftPage() {
                     )}
                   </div>
                 </div>
+              </div>
+            ) : countdownLeft > 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center gap-6">
+                <div className="flex items-end gap-6">
+                  {mapEntry && (
+                    <div className="flex flex-col items-center gap-1.5">
+                      <img
+                        src={mapEntry.icon}
+                        alt={map}
+                        className="w-16 h-16 rounded-lg object-cover"
+                      />
+                      <span className="font-mono text-xs font-semibold text-white/60">
+                        {map}
+                      </span>
+                    </div>
+                  )}
+                  {mapEntry && awakenings.length > 0 && (
+                    <div className="w-px self-stretch bg-white/10" />
+                  )}
+                  {awakenings.map((aw) => {
+                    const awEntry = ALL_AWAKENINGS.find((a) => a.name === aw);
+                    return awEntry ? (
+                      <div
+                        key={aw}
+                        className="flex flex-col items-center gap-1.5"
+                      >
+                        <img
+                          src={awEntry.icon}
+                          alt={aw}
+                          className="w-16 h-16 object-contain"
+                        />
+                        <span className="font-mono text-xs text-white/60">
+                          {aw}
+                        </span>
+                      </div>
+                    ) : null;
+                  })}
+                </div>
+                <span className="font-mono text-xs tracking-widest uppercase text-white/40">
+                  Draft starting in
+                </span>
+                <span className="font-mono font-bold tabular-nums text-8xl text-tools-gold">
+                  {countdownLeft}
+                </span>
               </div>
             ) : (
               /* Drafting / Done */
@@ -595,6 +670,11 @@ export default function DraftPage() {
                     )}
                   </div>
                 </div>
+              ) : countdownLeft > 0 ? (
+                <span className="font-mono text-sm tracking-widest text-white/50">
+                  Starting in{" "}
+                  <strong className="text-tools-gold">{countdownLeft}</strong>
+                </span>
               ) : (
                 <div className="flex gap-2">
                   {STRIKER_SEQUENCE.map((s, i) => {

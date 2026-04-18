@@ -24,6 +24,7 @@ export default function DraftPage() {
   const { state, side, loading, handleAction, handlePending, handleReady } =
     useMapDraftContext();
   const [timeLeft, setTimeLeft] = useState<number>(TIMER_SECONDS);
+  const [countdownLeft, setCountdownLeft] = useState(0);
   const [localPending, setLocalPending] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -44,25 +45,45 @@ export default function DraftPage() {
       setTimeLeft(TIMER_SECONDS);
       return;
     }
-    // Use server elapsed (clamped to ≥0) as the starting point, then count
-    // down with local clock to avoid clock-skew causing a frozen/stuttering display.
-    const serverElapsed = Math.max(
-      0,
-      Date.now() / 1000 - state!.stepStartedAt!,
-    );
-    const initialTimeLeft = Math.max(
-      0,
-      Math.ceil(TIMER_SECONDS - serverElapsed),
-    );
-    setTimeLeft(initialTimeLeft);
-    const localStart = Date.now();
+    const stepStartedAt = state.stepStartedAt;
     function tick() {
-      const localElapsed = (Date.now() - localStart) / 1000;
-      setTimeLeft(Math.max(0, Math.ceil(initialTimeLeft - localElapsed)));
+      const now = Date.now() / 1000;
+      if (now < stepStartedAt) {
+        setTimeLeft(TIMER_SECONDS);
+        return;
+      }
+      setTimeLeft(
+        Math.max(0, Math.ceil(TIMER_SECONDS - (now - stepStartedAt))),
+      );
     }
+    tick();
     const id = setInterval(tick, 250);
     return () => clearInterval(id);
-  }, [state?.stepStartedAt, state?.done, state?.readyBlue, state?.readyRed]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [state?.stepStartedAt, state?.done, state?.readyBlue, state?.readyRed]);
+
+  useEffect(() => {
+    if (!state?.stepStartedAt || !state.readyBlue || !state.readyRed) return;
+    const stepStartedAt = state.stepStartedAt;
+    function tick() {
+      setCountdownLeft(
+        Math.max(0, Math.ceil(stepStartedAt - Date.now() / 1000)),
+      );
+    }
+    tick();
+    const id = setInterval(tick, 100);
+    return () => clearInterval(id);
+  }, [state?.stepStartedAt, state?.readyBlue, state?.readyRed]);
+
+  useEffect(() => {
+    if (countdownLeft > 0) {
+      document.title = `Starting in ${countdownLeft}...`;
+    } else {
+      document.title = "OS Map Draft";
+    }
+    return () => {
+      document.title = "OS Map Draft";
+    };
+  }, [countdownLeft]);
 
   useEffect(() => {
     setLocalPending(null);
@@ -163,6 +184,11 @@ export default function DraftPage() {
           {!bothReady ? (
             <span className="font-mono text-sm tracking-widest">
               Waiting for both teams to ready up
+            </span>
+          ) : countdownLeft > 0 ? (
+            <span className="font-mono text-sm tracking-widest">
+              Starting in{" "}
+              <strong className="text-tools-gold">{countdownLeft}</strong>
             </span>
           ) : done ? (
             <>
@@ -287,6 +313,15 @@ export default function DraftPage() {
                     )}
                   </div>
                 </div>
+              </div>
+            ) : countdownLeft > 0 ? (
+              <div className="flex flex-col items-center justify-center h-full gap-4">
+                <span className="font-mono text-xs tracking-widest uppercase text-white/40">
+                  Draft starting in
+                </span>
+                <span className="font-mono font-bold tabular-nums text-8xl text-tools-gold">
+                  {countdownLeft}
+                </span>
               </div>
             ) : done ? (
               <DonePanel
@@ -466,6 +501,11 @@ export default function DraftPage() {
                     )}
                   </div>
                 </div>
+              ) : countdownLeft > 0 ? (
+                <span className="font-mono text-sm tracking-widest text-white/50">
+                  Starting in{" "}
+                  <strong className="text-tools-gold">{countdownLeft}</strong>
+                </span>
               ) : (
                 <div className="flex gap-3 justify-center">
                   {sequence.map((s, i) => {
