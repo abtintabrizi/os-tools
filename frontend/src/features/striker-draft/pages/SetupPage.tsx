@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Spinner from "@/features/common/components/Spinner";
 import { HomeButton } from "@/features/common/components/NavButtons";
 import {
@@ -14,19 +14,57 @@ import { useStrikerDraftContext } from "@/features/striker-draft/context/Striker
 import { useToast } from "@/features/common/components/Toast";
 import classNames from "classnames";
 
+const ALL_MAP_NAMES = new Set<string>(ALL_MAPS.map((m) => m.name));
+const ALL_AWAKENING_NAMES = new Set<string>(ALL_AWAKENINGS.map((a) => a.name));
+
+function getInitialParams() {
+  return new URLSearchParams(window.location.search);
+}
+
 export default function SetupPage() {
   const { toast } = useToast();
   const { handleLaunch } = useStrikerDraftContext();
-  const [blueName, setBlueName] = useState("");
-  const [redName, setRedName] = useState("");
+  const [blueName, setBlueName] = useState(() => {
+    return getInitialParams().get("blue") ?? "";
+  });
+  const [redName, setRedName] = useState(() => {
+    return getInitialParams().get("red") ?? "";
+  });
   const [loading, setLoading] = useState(false);
-  const [map, setMap] = useState("");
-  const [awakening, setAwakening] = useState("random");
-  const [customAwakenings, setCustomAwakenings] = useState({
-    first: "",
-    second: "",
+  const [map, setMap] = useState(() => {
+    const urlMap = getInitialParams().get("map") ?? "";
+    return ALL_MAP_NAMES.has(urlMap) ? urlMap : "";
+  });
+  const [awakening, setAwakening] = useState(() => {
+    const urlMode = getInitialParams().get("awakeningMode");
+    return urlMode === "custom" ? "custom" : "random";
+  });
+  const [customAwakenings, setCustomAwakenings] = useState(() => {
+    const params = getInitialParams();
+    const first = params.get("awk1") ?? "";
+    const second = params.get("awk2") ?? "";
+    return {
+      first: ALL_AWAKENING_NAMES.has(first) ? first : "",
+      second: ALL_AWAKENING_NAMES.has(second) ? second : "",
+    };
   });
   const [bannedAwakenings, setBannedAwakenings] = useState<Awakening[]>(() => {
+    try {
+      const params = getInitialParams();
+      const urlBanned = params.get("banned");
+      if (urlBanned) {
+        const parsed = JSON.parse(urlBanned) as Awakening[];
+        if (
+          Array.isArray(parsed) &&
+          parsed.every((a) => ALL_AWAKENING_NAMES.has(a))
+        ) {
+          localStorage.setItem("bannedAwakenings", JSON.stringify(parsed));
+          return parsed;
+        }
+      }
+    } catch {
+      // ignore parse errors
+    }
     try {
       const stored = localStorage.getItem("bannedAwakenings");
       if (stored) return JSON.parse(stored) as Awakening[];
@@ -35,6 +73,43 @@ export default function SetupPage() {
     }
     return DEFAULT_BANNED_AWAKENINGS;
   });
+
+  useEffect(() => {
+    const params = getInitialParams();
+    if (
+      params.has("blue") ||
+      params.has("red") ||
+      params.has("map") ||
+      params.has("awakeningMode") ||
+      params.has("awk1") ||
+      params.has("awk2") ||
+      params.has("banned")
+    ) {
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  }, []);
+
+  function handleCopyConfigLink() {
+    const paramObj: Record<string, string> = {};
+    if (blueName.trim()) paramObj.blue = blueName.trim();
+    if (redName.trim()) paramObj.red = redName.trim();
+    if (map) paramObj.map = map;
+    paramObj.awakeningMode = awakening;
+    if (awakening === "custom") {
+      if (customAwakenings.first) paramObj.awk1 = customAwakenings.first;
+      if (customAwakenings.second) paramObj.awk2 = customAwakenings.second;
+    } else {
+      paramObj.banned = JSON.stringify(bannedAwakenings);
+    }
+    const params = new URLSearchParams(paramObj);
+    const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+    navigator.clipboard.writeText(url);
+    toast({
+      message: "Config link copied!",
+      variant: "success",
+      position: "top-center",
+    });
+  }
 
   const handleAwakeningChange = (key: "first" | "second", value: string) => {
     setCustomAwakenings((prev) => ({ ...prev, [key]: value }));
@@ -150,8 +225,15 @@ export default function SetupPage() {
 
         {/* Center area */}
         <div className="w-full max-w-160 flex flex-col justify-center gap-3 col-start-2">
-          <div>
+          <div className="flex items-center justify-between">
             <HomeButton />
+            <button
+              type="button"
+              onClick={handleCopyConfigLink}
+              className="text-sm font-mono text-white border border-white px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors duration-150"
+            >
+              Copy Config Link
+            </button>
           </div>
           <h1 className="text-6xl font-extrabold leading-none tracking-tight">
             Striker <span className="text-tools-gold">Draft</span>

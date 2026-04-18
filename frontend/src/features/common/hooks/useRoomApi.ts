@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { Team } from "@/features/common/constants/constants";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+export const API_BASE =
+  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 const WS_BASE = API_BASE.replace(/^http/, "ws");
 
 const RECONNECT_DELAY_MS = 3000;
@@ -14,6 +15,7 @@ export interface RoomApi<T> {
   applyAction: (payload: Record<string, unknown>) => Promise<void>;
   setPending: (payload: Record<string, unknown>) => Promise<void>;
   ready: (side: Team.Blue | Team.Red) => Promise<void>;
+  post: (subPath: string, payload: Record<string, unknown>) => Promise<void>;
 }
 
 export function useRoomApi<T>(
@@ -155,5 +157,29 @@ export function useRoomApi<T>(
     [roomId, path],
   );
 
-  return { state, loading, error, create, applyAction, setPending, ready };
+  const post = useCallback(
+    async (
+      subPath: string,
+      payload: Record<string, unknown>,
+    ): Promise<void> => {
+      if (!roomId) return;
+      await fetch(`${API_BASE}/${path}/rooms/${roomId}/${subPath}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    },
+    [roomId, path],
+  );
+
+  return {
+    state,
+    loading,
+    error,
+    create,
+    applyAction,
+    setPending,
+    ready,
+    post,
+  };
 }

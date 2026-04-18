@@ -29,5 +29,23 @@ export function useMapDraftApi(roomId: string | null, side?: string) {
     [api.setPending], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
-  return { ...api, create, applyAction, setPending };
+  const setGame1FirstPick = useCallback(
+    (firstPick: string) => api.post("game1-first-pick", { firstPick }),
+    [api.post], // eslint-disable-line react-hooks/exhaustive-deps
+  );
+
+  const setStrikerRooms = useCallback(
+    (rooms: Record<string, string>, bannedAwakenings: string[]) =>
+      api.post("striker-rooms", { rooms, bannedAwakenings }),
+    [api.post], // eslint-disable-line react-hooks/exhaustive-deps
+  );
+
+  return {
+    ...api,
+    create,
+    applyAction,
+    setPending,
+    setGame1FirstPick,
+    setStrikerRooms,
+  };
 }

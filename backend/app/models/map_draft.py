@@ -17,3 +17,12 @@ class MapDraftActionRequest(BaseModel):
 class MapDraftPendingRequest(BaseModel):
     side: Team
     map: str | None = None
+
+
+class SetGame1FirstPickRequest(BaseModel):
+    firstPick: str
+
+
+class SetStrikerRoomsRequest(BaseModel):
+    rooms: dict[str, str]
+    bannedAwakenings: list[str]

@@ -5,9 +5,12 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
-    date: "2026-04-16",
+    date: "2026-04-17",
     notes: [
       "Added a 5 second counter to map/striker draft when both teams ready up",
+      "Added team names to the configs for map draft setup",
+      "Added config generation/loading to striker draft setup",
+      "Changed the post map draft screen to allow users to create striker draft lobbies and go to them directly",
     ],
   },
   {

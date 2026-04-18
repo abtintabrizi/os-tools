@@ -13,8 +13,14 @@ import { HomeButton } from "@/features/common/components/NavButtons";
 export default function SetupPage() {
   const { toast } = useToast();
   const { handleLaunch } = useMapDraftContext();
-  const [blueName, setBlueName] = useState("");
-  const [redName, setRedName] = useState("");
+  const [blueName, setBlueName] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("blue") ?? "";
+  });
+  const [redName, setRedName] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("red") ?? "";
+  });
   const [bestOf, setBestOf] = useState<SequenceKey>(() => {
     const params = new URLSearchParams(window.location.search);
     const urlFormat = params.get("format");
@@ -56,7 +62,12 @@ export default function SetupPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.has("pool") || params.has("format")) {
+    if (
+      params.has("pool") ||
+      params.has("format") ||
+      params.has("blue") ||
+      params.has("red")
+    ) {
       window.history.replaceState(null, "", window.location.pathname);
     }
   }, []);
@@ -85,10 +96,13 @@ export default function SetupPage() {
   }
 
   function handleCopyConfigLink() {
-    const params = new URLSearchParams({
+    const paramObj: Record<string, string> = {
       pool: JSON.stringify([...enabledMaps]),
       format: bestOf,
-    });
+    };
+    if (blueName.trim()) paramObj.blue = blueName.trim();
+    if (redName.trim()) paramObj.red = redName.trim();
+    const params = new URLSearchParams(paramObj);
     const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
     navigator.clipboard.writeText(url);
     toast({
