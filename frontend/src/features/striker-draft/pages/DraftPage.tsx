@@ -34,8 +34,18 @@ export default function DraftPage() {
   const [countdownLeft, setCountdownLeft] = useState(0);
   const [localPending, setLocalPending] = useState<string | null>(null);
   const clockOffsetRef = useRef(0);
+  const stepStartedAtRef = useRef<number | null>(null);
   const [showNoBanModal, setShowNoBanModal] = useState(false);
   const navigate = useNavigate();
+
+  // stepStartedAtRef updated in render body so stale intervals immediately read new value
+  stepStartedAtRef.current = state?.stepStartedAt ?? null;
+
+  useEffect(() => {
+    if (state?.serverTime) {
+      clockOffsetRef.current = state.serverTime - Date.now() / 1000;
+    }
+  }, [state?.serverTime]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -58,12 +68,6 @@ export default function DraftPage() {
   }, []);
 
   useEffect(() => {
-    if (state?.serverTime) {
-      clockOffsetRef.current = state.serverTime - Date.now() / 1000;
-    }
-  }, [state?.serverTime]);
-
-  useEffect(() => {
     if (
       !state?.stepStartedAt ||
       state.done ||
@@ -73,8 +77,12 @@ export default function DraftPage() {
       setTimeLeft(TIMER_SECONDS);
       return;
     }
-    const stepStartedAt = state.stepStartedAt;
     function tick() {
+      const stepStartedAt = stepStartedAtRef.current;
+      if (!stepStartedAt) {
+        setTimeLeft(TIMER_SECONDS);
+        return;
+      }
       const now = Date.now() / 1000 + clockOffsetRef.current;
       if (now < stepStartedAt) {
         setTimeLeft(TIMER_SECONDS);
@@ -91,8 +99,12 @@ export default function DraftPage() {
 
   useEffect(() => {
     if (!state?.stepStartedAt || !state.readyBlue || !state.readyRed) return;
-    const stepStartedAt = state.stepStartedAt;
     function tick() {
+      const stepStartedAt = stepStartedAtRef.current;
+      if (!stepStartedAt) {
+        setCountdownLeft(0);
+        return;
+      }
       const now = Date.now() / 1000 + clockOffsetRef.current;
       setCountdownLeft(Math.max(0, Math.ceil(stepStartedAt - now)));
     }
