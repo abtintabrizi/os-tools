@@ -29,6 +29,7 @@ export interface MapDraftState {
   game1FirstPick: string | null;
   strikerRooms: Record<string, string> | null;
   strikerBannedAwakenings: string[] | null;
+  serverTime?: number;
 }
 
 export type MapStatus =

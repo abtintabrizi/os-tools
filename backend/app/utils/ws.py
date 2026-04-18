@@ -1,3 +1,5 @@
+import time
+
 from fastapi import WebSocket
 
 from app.constants.common import Team
@@ -21,11 +23,12 @@ class ConnectionManager:
     async def broadcast(
         self, room_id: str, data: dict, side: str | None = None
     ) -> None:
+        payload = {**data, "serverTime": time.time()}
         for ws, conn_side in list(self.connections.get(room_id, [])):
             if side is not None and conn_side != side:
                 continue
             try:
-                await ws.send_json(data)
+                await ws.send_json(payload)
             except Exception:
                 pass
 
