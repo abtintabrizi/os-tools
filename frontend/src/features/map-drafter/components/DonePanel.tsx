@@ -80,10 +80,9 @@ export default function DonePanel() {
 
   const totalGames = picks.length + (decider ? 1 : 0);
 
-  function firstPickForGame(gameIndex: number): string | null {
-    if (!game1FirstPick) return null;
-    const other = game1FirstPick === blueName ? redName : blueName;
-    return gameIndex % 2 === 0 ? game1FirstPick : other;
+  function firstPickForGame(g1: string, gameIndex: number): string {
+    const other = g1 === blueName ? redName : blueName;
+    return gameIndex % 2 === 0 ? g1 : other;
   }
 
   function toggleBan(a: Awakening) {
@@ -97,11 +96,13 @@ export default function DonePanel() {
     });
   }
 
-  async function handleCreateRooms(clickedMap: string) {
-    if (!game1FirstPick || creating) return;
+  async function handleCreateRooms(g1FirstPick: string) {
+    if (creating) return;
     setCreating(true);
     setCreateError(null);
     try {
+      await handleGame1FirstPick(g1FirstPick);
+
       const allGames: { map: string; gameIndex: number }[] = [
         ...picks.map((p, i) => ({ map: p.map, gameIndex: i })),
         ...(decider ? [{ map: decider.map, gameIndex: totalGames - 1 }] : []),
@@ -110,11 +111,11 @@ export default function DonePanel() {
       const rooms: Record<string, string> = {};
       await Promise.all(
         allGames.map(async ({ map, gameIndex }) => {
-          const firstPick = firstPickForGame(gameIndex)!;
-          const secondPick = firstPick === blueName ? redName : blueName;
+          const fp = firstPickForGame(g1FirstPick, gameIndex);
+          const sp = fp === blueName ? redName : blueName;
           const roomId = await createStrikerRoom({
-            blueName: firstPick,
-            redName: secondPick,
+            blueName: fp,
+            redName: sp,
             map,
             bannedStarts: bannedAwakenings,
           });
@@ -123,11 +124,6 @@ export default function DonePanel() {
       );
 
       await handleSetStrikerRooms(rooms, bannedAwakenings);
-      window.open(
-        `/striker-draft/lobby?room=${rooms[clickedMap]}`,
-        "_blank",
-        "noreferrer",
-      );
     } catch (e) {
       setCreateError(e instanceof Error ? e.message : "Failed to create rooms");
     } finally {
@@ -136,11 +132,11 @@ export default function DonePanel() {
   }
 
   function renderButton(map: string, gameIndex: number) {
-    const firstPick = firstPickForGame(gameIndex);
     const btnClass =
       "flex justify-center items-center w-full py-2 bg-tools-gold text-black rounded-xl font-head font-bold disabled:cursor-default! disabled:opacity-50 transition-opacity duration-300 text-sm";
 
     if (strikerRooms) {
+      const fp = firstPickForGame(game1FirstPick!, gameIndex);
       const roomId = strikerRooms[map];
       return (
         <a
@@ -149,22 +145,20 @@ export default function DonePanel() {
           rel="noreferrer"
           className={btnClass}
         >
-          Open Lobby ({firstPick} First Pick)
+          Open Lobby ({fp} First Pick)
         </a>
       );
     }
 
+    const fp = game1FirstPick
+      ? firstPickForGame(game1FirstPick, gameIndex)
+      : null;
     return (
-      <button
-        type="button"
-        disabled={!firstPick || creating}
-        onClick={() => handleCreateRooms(map)}
-        className={btnClass}
-      >
+      <button type="button" disabled={!fp || creating} className={btnClass}>
         {creating
           ? "Creating Lobbies…"
-          : firstPick
-            ? `Create Lobby (${firstPick} First Pick)`
+          : fp
+            ? `${fp} First Pick`
             : "Choose G1 first pick above"}
       </button>
     );
@@ -174,16 +168,33 @@ export default function DonePanel() {
     <div className="flex flex-col gap-4 py-2">
       {/* Awakening ban picker */}
       <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between h-6">
           <div className="text-sm font-mono tracking-widest uppercase text-white/60">
             Starting Awakenings —{" "}
             {locked ? "Awakenings Chosen" : "Click to Toggle"}
           </div>
-          {locked && (
+          {locked ? (
             <span className="text-xs font-mono tracking-widest uppercase text-white/30">
               Locked
             </span>
-          )}
+          ) : bannedAwakenings.length !== DEFAULT_BANNED_AWAKENINGS.length ||
+            !DEFAULT_BANNED_AWAKENINGS.every((a) =>
+              bannedAwakenings.includes(a),
+            ) ? (
+            <button
+              type="button"
+              onClick={() => {
+                setBannedAwakenings(DEFAULT_BANNED_AWAKENINGS);
+                localStorage.setItem(
+                  "bannedAwakenings",
+                  JSON.stringify(DEFAULT_BANNED_AWAKENINGS),
+                );
+              }}
+              className="text-sm text-tools-red border border-tools-red px-2 py-1 rounded-md hover:bg-white/10 transition-colors duration-150"
+            >
+              Reset
+            </button>
+          ) : null}
         </div>
         <div className="grid grid-cols-10 gap-1">
           {CURRENT_AWAKENING_POOL.map((a) => {
@@ -198,8 +209,7 @@ export default function DonePanel() {
                 className={classNames(
                   "flex flex-col bg-tools-graphite items-center gap-1 p-1.5 rounded-lg transition-all duration-150 border",
                   {
-                    "opacity-30 grayscale border-white cursor-default!":
-                      isBanned,
+                    "opacity-30 grayscale border-white": isBanned,
                     " border-white/7": !isBanned,
                     "hover:bg-white/10": !isBanned && !locked,
                     "cursor-default!": locked,
@@ -223,25 +233,39 @@ export default function DonePanel() {
         </div>
       )}
 
-      {/* G1 first pick selection (only shown before rooms created) */}
-      {!strikerRooms && !game1FirstPick && (
-        <div className="flex gap-2 justify-center">
-          <button
-            type="button"
-            onClick={() => handleGame1FirstPick(blueName)}
-            className="text-xs font-mono font-semibold tracking-wide py-1.5 px-3 rounded-lg border border-tools-blue/40 text-tools-blue bg-tools-blue-dim hover:bg-tools-blue/15 transition-colors duration-150"
-          >
-            {blueName} First Pick in G1
-          </button>
-          <button
-            type="button"
-            onClick={() => handleGame1FirstPick(redName)}
-            className="text-xs font-mono font-semibold tracking-wide py-1.5 px-3 rounded-lg border border-tools-red/40 text-tools-red bg-tools-red-dim hover:bg-tools-red/15 transition-colors duration-150"
-          >
-            {redName} First Pick in G1
-          </button>
-        </div>
-      )}
+      {/* G1 first pick selection */}
+      <div className="flex gap-2 justify-center">
+        <button
+          type="button"
+          disabled={!!game1FirstPick || !!strikerRooms}
+          onClick={() => handleCreateRooms(blueName)}
+          className={classNames(
+            "text-xs font-mono font-semibold tracking-wide py-1.5 px-3 rounded-lg border transition-colors duration-150",
+            game1FirstPick === redName
+              ? "border-white/10 text-white/25 bg-white/5 cursor-default! opacity-40"
+              : "border-tools-blue/40 text-tools-blue bg-tools-blue-dim",
+            !game1FirstPick && !strikerRooms && "hover:bg-tools-blue/15",
+            game1FirstPick === blueName && "cursor-default!",
+          )}
+        >
+          {blueName} First Pick in G1
+        </button>
+        <button
+          type="button"
+          disabled={!!game1FirstPick || !!strikerRooms}
+          onClick={() => handleCreateRooms(redName)}
+          className={classNames(
+            "text-xs font-mono font-semibold tracking-wide py-1.5 px-3 rounded-lg border transition-colors duration-150",
+            game1FirstPick === blueName
+              ? "border-white/10 text-white/25 bg-white/5 cursor-default! opacity-40"
+              : "border-tools-red/40 text-tools-red bg-tools-red-dim",
+            !game1FirstPick && !strikerRooms && "hover:bg-tools-red/15",
+            game1FirstPick === redName && "cursor-default!",
+          )}
+        >
+          {redName} First Pick in G1
+        </button>
+      </div>
 
       {/* Map cards */}
       <div className="flex flex-row flex-wrap justify-center gap-3">
