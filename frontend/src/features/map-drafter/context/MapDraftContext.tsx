@@ -27,6 +27,11 @@ interface MapDraftContextValue {
   handlePending: (map: string | null) => Promise<void>;
   handleReady: () => Promise<void>;
   handleReset: () => void;
+  handleGame1FirstPick: (firstPick: string) => Promise<void>;
+  handleSetStrikerRooms: (
+    rooms: Record<string, string>,
+    bannedAwakenings: string[],
+  ) => Promise<void>;
 }
 
 const MapDraftContext = createContext<MapDraftContextValue | null>(null);
@@ -54,8 +59,17 @@ export function MapDraftProvider({ children }: { children: ReactNode }) {
   const [roomId, setRoomId] = useState<string | null>(urlRoom);
   const [lobbyState, setLobbyState] = useState<MapDraftState | null>(null);
 
-  const { state, loading, error, create, applyAction, setPending, ready } =
-    useMapDraftApi(roomId, side);
+  const {
+    state,
+    loading,
+    error,
+    create,
+    applyAction,
+    setPending,
+    ready,
+    setGame1FirstPick,
+    setStrikerRooms,
+  } = useMapDraftApi(roomId, side);
 
   // Redirect from base path when URL has room+side params (e.g. from a shared lobby link)
   useEffect(() => {
@@ -100,6 +114,17 @@ export function MapDraftProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  async function handleGame1FirstPick(firstPick: string) {
+    await setGame1FirstPick(firstPick);
+  }
+
+  async function handleSetStrikerRooms(
+    rooms: Record<string, string>,
+    bannedAwakenings: string[],
+  ) {
+    await setStrikerRooms(rooms, bannedAwakenings);
+  }
+
   function handleReset() {
     window.history.replaceState({}, "", "/map-draft");
     setRoomId(null);
@@ -123,6 +148,8 @@ export function MapDraftProvider({ children }: { children: ReactNode }) {
         handlePending,
         handleReady,
         handleReset,
+        handleGame1FirstPick,
+        handleSetStrikerRooms,
       }}
     >
       {children}

@@ -324,11 +324,7 @@ export default function DraftPage() {
                 </span>
               </div>
             ) : done ? (
-              <DonePanel
-                actions={actions}
-                blueName={blueName}
-                mapStatuses={mapStatuses}
-              />
+              <DonePanel />
             ) : (
               <div className="flex flex-col justify-center items-center">
                 <div
