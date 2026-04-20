@@ -66,20 +66,18 @@ function SpectatorCard({
                 src={mapEntry.icon}
                 alt={completedAction?.map}
                 className="absolute inset-0 w-full h-full object-cover"
-                style={{
-                  clipPath: "polygon(-2% -2%, 102% -2%, 102% 106%, -2% 2%)",
-                }}
+                style={{ clipPath: "polygon(0% 0%, 100% 0%, 100% 100%)" }}
                 initial={{ x: "12%", y: "-12%" }}
-                animate={{ x: 0, y: -1 }}
+                animate={{ x: 0, y: 0 }}
                 transition={{ duration: 0.65, ease: [0.25, 0, 0, 1] }}
               />
               <motion.img
                 src={mapEntry.icon}
                 alt={completedAction?.map}
                 className="absolute inset-0 w-full h-full object-cover"
-                style={{ clipPath: "polygon(-2% -2%, -2% 102%, 102% 102%)" }}
+                style={{ clipPath: "polygon(0% 0%, 0% 100%, 100% 100%)" }}
                 initial={{ x: "-12%", y: "12%" }}
-                animate={{ x: 0, y: -2 }}
+                animate={{ x: 1, y: -1 }}
                 transition={{ duration: 0.65, ease: [0.25, 0, 0, 1] }}
               />
             </motion.div>
@@ -115,11 +113,19 @@ function SpectatorCard({
           </motion.div>
         )}
         {!isBan && completedAction && pickNumber && (
-          <div className="absolute inset-0 flex items-center justify-center">
+          <motion.div
+            className="absolute inset-0 flex items-center justify-center"
+            initial={{ opacity: wasFilledOnMount.current ? 1 : 0 }}
+            animate={{ opacity: 1 }}
+            transition={{
+              delay: wasFilledOnMount.current ? 0 : 0.4,
+              duration: 0.2,
+            }}
+          >
             <span className="font-mono text-sm font-bold tracking-widest uppercase bg-tools-gold/70 text-black px-2 py-0.5 rounded">
               G{pickNumber}
             </span>
-          </div>
+          </motion.div>
         )}
         {isCurrent && !completedAction && (
           <div className="absolute inset-0 flex items-center justify-center">
@@ -139,6 +145,72 @@ function SpectatorCard({
       </div>
       <span className="font-mono text-xs text-white/40 text-center leading-tight w-20 line-clamp-2 min-h-7.5">
         {completedAction?.map ?? (isBan ? "Ban" : `G${pickNumber}`)}
+      </span>
+    </div>
+  );
+}
+
+function DeciderCard({ mapName }: { mapName: string | undefined }) {
+  const wasFilledOnMount = useRef(!!mapName);
+  const mapEntry = mapName ? ALL_MAPS.find((m) => m.name === mapName) : null;
+
+  return (
+    <div className="flex flex-col items-center gap-1 w-20">
+      <span className="font-mono font-bold tracking-widest uppercase text-center text-tools-gold">
+        Decider
+      </span>
+      <div
+        className={`relative w-20 h-20 rounded border-2 overflow-hidden border-tools-gold ${!mapName ? "opacity-30" : ""}`}
+      >
+        <div className="absolute inset-0 bg-white/5" />
+        <AnimatePresence initial={false}>
+          {mapEntry && (
+            <motion.div
+              key={mapEntry.name}
+              className="absolute inset-0"
+              initial={{ scale: 1.08 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 0.65, ease: [0.25, 0, 0, 1] }}
+            >
+              <motion.img
+                src={mapEntry.icon}
+                alt={mapName}
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{ clipPath: "polygon(0% 0%, 100% 0%, 100% 100%)" }}
+                initial={{ x: "12%", y: "-12%" }}
+                animate={{ x: 0, y: 0 }}
+                transition={{ duration: 0.65, ease: [0.25, 0, 0, 1] }}
+              />
+              <motion.img
+                src={mapEntry.icon}
+                alt={mapName}
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{ clipPath: "polygon(0% 0%, 0% 100%, 100% 100%)" }}
+                initial={{ x: "-12%", y: "12%" }}
+                animate={{ x: 1, y: -1 }}
+                transition={{ duration: 0.65, ease: [0.25, 0, 0, 1] }}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+        {mapName && (
+          <motion.div
+            className="absolute inset-0 flex items-center justify-center"
+            initial={{ opacity: wasFilledOnMount.current ? 1 : 0 }}
+            animate={{ opacity: 1 }}
+            transition={{
+              delay: wasFilledOnMount.current ? 0 : 0.4,
+              duration: 0.2,
+            }}
+          >
+            <span className="font-mono text-sm font-bold tracking-widest uppercase bg-tools-gold/70 text-black px-2 py-0.5 rounded">
+              G3
+            </span>
+          </motion.div>
+        )}
+      </div>
+      <span className="font-mono text-xs text-white/40 text-center leading-tight w-20 line-clamp-2 min-h-7.5">
+        {mapName ?? "G3"}
       </span>
     </div>
   );
@@ -164,9 +236,6 @@ export function SpectatorBar({ timeLeft, countdownLeft }: SpectatorBarProps) {
   const deciderMap = Object.entries(mapStatuses).find(
     ([, s]) => s === "decider",
   )?.[0];
-  const deciderEntry = deciderMap
-    ? ALL_MAPS.find((m) => m.name === deciderMap)
-    : null;
 
   return (
     <div className="px-5 border-t border-white/7 h-40 flex items-center gap-5 shrink-0 justify-center">
@@ -242,34 +311,7 @@ export function SpectatorBar({ timeLeft, countdownLeft }: SpectatorBarProps) {
           })}
           {(state.bestOf === Sequence.BO3 ||
             state.bestOf === Sequence.BO3EU) && (
-            <div className="flex flex-col items-center gap-1 w-20">
-              <span className="font-mono font-bold tracking-widest uppercase text-center text-tools-gold">
-                Decider
-              </span>
-              <div
-                className={`relative w-20 h-20 rounded border-2 overflow-hidden border-tools-gold ${!deciderMap ? "opacity-30" : ""}`}
-              >
-                {deciderEntry?.icon ? (
-                  <img
-                    src={deciderEntry.icon}
-                    alt={deciderMap}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-white/5" />
-                )}
-                {deciderMap && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="font-mono text-sm font-bold tracking-widest uppercase bg-tools-gold/70 text-black px-2 py-0.5 rounded">
-                      G3
-                    </span>
-                  </div>
-                )}
-              </div>
-              <span className="font-mono text-xs text-white/40 text-center leading-tight w-20 line-clamp-2">
-                {deciderMap ?? "G3"}
-              </span>
-            </div>
+            <DeciderCard mapName={deciderMap} />
           )}
         </div>
       )}
