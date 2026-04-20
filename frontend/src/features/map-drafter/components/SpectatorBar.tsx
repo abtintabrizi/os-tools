@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { AnimatePresence, motion } from "motion/react";
+import { AnimatedNumber } from "@/features/common/components/AnimatedNumber";
 
 import {
   ALL_MAPS,
@@ -129,7 +130,8 @@ function SpectatorCard({
         )}
         {isCurrent && !completedAction && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <span
+            <AnimatedNumber
+              value={timeLeft}
               className={`font-mono font-bold tabular-nums text-2xl ${
                 timeLeft <= 5
                   ? "text-tools-red"
@@ -137,9 +139,7 @@ function SpectatorCard({
                     ? "text-amber-400"
                     : "text-white/70"
               }`}
-            >
-              {timeLeft}
-            </span>
+            />
           </div>
         )}
       </div>

@@ -14,6 +14,7 @@ import { useMapDraftContext } from "@/features/map-drafter/context/MapDraftConte
 import { StepTracker } from "@/features/common/components/StepTracker";
 import DonePanel from "@/features/map-drafter/components/DonePanel";
 import { MapSidebarCard } from "@/features/map-drafter/components/MapSidebarCard";
+import { AnimatedNumber } from "@/features/common/components/AnimatedNumber";
 import { SpectatorBar } from "@/features/map-drafter/components/SpectatorBar";
 import {
   BackButton,
@@ -328,15 +329,17 @@ export default function DraftPage() {
                 <span className="font-mono text-lg tracking-widest uppercase text-white/40">
                   Draft starting in
                 </span>
-                <span className="font-mono font-bold tabular-nums text-8xl text-tools-gold">
-                  {countdownLeft}
-                </span>
+                <AnimatedNumber
+                  value={countdownLeft}
+                  className="font-mono font-bold tabular-nums text-8xl text-tools-gold"
+                />
               </div>
             ) : done ? (
               <DonePanel />
             ) : (
               <div className="flex flex-col justify-center items-center">
-                <div
+                <AnimatedNumber
+                  value={timeLeft}
                   className={`font-mono font-bold tabular-nums mb-4 text-6xl transition-colors ${
                     timeLeft <= 5
                       ? "text-tools-red"
@@ -344,9 +347,7 @@ export default function DraftPage() {
                         ? "text-amber-400"
                         : "text-white/30"
                   }`}
-                >
-                  {timeLeft}
-                </div>
+                />
                 <div className="grid grid-cols-4 gap-3 mb-3">
                   {maps.map((map) => {
                     const status = mapStatuses[map];

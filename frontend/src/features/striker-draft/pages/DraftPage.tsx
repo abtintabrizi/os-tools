@@ -15,6 +15,7 @@ import { StepTracker } from "@/features/common/components/StepTracker";
 import { STRIKER_SEQUENCE } from "@/features/striker-draft/constants";
 import type { IndexedStep } from "@/features/striker-draft/types";
 import { SidebarCard } from "@/features/striker-draft/components/SidebarCard";
+import { AnimatedNumber } from "@/features/common/components/AnimatedNumber";
 import { StrikerSpectatorBar } from "@/features/striker-draft/components/StrikerSpectatorBar";
 import {
   BackButton,
@@ -412,9 +413,10 @@ export default function DraftPage() {
                 <span className="font-mono text-lg tracking-widest uppercase text-white/40">
                   Draft starting in
                 </span>
-                <span className="font-mono font-bold tabular-nums text-8xl text-tools-gold">
-                  {countdownLeft}
-                </span>
+                <AnimatedNumber
+                  value={countdownLeft}
+                  className="font-mono font-bold tabular-nums text-8xl text-tools-gold"
+                />
               </div>
             ) : (
               /* Drafting / Done */

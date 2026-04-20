@@ -6,6 +6,7 @@ import {
   DraftAction,
   Team,
 } from "@/features/common/constants/constants";
+import { AnimatedNumber } from "@/features/common/components/AnimatedNumber";
 import type { MapDraftAction } from "@/features/map-drafter/types";
 import { useMapDraftContext } from "@/features/map-drafter/context/MapDraftContext";
 import { SEQUENCE_MAP } from "@map-drafter/constants.ts";
@@ -157,7 +158,8 @@ export function MapSidebarCard({
       )}
       {status === "active" && bothReady && (
         <div className="absolute inset-0 flex items-center justify-center">
-          <span
+          <AnimatedNumber
+            value={timeLeft}
             className={`font-mono font-bold tabular-nums text-4xl ${
               timeLeft <= 5
                 ? "text-tools-red"
@@ -165,9 +167,7 @@ export function MapSidebarCard({
                   ? "text-amber-400"
                   : "text-white"
             }`}
-          >
-            {timeLeft}
-          </span>
+          />
         </div>
       )}
       {isBan && filled && (
