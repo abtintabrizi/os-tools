@@ -14,7 +14,8 @@ import { useMapDraftContext } from "@/features/map-drafter/context/MapDraftConte
 import { StepTracker } from "@/features/common/components/StepTracker";
 import DonePanel from "@/features/map-drafter/components/DonePanel";
 import { MapSidebarCard } from "@/features/map-drafter/components/MapSidebarCard";
-import { Sequence } from "@/features/map-drafter/types";
+import { AnimatedNumber } from "@/features/common/components/AnimatedNumber";
+import { SpectatorBar } from "@/features/map-drafter/components/SpectatorBar";
 import {
   BackButton,
   HomeButton,
@@ -131,9 +132,6 @@ export default function DraftPage() {
   const pending = localPending ?? serverPending;
 
   const mapStatuses = deriveMapStatuses(state, sequence);
-
-  const blueActions = actions.filter((a) => a.team === blueName);
-  const redActions = actions.filter((a) => a.team === redName);
 
   const blueSeqSteps = sequence
     .map((s, globalIdx) => ({ ...s, globalIdx }))
@@ -257,14 +255,8 @@ export default function DraftPage() {
               key={s.globalIdx}
               step={s}
               cardIndex={i}
-              teamActions={blueActions}
-              teamSteps={blueSeqSteps}
               isBlue
-              currentStep={step}
-              done={done}
               timeLeft={timeLeft}
-              bothReady={bothReady}
-              pendingMap={state.pendingBlue}
             />
           ))}
         </div>
@@ -334,18 +326,20 @@ export default function DraftPage() {
               </div>
             ) : countdownLeft > 0 && actions.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full gap-4">
-                <span className="font-mono text-xs tracking-widest uppercase text-white/40">
+                <span className="font-mono text-lg tracking-widest uppercase text-white/40">
                   Draft starting in
                 </span>
-                <span className="font-mono font-bold tabular-nums text-8xl text-tools-gold">
-                  {countdownLeft}
-                </span>
+                <AnimatedNumber
+                  value={countdownLeft}
+                  className="font-mono font-bold tabular-nums text-8xl text-tools-gold"
+                />
               </div>
             ) : done ? (
               <DonePanel />
             ) : (
               <div className="flex flex-col justify-center items-center">
-                <div
+                <AnimatedNumber
+                  value={timeLeft}
                   className={`font-mono font-bold tabular-nums mb-4 text-6xl transition-colors ${
                     timeLeft <= 5
                       ? "text-tools-red"
@@ -353,9 +347,7 @@ export default function DraftPage() {
                         ? "text-amber-400"
                         : "text-white/30"
                   }`}
-                >
-                  {timeLeft}
-                </div>
+                />
                 <div className="grid grid-cols-4 gap-3 mb-3">
                   {maps.map((map) => {
                     const status = mapStatuses[map];
@@ -472,174 +464,7 @@ export default function DraftPage() {
           </div>
 
           {side === Team.Spectator && (
-            <div className="px-5 border-t border-white/7 h-40 flex items-center gap-5 shrink-0 justify-center">
-              {!bothReady ? (
-                <div className="flex items-center gap-6">
-                  <div className="flex flex-col items-center gap-2 w-26">
-                    <span
-                      className={`font-mono text-xs font-bold tracking-widest uppercase py-1 px-2.5 rounded ${blueBadgeClass}`}
-                    >
-                      Blue
-                    </span>
-                    <span className="font-mono text-sm font-bold max-w-full truncate">
-                      {blueName}
-                    </span>
-                    {state.readyBlue ? (
-                      <span className="font-mono text-xs tracking-widest uppercase text-tools-green-light bg-tools-green/10 px-3 py-1 rounded border border-tools-green/20">
-                        Ready
-                      </span>
-                    ) : (
-                      <span className="font-mono text-xs tracking-widest uppercase text-white/25 px-3 py-1">
-                        Not ready
-                      </span>
-                    )}
-                  </div>
-                  <div className="w-px bg-white/7 self-stretch" />
-                  <div className="flex flex-col items-center gap-2 w-26">
-                    <span
-                      className={`font-mono text-xs font-bold tracking-widest uppercase py-1 px-2.5 rounded ${redBadgeClass}`}
-                    >
-                      Red
-                    </span>
-                    <span className="font-mono text-sm font-bold max-w-full truncate">
-                      {redName}
-                    </span>
-                    {state.readyRed ? (
-                      <span className="font-mono text-xs tracking-widest uppercase text-tools-green-light bg-tools-green/10 px-3 py-1 rounded border border-tools-green/20">
-                        Ready
-                      </span>
-                    ) : (
-                      <span className="font-mono text-xs tracking-widest uppercase text-white/25 px-3 py-1">
-                        Not ready
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ) : countdownLeft > 0 && actions.length === 0 ? (
-                <span className="font-mono text-sm tracking-widest text-white/50">
-                  Starting in{" "}
-                  <strong className="text-tools-gold">{countdownLeft}</strong>
-                </span>
-              ) : (
-                <div className="flex gap-3 justify-center">
-                  {sequence.map((s, i) => {
-                    const completedAction = actions[i];
-                    const mapEntry = completedAction
-                      ? ALL_MAPS.find((m) => m.name === completedAction.map)
-                      : null;
-                    const isBlue = s.team === Team.Blue;
-                    const isBan = s.action === DraftAction.Ban;
-                    const teamName = isBlue ? blueName : redName;
-                    const isCurrent = !done && i === step;
-                    const pickNumber = !isBan
-                      ? (sequence[i].gameNum ?? 1)
-                      : null;
-
-                    return (
-                      <div
-                        key={i}
-                        className="flex flex-col items-center gap-1 w-20"
-                      >
-                        <span
-                          className={`font-mono font-bold tracking-widest uppercase text-center truncate w-full ${isBlue ? "text-tools-blue" : "text-tools-red"}`}
-                        >
-                          {teamName}
-                        </span>
-                        <div
-                          className={`relative w-20 h-20 rounded border-2 overflow-hidden ${isBlue ? "border-tools-blue" : "border-tools-red"} ${isCurrent ? "ring-1 ring-white/30" : ""} ${!completedAction && !isCurrent ? "opacity-30" : ""}`}
-                        >
-                          {mapEntry?.icon ? (
-                            <img
-                              src={mapEntry.icon}
-                              alt={completedAction?.map}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-white/5" />
-                          )}
-                          {isBan && completedAction && (
-                            <>
-                              <div className="absolute inset-0 bg-black/50 grayscale" />
-                              <div className="absolute inset-0 flex items-center justify-center">
-                                <span className="font-mono text-[9px] font-bold tracking-widest uppercase bg-tools-red/50 text-white px-1 py-0.5 rounded">
-                                  Banned
-                                </span>
-                              </div>
-                            </>
-                          )}
-                          {!isBan && completedAction && pickNumber && (
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <span className="font-mono text-sm font-bold tracking-widest uppercase bg-tools-gold/70 text-black px-2 py-0.5 rounded">
-                                G{pickNumber}
-                              </span>
-                            </div>
-                          )}
-                          {isCurrent && !completedAction && (
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <span
-                                className={`font-mono font-bold tabular-nums text-2xl ${
-                                  timeLeft <= 5
-                                    ? "text-tools-red"
-                                    : timeLeft <= 10
-                                      ? "text-amber-400"
-                                      : "text-white/70"
-                                }`}
-                              >
-                                {timeLeft}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                        <span className="font-mono text-xs text-white/40 text-center leading-tight w-20 line-clamp-2">
-                          {completedAction?.map ??
-                            (isBan ? "Ban" : `G${pickNumber}`)}
-                        </span>
-                      </div>
-                    );
-                  })}
-                  {(state.bestOf === Sequence.BO3 ||
-                    state.bestOf === Sequence.BO3EU) &&
-                    (() => {
-                      const deciderMap = Object.entries(mapStatuses).find(
-                        ([, s]) => s === "decider",
-                      )?.[0];
-                      const deciderEntry = deciderMap
-                        ? ALL_MAPS.find((m) => m.name === deciderMap)
-                        : null;
-                      return (
-                        <div className="flex flex-col items-center gap-1 w-20">
-                          <span className="font-mono font-bold tracking-widest uppercase text-center text-tools-gold">
-                            Decider
-                          </span>
-                          <div
-                            className={`relative w-20 h-20 rounded border-2 overflow-hidden border-tools-gold ${!deciderMap ? "opacity-30" : ""}`}
-                          >
-                            {deciderEntry?.icon ? (
-                              <img
-                                src={deciderEntry.icon}
-                                alt={deciderMap}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-white/5" />
-                            )}
-                            {deciderMap && (
-                              <div className="absolute inset-0 flex items-center justify-center">
-                                <span className="font-mono text-sm font-bold tracking-widest uppercase bg-tools-gold/70 text-black px-2 py-0.5 rounded">
-                                  G3
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                          <span className="font-mono text-xs text-white/40 text-center leading-tight w-20 line-clamp-2">
-                            {deciderMap ?? "G3"}
-                          </span>
-                        </div>
-                      );
-                    })()}
-                </div>
-              )}
-            </div>
+            <SpectatorBar timeLeft={timeLeft} countdownLeft={countdownLeft} />
           )}
         </div>
 
@@ -655,14 +480,8 @@ export default function DraftPage() {
               key={s.globalIdx}
               step={s}
               cardIndex={i}
-              teamActions={redActions}
-              teamSteps={redSeqSteps}
               isBlue={false}
-              currentStep={step}
-              done={done}
               timeLeft={timeLeft}
-              bothReady={bothReady}
-              pendingMap={state.pendingRed}
             />
           ))}
         </div>

@@ -15,6 +15,8 @@ import { StepTracker } from "@/features/common/components/StepTracker";
 import { STRIKER_SEQUENCE } from "@/features/striker-draft/constants";
 import type { IndexedStep } from "@/features/striker-draft/types";
 import { SidebarCard } from "@/features/striker-draft/components/SidebarCard";
+import { AnimatedNumber } from "@/features/common/components/AnimatedNumber";
+import { StrikerSpectatorBar } from "@/features/striker-draft/components/StrikerSpectatorBar";
 import {
   BackButton,
   HomeButton,
@@ -53,7 +55,6 @@ export default function DraftPage() {
       navigate("/striker-draft", { replace: true });
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
 
   useEffect(() => {
     if (
@@ -158,9 +159,6 @@ export default function DraftPage() {
     ...s,
     globalIdx: i,
   })).filter((s) => s.team === Team.Red);
-  const blueActions = actions.filter((a) => a.team === blueName);
-  const redActions = actions.filter((a) => a.team === redName);
-
   const mapEntry = ALL_MAPS.find((m) => m.name === map);
 
   function handleStrikerClick(name: string) {
@@ -272,14 +270,8 @@ export default function DraftPage() {
               key={s.globalIdx}
               step={s}
               cardIndex={i}
-              teamActions={blueActions}
-              teamSteps={blueSeqSteps}
               isBlue
-              currentStep={step}
-              done={done}
               timeLeft={timeLeft}
-              bothReady={bothReady}
-              pendingStriker={state.pendingBlue}
             />
           ))}
         </div>
@@ -418,12 +410,13 @@ export default function DraftPage() {
                     ) : null;
                   })}
                 </div>
-                <span className="font-mono text-xs tracking-widest uppercase text-white/40">
+                <span className="font-mono text-lg tracking-widest uppercase text-white/40">
                   Draft starting in
                 </span>
-                <span className="font-mono font-bold tabular-nums text-8xl text-tools-gold">
-                  {countdownLeft}
-                </span>
+                <AnimatedNumber
+                  value={countdownLeft}
+                  className="font-mono font-bold tabular-nums text-8xl text-tools-gold"
+                />
               </div>
             ) : (
               /* Drafting / Done */
@@ -594,178 +587,11 @@ export default function DraftPage() {
             )}
           </div>
 
-          {/* Spectator sequence tracker */}
           {side === Team.Spectator && (
-            <div className="px-5 mx-5 border-t border-white/7 h-40 flex items-center gap-5 shrink-0 justify-center">
-              {/* Map + awakenings */}
-              <div className="flex items-center gap-4 shrink-0">
-                {mapEntry && (
-                  <div className="w-20 flex flex-col items-center gap-1">
-                    <img
-                      src={mapEntry.icon}
-                      alt={map}
-                      className="w-16 h-16 rounded-lg object-cover"
-                    />
-                    <span className="font-mono text-[10px] font-semibold text-white/60 text-center w-full line-clamp-2 leading-tight">
-                      {map}
-                    </span>
-                  </div>
-                )}
-                {mapEntry && awakenings.length > 0 && (
-                  <div className="w-px h-12 bg-white/10" />
-                )}
-                {awakenings.map((aw) => {
-                  const awEntry = ALL_AWAKENINGS.find((a) => a.name === aw);
-                  return awEntry ? (
-                    <div
-                      key={aw}
-                      className="w-20 flex flex-col items-center gap-1"
-                    >
-                      <img
-                        src={awEntry.icon}
-                        alt={aw}
-                        className="w-16 h-16 object-contain"
-                      />
-                      <span className="font-mono text-[10px] text-white/50 text-center w-full line-clamp-2 leading-tight">
-                        {aw}
-                      </span>
-                    </div>
-                  ) : null;
-                })}
-              </div>
-              <div className="w-px bg-white/7 h-3/5" />
-              {!bothReady ? (
-                <div className="flex items-center gap-6">
-                  <div className="flex flex-col items-center gap-2 w-26">
-                    <span
-                      className={`font-mono text-xs font-bold tracking-widest uppercase py-1 px-2.5 rounded ${blueBadgeClass}`}
-                    >
-                      Blue
-                    </span>
-                    <span className="font-mono text-sm font-bold max-w-full truncate">
-                      {blueName}
-                    </span>
-                    {state.readyBlue ? (
-                      <span className="font-mono text-xs tracking-widest uppercase text-tools-green-light bg-tools-green/10 px-3 py-1 rounded border border-tools-green/20">
-                        Ready
-                      </span>
-                    ) : (
-                      <span className="font-mono text-xs tracking-widest uppercase text-white/25 px-3 py-1">
-                        Not ready
-                      </span>
-                    )}
-                  </div>
-                  <div className="w-px bg-white/7 self-stretch" />
-                  <div className="flex flex-col items-center gap-2 w-26">
-                    <span
-                      className={`font-mono text-xs font-bold tracking-widest uppercase py-1 px-2.5 rounded ${redBadgeClass}`}
-                    >
-                      Red
-                    </span>
-                    <span className="font-mono text-sm font-bold max-w-full truncate">
-                      {redName}
-                    </span>
-                    {state.readyRed ? (
-                      <span className="font-mono text-xs tracking-widest uppercase text-tools-green-light bg-tools-green/10 px-3 py-1 rounded border border-tools-green/20">
-                        Ready
-                      </span>
-                    ) : (
-                      <span className="font-mono text-xs tracking-widest uppercase text-white/25 px-3 py-1">
-                        Not ready
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ) : countdownLeft > 0 && actions.length === 0 ? (
-                <span className="font-mono text-sm tracking-widest text-white/50">
-                  Starting in{" "}
-                  <strong className="text-tools-gold">{countdownLeft}</strong>
-                </span>
-              ) : (
-                <div className="flex gap-2">
-                  {STRIKER_SEQUENCE.map((s, i) => {
-                    const completedAction = actions[i];
-                    const strikerEntry = completedAction
-                      ? ALL_STRIKERS.find(
-                          (str) => str.name === completedAction.striker,
-                        )
-                      : null;
-                    const isBlue = s.team === Team.Blue;
-                    const isBan = s.action === DraftAction.Ban;
-                    const isCurrent = !done && i === step;
-
-                    return (
-                      <div
-                        key={i}
-                        className="flex flex-col items-center gap-1 w-20"
-                      >
-                        <span
-                          className={`font-mono font-bold tracking-widest uppercase text-center truncate w-full ${isBlue ? "text-tools-blue" : "text-tools-red"}`}
-                        >
-                          {isBlue ? blueName : redName}
-                        </span>
-                        <div
-                          className={`relative w-20 h-20 rounded border-2 overflow-hidden ${isBlue ? "border-tools-blue" : "border-tools-red"} ${isCurrent ? "ring-1 ring-white/30" : ""} ${!completedAction && !isCurrent ? "opacity-30" : ""}`}
-                        >
-                          {strikerEntry ? (
-                            <img
-                              src={strikerEntry.icon}
-                              alt={completedAction?.striker}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-white/5" />
-                          )}
-                          {isBan &&
-                            completedAction &&
-                            completedAction.striker && (
-                              <>
-                                <div className="absolute inset-0 bg-black/50 grayscale" />
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                  <span className="font-mono text-[9px] font-bold tracking-widest uppercase bg-tools-red/50 text-white px-1 py-0.5 rounded">
-                                    Banned
-                                  </span>
-                                </div>
-                              </>
-                            )}
-                          {isBan &&
-                            completedAction &&
-                            !completedAction.striker && (
-                              <div className="absolute inset-0 flex items-center justify-center">
-                                <span className="font-mono text-[9px] font-bold tracking-widest uppercase bg-white/10 text-white/50 px-1 py-0.5 rounded">
-                                  No Ban
-                                </span>
-                              </div>
-                            )}
-                          {isCurrent && !completedAction && (
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <span
-                                className={`font-mono font-bold tabular-nums text-2xl ${
-                                  timeLeft <= 5
-                                    ? "text-tools-red"
-                                    : timeLeft <= 10
-                                      ? "text-amber-400"
-                                      : "text-white/70"
-                                }`}
-                              >
-                                {timeLeft}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                        <span className="font-mono text-xs text-white/40 text-center leading-tight w-20 line-clamp-2">
-                          {completedAction
-                            ? (completedAction.striker ?? "No Ban")
-                            : isBan
-                              ? "Ban"
-                              : "Pick"}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+            <StrikerSpectatorBar
+              timeLeft={timeLeft}
+              countdownLeft={countdownLeft}
+            />
           )}
         </div>
 
@@ -781,14 +607,8 @@ export default function DraftPage() {
               key={s.globalIdx}
               step={s}
               cardIndex={i}
-              teamActions={redActions}
-              teamSteps={redSeqSteps}
               isBlue={false}
-              currentStep={step}
-              done={done}
               timeLeft={timeLeft}
-              bothReady={bothReady}
-              pendingStriker={state.pendingRed}
             />
           ))}
         </div>

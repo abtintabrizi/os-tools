@@ -1,5 +1,15 @@
-import { ALL_MAPS, DraftAction } from "@/features/common/constants/constants";
+import { AnimatePresence, motion } from "motion/react";
+import { useRef } from "react";
+
+import {
+  ALL_MAPS,
+  DraftAction,
+  Team,
+} from "@/features/common/constants/constants";
+import { AnimatedNumber } from "@/features/common/components/AnimatedNumber";
 import type { MapDraftAction } from "@/features/map-drafter/types";
+import { useMapDraftContext } from "@/features/map-drafter/context/MapDraftContext";
+import { SEQUENCE_MAP } from "@map-drafter/constants.ts";
 
 interface SequenceStep {
   team: string;
@@ -11,29 +21,38 @@ interface SequenceStep {
 interface MapSidebarCardProps {
   step: SequenceStep;
   cardIndex: number;
-  teamActions: MapDraftAction[];
-  teamSteps: SequenceStep[];
   isBlue: boolean;
-  currentStep: number;
-  done: boolean;
   timeLeft: number;
-  bothReady: boolean;
-  pendingMap?: string | null;
 }
 
 export function MapSidebarCard({
   step: s,
   cardIndex,
-  teamActions,
-  teamSteps,
   isBlue,
-  currentStep,
-  done,
   timeLeft,
-  bothReady,
-  pendingMap,
 }: MapSidebarCardProps) {
+  const { state } = useMapDraftContext();
+
+  const sequence = state ? SEQUENCE_MAP[state.bestOf] : [];
+  const teamSteps = sequence
+    .map((step, globalIdx) => ({ ...step, globalIdx }))
+    .filter((step) => step.team === (isBlue ? Team.Blue : Team.Red));
+  const teamActions: MapDraftAction[] = state
+    ? state.actions.filter(
+        (a) => a.team === (isBlue ? state.blueName : state.redName),
+      )
+    : [];
+  const pendingMap = state
+    ? isBlue
+      ? state.pendingBlue
+      : state.pendingRed
+    : null;
+  const currentStep = state?.step ?? 0;
+  const done = state?.done ?? false;
+  const bothReady = (state?.readyBlue && state?.readyRed) ?? false;
+
   const filled = teamActions[cardIndex];
+  const wasFilledOnMount = useRef(!!filled);
   const isBan = s.action === DraftAction.Ban;
   const isActive = s.globalIdx === currentStep && !done;
   const status: "filled" | "active" | "pending" = filled
@@ -70,33 +89,77 @@ export function MapSidebarCard({
     <div
       className={`relative rounded-lg border-2 overflow-hidden aspect-video ${borderClass} ${status === "pending" ? "opacity-30" : ""}`}
     >
-      {mapEntry ? (
-        <img
-          src={mapEntry.image}
-          alt={filled?.map}
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-      ) : (
-        <div
-          className="absolute inset-0"
-          style={{
-            background: isBlue
-              ? "radial-gradient(circle at 50% 65%, rgba(59,130,246,0.15) 0%, rgba(18,18,28,1) 75%)"
-              : "radial-gradient(circle at 50% 65%, rgba(239,68,68,0.15) 0%, rgba(18,18,28,1) 75%)",
-          }}
-        />
-      )}
-      {pendingEntry && (
-        <img
-          src={pendingEntry.image}
-          alt={pendingEntry.name}
-          className="absolute inset-0 w-full h-full object-cover blur-sm brightness-50 transition-opacity duration-300"
-        />
-      )}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: isBlue
+            ? "radial-gradient(circle at 50% 65%, rgba(59,130,246,0.15) 0%, rgba(18,18,28,1) 75%)"
+            : "radial-gradient(circle at 50% 65%, rgba(239,68,68,0.15) 0%, rgba(18,18,28,1) 75%)",
+        }}
+      />
+      <AnimatePresence initial={false}>
+        {mapEntry && (
+          <motion.div
+            key={mapEntry.name}
+            className="absolute inset-0"
+            initial={{ scale: 1.08 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.65, ease: [0.25, 0, 0, 1] }}
+          >
+            <motion.img
+              src={mapEntry.image}
+              alt={filled?.map}
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{
+                clipPath: "polygon(-2% -2%, 102% -2%, 102% 106%, -2% 2%)",
+              }}
+              initial={{ x: "12%", y: "-12%" }}
+              animate={{ x: 0, y: -1 }}
+              transition={{ duration: 0.65, ease: [0.25, 0, 0, 1] }}
+            />
+            <motion.img
+              src={mapEntry.image}
+              alt={filled?.map}
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ clipPath: "polygon(-2% -2%, -2% 102%, 102% 102%)" }}
+              initial={{ x: "-12%", y: "12%" }}
+              animate={{ x: 0, y: -1 }}
+              transition={{ duration: 0.65, ease: [0.25, 0, 0, 1] }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {pendingEntry && (
+          <motion.img
+            key={pendingEntry.name}
+            src={pendingEntry.image}
+            alt={pendingEntry.name}
+            className="absolute inset-0 w-full h-full object-cover blur-[2px] brightness-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+          />
+        )}
+      </AnimatePresence>
       <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/10 to-transparent" />
+      {filled && !wasFilledOnMount.current && (
+        <motion.div
+          key={filled.map}
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: isBan ? "rgba(239,68,68,0.2)" : "rgba(34,197,94,0.15)",
+          }}
+          initial={{ opacity: 1 }}
+          animate={{ opacity: 0 }}
+          transition={{ duration: 0.9, ease: "easeOut" }}
+        />
+      )}
       {status === "active" && bothReady && (
         <div className="absolute inset-0 flex items-center justify-center">
-          <span
+          <AnimatedNumber
+            value={timeLeft}
             className={`font-mono font-bold tabular-nums text-4xl ${
               timeLeft <= 5
                 ? "text-tools-red"
@@ -104,20 +167,23 @@ export function MapSidebarCard({
                   ? "text-amber-400"
                   : "text-white"
             }`}
-          >
-            {timeLeft}
-          </span>
+          />
         </div>
       )}
       {isBan && filled && (
-        <>
+        <motion.div
+          className="absolute inset-0"
+          initial={{ opacity: wasFilledOnMount.current ? 1 : 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4, duration: 0.2 }}
+        >
           <div className="absolute inset-0 bg-black/50 grayscale" />
           <div className="absolute inset-0 flex items-center justify-center">
             <span className="font-mono text-sm font-bold tracking-widest uppercase bg-tools-red/20 text-tools-red-light px-2.5 py-1 rounded">
               Banned
             </span>
           </div>
-        </>
+        </motion.div>
       )}
       <div className="absolute bottom-0 left-0 right-0 p-2 flex justify-between items-end gap-1">
         {filled && (
