@@ -54,7 +54,6 @@ export default function DraftPage() {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-
   useEffect(() => {
     if (
       !state?.stepStartedAt ||
@@ -418,7 +417,7 @@ export default function DraftPage() {
                     ) : null;
                   })}
                 </div>
-                <span className="font-mono text-xs tracking-widest uppercase text-white/40">
+                <span className="font-mono text-lg tracking-widest uppercase text-white/40">
                   Draft starting in
                 </span>
                 <span className="font-mono font-bold tabular-nums text-8xl text-tools-gold">
