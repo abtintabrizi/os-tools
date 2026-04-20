@@ -19,10 +19,8 @@ class MapDraftPendingRequest(BaseModel):
     map: str | None = None
 
 
-class SetGame1FirstPickRequest(BaseModel):
+class SetStrikerRoomRequest(BaseModel):
+    map: str
+    roomId: str
     firstPick: str
-
-
-class SetStrikerRoomsRequest(BaseModel):
-    rooms: dict[str, str]
     bannedAwakenings: list[str]

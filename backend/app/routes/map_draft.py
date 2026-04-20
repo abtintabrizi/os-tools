@@ -11,8 +11,7 @@ from app.models.map_draft import (
     MapDraftActionRequest,
     CreateMapDraftRoomRequest,
     MapDraftPendingRequest,
-    SetGame1FirstPickRequest,
-    SetStrikerRoomsRequest,
+    SetStrikerRoomRequest,
 )
 from app.utils.supabase import generate_room_id, get_room, save_room
 from app.utils.map_draft import (
@@ -51,9 +50,7 @@ async def create_room(body: CreateMapDraftRoomRequest):
         "pendingBlue": None,
         "pendingRed": None,
         "stepStartedAt": None,
-        "game1FirstPick": None,
-        "strikerRooms": None,
-        "strikerBannedAwakenings": None,
+        "strikerLobbies": None,
     }
     await save_room(room_id, state, Table.MAP_DRAFTS)
     logger.info(
@@ -196,33 +193,26 @@ async def apply_action(room_id: str, body: MapDraftActionRequest):
     return updated
 
 
-@router.post("/rooms/{room_id}/striker-rooms")
-async def set_striker_rooms(room_id: str, body: SetStrikerRoomsRequest):
+@router.post("/rooms/{room_id}/striker-room")
+async def set_striker_room(room_id: str, body: SetStrikerRoomRequest):
     state = await get_room(room_id, Table.MAP_DRAFTS)
     if state is None:
         raise HTTPException(status_code=404, detail="Room not found")
-    if state.get("strikerRooms") is not None:
-        raise HTTPException(status_code=400, detail="Striker rooms already set")
+    existing = state.get("strikerLobbies") or {}
+    if body.map in existing:
+        raise HTTPException(status_code=400, detail="Room already set for this map")
 
     updated = {
         **state,
-        "strikerRooms": body.rooms,
-        "strikerBannedAwakenings": body.bannedAwakenings,
+        "strikerLobbies": {
+            **existing,
+            body.map: {
+                "roomId": body.roomId,
+                "firstPick": body.firstPick,
+                "bannedAwakenings": body.bannedAwakenings,
+            },
+        },
     }
-    await save_room(room_id, updated, Table.MAP_DRAFTS)
-    await manager.broadcast(room_id, updated)
-    return updated
-
-
-@router.post("/rooms/{room_id}/game1-first-pick")
-async def set_game1_first_pick(room_id: str, body: SetGame1FirstPickRequest):
-    state = await get_room(room_id, Table.MAP_DRAFTS)
-    if state is None:
-        raise HTTPException(status_code=404, detail="Room not found")
-    if body.firstPick not in (state["blueName"], state["redName"]):
-        raise HTTPException(status_code=400, detail="Invalid team name")
-
-    updated = {**state, "game1FirstPick": body.firstPick}
     await save_room(room_id, updated, Table.MAP_DRAFTS)
     await manager.broadcast(room_id, updated)
     return updated
