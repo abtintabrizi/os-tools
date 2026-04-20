@@ -1,40 +1,54 @@
+import { AnimatePresence, motion } from "motion/react";
+import { useRef } from "react";
 import {
   ALL_STRIKERS,
   DraftAction,
   StrikerDirection,
+  Team,
 } from "@/features/common/constants/constants";
 import type {
   StrikerDraftAction,
   IndexedStep,
 } from "@/features/striker-draft/types";
 import { useStrikerColor } from "@/features/striker-draft/hooks/useStrikerColor";
+import { useStrikerDraftContext } from "@/features/striker-draft/context/StrikerDraftContext";
+import { STRIKER_SEQUENCE } from "@/features/striker-draft/constants";
 
 interface SidebarCardProps {
   step: IndexedStep;
   cardIndex: number;
-  teamActions: StrikerDraftAction[];
-  teamSteps: IndexedStep[];
   isBlue: boolean;
-  currentStep: number;
-  done: boolean;
   timeLeft: number;
-  bothReady: boolean;
-  pendingStriker?: string | null;
 }
 
 export function SidebarCard({
   step: s,
   cardIndex,
-  teamActions,
-  teamSteps,
   isBlue,
-  currentStep,
-  done,
   timeLeft,
-  bothReady,
-  pendingStriker,
 }: SidebarCardProps) {
+  const { state } = useStrikerDraftContext();
+
+  const teamSteps: IndexedStep[] = STRIKER_SEQUENCE.map((step, i) => ({
+    ...step,
+    globalIdx: i,
+  })).filter((step) => step.team === (isBlue ? Team.Blue : Team.Red));
+  const teamActions: StrikerDraftAction[] = state
+    ? state.actions.filter(
+        (a) => a.team === (isBlue ? state.blueName : state.redName),
+      )
+    : [];
+  const pendingStriker = state
+    ? isBlue
+      ? state.pendingBlue
+      : state.pendingRed
+    : null;
+  const currentStep = state?.step ?? 0;
+  const done = state?.done ?? false;
+  const bothReady = (state?.readyBlue && state?.readyRed) ?? false;
+
   const filled = teamActions[cardIndex];
+  const wasFilledOnMount = useRef(!!filled);
   const isBan = s.action === DraftAction.Ban;
   const isActive = s.globalIdx === currentStep && !done;
   const status: "filled" | "active" | "pending" = filled
@@ -52,6 +66,15 @@ export function SidebarCard({
       ? ALL_STRIKERS.find((str) => str.name === pendingStriker)
       : null;
   const splashColor = useStrikerColor(strikerEntry?.splash);
+
+  const shouldFlip = strikerEntry
+    ? (isBlue && strikerEntry.facing === StrikerDirection.Left) ||
+      (!isBlue && strikerEntry.facing === StrikerDirection.Right)
+    : false;
+  const pendingShouldFlip = pendingEntry
+    ? (isBlue && pendingEntry.facing === StrikerDirection.Left) ||
+      (!isBlue && pendingEntry.facing === StrikerDirection.Right)
+    : false;
 
   const nth =
     teamSteps.slice(0, cardIndex).filter((t) => t.action === s.action).length +
@@ -73,27 +96,13 @@ export function SidebarCard({
     <div
       className={`relative rounded-lg border-2 overflow-hidden flex-1 min-h-0 ${borderClass} ${status === "pending" ? "opacity-30" : ""}`}
     >
-      {strikerEntry ? (
-        <>
-          {splashColor && (
-            <div
-              className="absolute inset-0"
-              style={{
-                background: `radial-gradient(circle at 50% 30%, rgba(${splashColor},0.7) 0%, transparent 85%)`,
-              }}
-            />
-          )}
-          <img
-            src={strikerEntry.splash}
-            alt={filled?.striker}
-            className={`absolute inset-0 w-full h-full object-cover object-top ${
-              (isBlue && strikerEntry.facing === StrikerDirection.Left) ||
-              (!isBlue && strikerEntry.facing === StrikerDirection.Right)
-                ? "scale-x-[-1]"
-                : ""
-            }`}
-          />
-        </>
+      {splashColor ? (
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `radial-gradient(circle at 50% 30%, rgba(${splashColor},0.7) 0%, transparent 85%)`,
+          }}
+        />
       ) : (
         <div
           className="absolute inset-0"
@@ -104,19 +113,67 @@ export function SidebarCard({
           }}
         />
       )}
-      {pendingEntry && (
-        <img
-          src={pendingEntry.splash}
-          alt={pendingEntry.name}
-          className={`absolute inset-0 w-full h-full object-cover object-top blur-sm brightness-50 transition-opacity duration-300 ${
-            (isBlue && pendingEntry.facing === StrikerDirection.Left) ||
-            (!isBlue && pendingEntry.facing === StrikerDirection.Right)
-              ? "scale-x-[-1]"
-              : ""
-          }`}
+      <div className={`absolute inset-0 ${shouldFlip ? "scale-x-[-1]" : ""}`}>
+        <AnimatePresence initial={false}>
+          {strikerEntry && (
+            <motion.div
+              key={strikerEntry.name}
+              className="absolute inset-0"
+              initial={{ scale: 1.08 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 0.65, ease: [0.25, 0, 0, 1] }}
+            >
+              <motion.img
+                src={strikerEntry.splash}
+                alt={filled?.striker}
+                className="absolute inset-0 w-full h-full object-cover object-top"
+                style={{
+                  clipPath: "polygon(-2% -2%, 102% -2%, 102% 106%, -2% 2%)",
+                }}
+                initial={{ x: "12%", y: "-12%" }}
+                animate={{ x: 0, y: -1 }}
+                transition={{ duration: 0.65, ease: [0.25, 0, 0, 1] }}
+              />
+              <motion.img
+                src={strikerEntry.splash}
+                alt={filled?.striker}
+                className="absolute inset-0 w-full h-full object-cover object-top"
+                style={{ clipPath: "polygon(-2% -2%, -2% 102%, 102% 102%)" }}
+                initial={{ x: "-12%", y: "12%" }}
+                animate={{ x: 0, y: -1 }}
+                transition={{ duration: 0.65, ease: [0.25, 0, 0, 1] }}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+      <AnimatePresence>
+        {pendingEntry && (
+          <motion.img
+            key={pendingEntry.name}
+            src={pendingEntry.splash}
+            alt={pendingEntry.name}
+            className={`absolute inset-0 w-full h-full object-cover object-top blur-[2px] brightness-50 ${pendingShouldFlip ? "scale-x-[-1]" : ""}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+          />
+        )}
+      </AnimatePresence>
+      <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/10 to-transparent" />
+      {filled && !wasFilledOnMount.current && !isNoBan && (
+        <motion.div
+          key={filled.striker}
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: isBan ? "rgba(239,68,68,0.2)" : "rgba(34,197,94,0.15)",
+          }}
+          initial={{ opacity: 1 }}
+          animate={{ opacity: 0 }}
+          transition={{ duration: 0.9, ease: "easeOut" }}
         />
       )}
-      <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/10 to-transparent" />
       {status === "active" && bothReady && (
         <div className="absolute inset-0 flex items-center justify-center">
           <span
@@ -133,21 +190,31 @@ export function SidebarCard({
         </div>
       )}
       {isBan && filled && !isNoBan && (
-        <>
+        <motion.div
+          className="absolute inset-0"
+          initial={{ opacity: wasFilledOnMount.current ? 1 : 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4, duration: 0.2 }}
+        >
           <div className="absolute inset-0 bg-black/50 grayscale" />
           <div className="absolute inset-0 flex items-center justify-center">
             <span className="font-mono text-sm font-bold tracking-widest uppercase bg-tools-red/20 text-tools-red-light px-2.5 py-1 rounded">
               Banned
             </span>
           </div>
-        </>
+        </motion.div>
       )}
       {isNoBan && (
-        <div className="absolute inset-0 flex items-center justify-center">
+        <motion.div
+          className="absolute inset-0 flex items-center justify-center"
+          initial={{ opacity: wasFilledOnMount.current ? 1 : 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
           <span className="font-mono text-base font-bold tracking-widest uppercase italic">
             No Ban
           </span>
-        </div>
+        </motion.div>
       )}
       <div className="absolute bottom-0 left-0 right-0 p-2 flex justify-between items-end gap-1">
         {filled && !isNoBan && (

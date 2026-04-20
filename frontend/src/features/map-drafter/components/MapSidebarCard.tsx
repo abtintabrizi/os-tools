@@ -1,8 +1,14 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useRef } from "react";
 
-import { ALL_MAPS, DraftAction } from "@/features/common/constants/constants";
+import {
+  ALL_MAPS,
+  DraftAction,
+  Team,
+} from "@/features/common/constants/constants";
 import type { MapDraftAction } from "@/features/map-drafter/types";
+import { useMapDraftContext } from "@/features/map-drafter/context/MapDraftContext";
+import { SEQUENCE_MAP } from "@map-drafter/constants.ts";
 
 interface SequenceStep {
   team: string;
@@ -14,28 +20,36 @@ interface SequenceStep {
 interface MapSidebarCardProps {
   step: SequenceStep;
   cardIndex: number;
-  teamActions: MapDraftAction[];
-  teamSteps: SequenceStep[];
   isBlue: boolean;
-  currentStep: number;
-  done: boolean;
   timeLeft: number;
-  bothReady: boolean;
-  pendingMap?: string | null;
 }
 
 export function MapSidebarCard({
   step: s,
   cardIndex,
-  teamActions,
-  teamSteps,
   isBlue,
-  currentStep,
-  done,
   timeLeft,
-  bothReady,
-  pendingMap,
 }: MapSidebarCardProps) {
+  const { state } = useMapDraftContext();
+
+  const sequence = state ? SEQUENCE_MAP[state.bestOf] : [];
+  const teamSteps = sequence
+    .map((step, globalIdx) => ({ ...step, globalIdx }))
+    .filter((step) => step.team === (isBlue ? Team.Blue : Team.Red));
+  const teamActions: MapDraftAction[] = state
+    ? state.actions.filter(
+        (a) => a.team === (isBlue ? state.blueName : state.redName),
+      )
+    : [];
+  const pendingMap = state
+    ? isBlue
+      ? state.pendingBlue
+      : state.pendingRed
+    : null;
+  const currentStep = state?.step ?? 0;
+  const done = state?.done ?? false;
+  const bothReady = (state?.readyBlue && state?.readyRed) ?? false;
+
   const filled = teamActions[cardIndex];
   const wasFilledOnMount = useRef(!!filled);
   const isBan = s.action === DraftAction.Ban;
@@ -108,7 +122,7 @@ export function MapSidebarCard({
               className="absolute inset-0 w-full h-full object-cover"
               style={{ clipPath: "polygon(-2% -2%, -2% 102%, 102% 102%)" }}
               initial={{ x: "-12%", y: "12%" }}
-              animate={{ x: 0, y: -2 }}
+              animate={{ x: 0, y: -1 }}
               transition={{ duration: 0.65, ease: [0.25, 0, 0, 1] }}
             />
           </motion.div>

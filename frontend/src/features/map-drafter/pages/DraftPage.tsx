@@ -132,9 +132,6 @@ export default function DraftPage() {
 
   const mapStatuses = deriveMapStatuses(state, sequence);
 
-  const blueActions = actions.filter((a) => a.team === blueName);
-  const redActions = actions.filter((a) => a.team === redName);
-
   const blueSeqSteps = sequence
     .map((s, globalIdx) => ({ ...s, globalIdx }))
     .filter((s) => s.team === Team.Blue);
@@ -257,14 +254,8 @@ export default function DraftPage() {
               key={s.globalIdx}
               step={s}
               cardIndex={i}
-              teamActions={blueActions}
-              teamSteps={blueSeqSteps}
               isBlue
-              currentStep={step}
-              done={done}
               timeLeft={timeLeft}
-              bothReady={bothReady}
-              pendingMap={state.pendingBlue}
             />
           ))}
         </div>
@@ -488,14 +479,8 @@ export default function DraftPage() {
               key={s.globalIdx}
               step={s}
               cardIndex={i}
-              teamActions={redActions}
-              teamSteps={redSeqSteps}
               isBlue={false}
-              currentStep={step}
-              done={done}
               timeLeft={timeLeft}
-              bothReady={bothReady}
-              pendingMap={state.pendingRed}
             />
           ))}
         </div>
