@@ -5,6 +5,12 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    date: "2026-04-19",
+    notes: [
+      "First pick is now chosen on a per map basis in map draft (I had incorrectly assumed it alternates, thanks Jack Limestone!)",
+    ],
+  },
+  {
     date: "2026-04-18",
     notes: [
       "Fixed a timer related bug where server/client timestamps were out of sync",
