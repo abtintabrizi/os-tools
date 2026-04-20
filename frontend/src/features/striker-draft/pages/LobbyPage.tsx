@@ -1,7 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import classNames from "classnames";
 import type { Side } from "@/features/common/types";
-import { Team } from "@/features/common/constants/constants";
+import {
+  ALL_AWAKENINGS,
+  CURRENT_AWAKENING_POOL,
+  Team,
+} from "@/features/common/constants/constants";
 import { useStrikerDraftContext } from "@/features/striker-draft/context/StrikerDraftContext";
 import {
   BackButton,
@@ -24,7 +29,16 @@ export default function LobbyPage() {
   if (loading || !room)
     return <LoadingScreen message="Connecting to draft..." />;
 
-  const { roomId, blueName, redName } = room;
+  const {
+    roomId,
+    blueName,
+    redName,
+    bannedStarts,
+    map,
+    awakenings,
+    awakeningMode,
+  } = room;
+  const isRandom = awakeningMode === "random";
 
   function buildUrl(side: Side): string {
     const url = new URL(window.location.origin + "/striker-draft/draft");
@@ -60,100 +74,142 @@ export default function LobbyPage() {
     "border border-white/7 bg-transparent hover:border-white/15 hover:bg-white/5";
 
   return (
-    <div className="h-screen flex items-center justify-center">
-      <div className="flex flex-col gap-3 w-full max-w-160">
-        <div className="flex gap-3">
-          <BackButton />
-          <HomeButton />
-        </div>
-        <h2 className="text-6xl font-extrabold leading-tight tracking-tight">
-          Room <span className="text-tools-gold">Ready</span>
-        </h2>
-
-        <div className="flex items-center justify-between">
-          <p className="font-mono text-xs tracking-wider uppercase">
-            // Room {roomId} · Striker Draft · Share links below
-          </p>
-          <button
-            className={`${baseBtn} border border-tools-gold/40 text-tools-gold bg-tools-gold/6 hover:bg-tools-gold/14`}
-            onClick={copyAll}
-          >
-            {copied === "all" ? "Copied!" : "Copy all links"}
-          </button>
-        </div>
-
-        <div className="flex flex-col gap-3 bg-tools-carbon border border-white/7 rounded-2xl p-6">
-          <div className="flex flex-col gap-2">
-            <div className="text-xs font-mono font-bold tracking-widest text-tools-blue">
-              {blueName} — Blue side
+    <div className="h-screen flex justify-center items-center">
+      <div className="grid grid-cols-3 gap-5 p-5">
+        {isRandom && bannedStarts && bannedStarts.length > 0 && (
+          <div className="flex flex-col gap-4 bg-tools-carbon border border-white/7 rounded-2xl p-6 justify-center items-center">
+            <div className="text-sm font-mono tracking-widest uppercase w-full">
+              Starting Awakenings — Banned
             </div>
-            <div className="bg-tools-graphite border border-white/7 rounded-lg py-2.5 px-3 font-mono text-xs break-all leading-relaxed">
-              {blueUrl}
-            </div>
-            <div className="flex gap-2.5 flex-wrap">
-              <button
-                className={`${baseBtn} ${blueBtn}`}
-                onClick={() => copy(blueUrl, Team.Blue)}
-              >
-                {copied === Team.Blue ? "Copied!" : "Copy blue link"}
-              </button>
-              <button
-                className={`${baseBtn} ${blueBtn}`}
-                onClick={() => handleSidePick(Team.Blue)}
-              >
-                Enter as {blueName}
-              </button>
+            <div className="grid grid-cols-6 gap-1">
+              {CURRENT_AWAKENING_POOL.map((a) => {
+                const icon = ALL_AWAKENINGS.find((b) => b.name === a)?.icon;
+                const isBanned = bannedStarts.includes(a);
+                return (
+                  <div
+                    key={a}
+                    className={classNames(
+                      "flex flex-col bg-tools-graphite items-center gap-1 p-2 rounded-lg border border-white/7",
+                      { "opacity-30 grayscale": isBanned },
+                    )}
+                  >
+                    <img
+                      src={icon}
+                      alt={a}
+                      className="w-12 h-12 object-contain shrink-0"
+                    />
+                    <span className="text-xs text-center leading-tight line-clamp-2">
+                      {a}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
+        )}
 
-          <div className="h-px bg-tools-gold my-3" />
+        <div className="w-full max-w-160 flex flex-col justify-center gap-3 col-start-2">
+          <div className="flex gap-3">
+            <BackButton />
+            <HomeButton />
+          </div>
+          <h2 className="text-6xl font-extrabold leading-tight tracking-tight">
+            Room <span className="text-tools-gold">Ready</span>
+          </h2>
 
-          <div className="flex flex-col gap-2">
-            <div className="text-xs font-mono font-bold tracking-widest text-tools-red">
-              {redName} — Red side
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-0.5">
+              <p className="font-mono text-xs tracking-wider uppercase">
+                // Room {roomId} · Striker Draft · Share links below
+              </p>
+              <p className="font-mono text-xs tracking-wider uppercase text-white/50">
+                // {map} ·{" "}
+                {isRandom ? "Random Awakenings" : `${awakenings.join(" / ")}`}
+              </p>
             </div>
-            <div className="bg-tools-graphite border border-white/7 rounded-lg py-2.5 px-3 font-mono text-xs break-all leading-relaxed">
-              {redUrl}
-            </div>
-            <div className="flex gap-2.5 flex-wrap">
-              <button
-                className={`${baseBtn} ${redBtn}`}
-                onClick={() => copy(redUrl, Team.Red)}
-              >
-                {copied === Team.Red ? "Copied!" : "Copy red link"}
-              </button>
-              <button
-                className={`${baseBtn} ${redBtn}`}
-                onClick={() => handleSidePick(Team.Red)}
-              >
-                Enter as {redName}
-              </button>
-            </div>
+            <button
+              className={`${baseBtn} border border-tools-gold/40 text-tools-gold bg-tools-gold/6 hover:bg-tools-gold/14`}
+              onClick={copyAll}
+            >
+              {copied === "all" ? "Copied!" : "Copy all links"}
+            </button>
           </div>
 
-          <div className="h-px bg-tools-gold my-3" />
+          <div className="flex flex-col gap-3 bg-tools-carbon border border-white/7 rounded-2xl p-6">
+            <div className="flex flex-col gap-2">
+              <div className="text-xs font-mono font-bold tracking-widest text-tools-blue">
+                {blueName} — Blue side
+              </div>
+              <div className="bg-tools-graphite border border-white/7 rounded-lg py-2.5 px-3 font-mono text-xs break-all leading-relaxed">
+                {blueUrl}
+              </div>
+              <div className="flex gap-2.5 flex-wrap">
+                <button
+                  className={`${baseBtn} ${blueBtn}`}
+                  onClick={() => copy(blueUrl, Team.Blue)}
+                >
+                  {copied === Team.Blue ? "Copied!" : "Copy blue link"}
+                </button>
+                <button
+                  className={`${baseBtn} ${blueBtn}`}
+                  onClick={() => handleSidePick(Team.Blue)}
+                >
+                  Enter as {blueName}
+                </button>
+              </div>
+            </div>
 
-          <div className="flex flex-col gap-2">
-            <div className="text-xs font-mono font-bold tracking-widest">
-              Spectator
+            <div className="h-px bg-tools-gold my-3" />
+
+            <div className="flex flex-col gap-2">
+              <div className="text-xs font-mono font-bold tracking-widest text-tools-red">
+                {redName} — Red side
+              </div>
+              <div className="bg-tools-graphite border border-white/7 rounded-lg py-2.5 px-3 font-mono text-xs break-all leading-relaxed">
+                {redUrl}
+              </div>
+              <div className="flex gap-2.5 flex-wrap">
+                <button
+                  className={`${baseBtn} ${redBtn}`}
+                  onClick={() => copy(redUrl, Team.Red)}
+                >
+                  {copied === Team.Red ? "Copied!" : "Copy red link"}
+                </button>
+                <button
+                  className={`${baseBtn} ${redBtn}`}
+                  onClick={() => handleSidePick(Team.Red)}
+                >
+                  Enter as {redName}
+                </button>
+              </div>
             </div>
-            <div className="bg-tools-graphite border border-white/7 rounded-lg py-2.5 px-3 font-mono text-xs break-all leading-relaxed">
-              {spectatorUrl}
-            </div>
-            <div className="flex gap-2.5 flex-wrap">
-              <button
-                className={`${baseBtn} ${neutralBtn}`}
-                onClick={() => copy(spectatorUrl, Team.Spectator)}
-              >
-                {copied === Team.Spectator ? "Copied!" : "Copy spectator link"}
-              </button>
+
+            <div className="h-px bg-tools-gold my-3" />
+
+            <div className="flex flex-col gap-2">
+              <div className="text-xs font-mono font-bold tracking-widest">
+                Spectator
+              </div>
+              <div className="bg-tools-graphite border border-white/7 rounded-lg py-2.5 px-3 font-mono text-xs break-all leading-relaxed">
+                {spectatorUrl}
+              </div>
               <div className="flex gap-2.5 flex-wrap">
                 <button
                   className={`${baseBtn} ${neutralBtn}`}
-                  onClick={() => handleSidePick(Team.Spectator)}
+                  onClick={() => copy(spectatorUrl, Team.Spectator)}
                 >
-                  Enter as Spectator
+                  {copied === Team.Spectator
+                    ? "Copied!"
+                    : "Copy spectator link"}
                 </button>
+                <div className="flex gap-2.5 flex-wrap">
+                  <button
+                    className={`${baseBtn} ${neutralBtn}`}
+                    onClick={() => handleSidePick(Team.Spectator)}
+                  >
+                    Enter as Spectator
+                  </button>
+                </div>
               </div>
             </div>
           </div>

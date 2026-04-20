@@ -12,6 +12,8 @@ export interface StrikerDraftState {
   pendingBlue: string | null;
   pendingRed: string | null;
   stepStartedAt: number | null;
+  bannedStarts: string[] | null;
+  awakeningMode: "random" | "custom";
   serverTime?: number;
 }
 

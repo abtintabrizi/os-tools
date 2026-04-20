@@ -54,18 +54,6 @@ export default function DraftPage() {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
-    ALL_STRIKERS.forEach((s) => {
-      new Image().src = s.splash;
-      new Image().src = s.icon;
-    });
-    ALL_MAPS.forEach((m) => {
-      new Image().src = m.icon;
-    });
-    ALL_AWAKENINGS.forEach((a) => {
-      new Image().src = a.icon;
-    });
-  }, []);
 
   useEffect(() => {
     if (

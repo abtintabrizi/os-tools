@@ -57,6 +57,7 @@ async def create_room(body: CreateStrikerDraftRoomRequest):
         "pendingRed": None,
         "stepStartedAt": None,
         "bannedStarts": body.bannedStarts,
+        "awakeningMode": body.awakeningMode,
     }
     await save_room(room_id, state, Table.STRIKER_DRAFTS)
     logger.info(
