@@ -41,11 +41,10 @@ export default function DonePanel() {
     ? deriveMapStatuses(state, SEQUENCE_MAP[state.bestOf])
     : {};
 
+  const lockedBans = (state?.bannedAwakenings ?? null) as Awakening[] | null;
+  const locked = lockedBans !== null;
+
   const [bannedAwakenings, setBannedAwakenings] = useState<Awakening[]>(() => {
-    const existingLobby = strikerLobbies
-      ? Object.values(strikerLobbies)[0]
-      : null;
-    if (existingLobby) return existingLobby.bannedAwakenings as Awakening[];
     try {
       const stored = localStorage.getItem("bannedAwakenings");
       if (stored) return JSON.parse(stored) as Awakening[];
@@ -57,11 +56,7 @@ export default function DonePanel() {
   const [creating, setCreating] = useState<Record<string, boolean>>({});
   const [createErrors, setCreateErrors] = useState<Record<string, string>>({});
 
-  const locked = !!(strikerLobbies && Object.keys(strikerLobbies).length > 0);
-  const displayedBans = locked
-    ? ((Object.values(strikerLobbies!)[0].bannedAwakenings ??
-        []) as Awakening[])
-    : bannedAwakenings;
+  const displayedBans = lockedBans ?? bannedAwakenings;
 
   const picks = actions
     .filter((a) => a.action === "pick" && a.team !== null)
@@ -96,13 +91,14 @@ export default function DonePanel() {
     setCreateErrors((prev) => ({ ...prev, [map]: "" }));
     try {
       const sp = fp === blueName ? redName : blueName;
+      const bans = lockedBans ?? bannedAwakenings;
       const roomId = await createStrikerRoom({
         blueName: fp,
         redName: sp,
         map,
-        bannedStarts: bannedAwakenings,
+        bannedStarts: bans,
       });
-      await handleSetStrikerRoom(map, roomId, fp, bannedAwakenings);
+      await handleSetStrikerRoom(map, roomId, fp, bans);
     } catch (e) {
       setCreateErrors((prev) => ({
         ...prev,

@@ -51,6 +51,7 @@ async def create_room(body: CreateMapDraftRoomRequest):
         "pendingRed": None,
         "stepStartedAt": None,
         "strikerLobbies": None,
+        "bannedAwakenings": None,
     }
     await save_room(room_id, state, Table.MAP_DRAFTS)
     logger.info(
@@ -204,12 +205,12 @@ async def set_striker_room(room_id: str, body: SetStrikerRoomRequest):
 
     updated = {
         **state,
+        "bannedAwakenings": state.get("bannedAwakenings") or body.bannedAwakenings,
         "strikerLobbies": {
             **existing,
             body.map: {
                 "roomId": body.roomId,
                 "firstPick": body.firstPick,
-                "bannedAwakenings": body.bannedAwakenings,
             },
         },
     }

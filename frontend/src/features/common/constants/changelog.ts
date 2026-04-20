@@ -8,6 +8,8 @@ export const changelog: ChangelogEntry[] = [
     date: "2026-04-19",
     notes: [
       "First pick is now chosen on a per map basis in map draft (I had incorrectly assumed it alternates, thanks Jack Limestone!)",
+      "Fixed an issue where the locked in awakenings at the end of map draft UI would incorrectly pull from a user's storage instead of the lobby's locked awakenings",
+      "Awakenings and map info added to striker draft lobby page",
     ],
   },
   {
