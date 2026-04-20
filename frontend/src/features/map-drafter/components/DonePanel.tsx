@@ -162,7 +162,7 @@ export default function DonePanel() {
                 : "border-tools-blue/40 text-tools-blue bg-tools-blue-dim hover:bg-tools-blue/15",
             )}
           >
-            {blueName} First
+            {blueName} First Pick
           </button>
           <button
             type="button"
@@ -175,7 +175,7 @@ export default function DonePanel() {
                 : "border-tools-red/40 text-tools-red bg-tools-red-dim hover:bg-tools-red/15",
             )}
           >
-            {redName} First
+            {redName} First Pick
           </button>
         </div>
         {createErrors[map] && (
