@@ -26,9 +26,10 @@ export interface MapDraftState {
   pendingBlue: string | null;
   pendingRed: string | null;
   stepStartedAt: number | null;
-  game1FirstPick: string | null;
-  strikerRooms: Record<string, string> | null;
-  strikerBannedAwakenings: string[] | null;
+  strikerLobbies: Record<
+    string,
+    { roomId: string; firstPick: string; bannedAwakenings: string[] }
+  > | null;
   serverTime?: number;
 }
 

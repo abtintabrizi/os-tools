@@ -27,9 +27,10 @@ interface MapDraftContextValue {
   handlePending: (map: string | null) => Promise<void>;
   handleReady: () => Promise<void>;
   handleReset: () => void;
-  handleGame1FirstPick: (firstPick: string) => Promise<void>;
-  handleSetStrikerRooms: (
-    rooms: Record<string, string>,
+  handleSetStrikerRoom: (
+    map: string,
+    roomId: string,
+    firstPick: string,
     bannedAwakenings: string[],
   ) => Promise<void>;
 }
@@ -67,8 +68,7 @@ export function MapDraftProvider({ children }: { children: ReactNode }) {
     applyAction,
     setPending,
     ready,
-    setGame1FirstPick,
-    setStrikerRooms,
+    setStrikerRoom,
   } = useMapDraftApi(roomId, side);
 
   // Redirect from base path when URL has room+side params (e.g. from a shared lobby link)
@@ -114,15 +114,13 @@ export function MapDraftProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  async function handleGame1FirstPick(firstPick: string) {
-    await setGame1FirstPick(firstPick);
-  }
-
-  async function handleSetStrikerRooms(
-    rooms: Record<string, string>,
+  async function handleSetStrikerRoom(
+    map: string,
+    roomId: string,
+    firstPick: string,
     bannedAwakenings: string[],
   ) {
-    await setStrikerRooms(rooms, bannedAwakenings);
+    await setStrikerRoom(map, roomId, firstPick, bannedAwakenings);
   }
 
   function handleReset() {
@@ -148,8 +146,7 @@ export function MapDraftProvider({ children }: { children: ReactNode }) {
         handlePending,
         handleReady,
         handleReset,
-        handleGame1FirstPick,
-        handleSetStrikerRooms,
+        handleSetStrikerRoom,
       }}
     >
       {children}
