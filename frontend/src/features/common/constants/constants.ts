@@ -242,14 +242,12 @@ export const CURRENT_AWAKENING_POOL = [
   Awakening.GlassCannon,
   Awakening.HeavyImpact,
   Awakening.Hotshot,
-  Awakening.InnerFocus,
   Awakening.MissilePropulsion,
   Awakening.Monumentalist,
   Awakening.OmegaInfusedAccelerator,
   Awakening.OneTwoPunch,
   Awakening.OrbDancer,
   Awakening.PeakPerformance,
-  Awakening.Rampage,
   Awakening.ReptileRemedy,
   Awakening.Stinger,
   Awakening.TeamPlayer,
@@ -264,6 +262,8 @@ export const CURRENT_AWAKENING_POOL = [
   Awakening.FireUp,
   Awakening.Catalyst,
   Awakening.FightOrFlight,
+  Awakening.SiegeMachine,
+  Awakening.RecoveryDrone,
 ].sort((a, b) => a.localeCompare(b));
 
 export const AWAKENING_CONFLICTS: Partial<Record<Awakening, Awakening[]>> = {

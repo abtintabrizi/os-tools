@@ -86,14 +86,12 @@ CURRENT_AWAKENING_POOL = [
     Awakening.GlassCannon,
     Awakening.HeavyImpact,
     Awakening.Hotshot,
-    Awakening.InnerFocus,
     Awakening.MissilePropulsion,
     Awakening.Monumentalist,
     Awakening.OmegaInfusedAccelerator,
     Awakening.OneTwoPunch,
     Awakening.OrbDancer,
     Awakening.PeakPerformance,
-    Awakening.Rampage,
     Awakening.ReptileRemedy,
     Awakening.Stinger,
     Awakening.TeamPlayer,
@@ -108,6 +106,8 @@ CURRENT_AWAKENING_POOL = [
     Awakening.FireUp,
     Awakening.Catalyst,
     Awakening.FightOrFlight,
+    Awakening.SiegeMachine,
+    Awakening.RecoveryDrone,
 ]
 
 AWAKENING_CONFLICTS: dict[Awakening, list[Awakening]] = {
