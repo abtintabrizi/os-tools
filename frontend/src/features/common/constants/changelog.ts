@@ -5,6 +5,12 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    date: "2026-05-24",
+    notes: [
+      "Fixed a bug where teams could accidentally submit a pick for the opposing team",
+    ],
+  },
+  {
     date: "2026-04-23",
     notes: ["Updated awakenings to match the April 23 patch"],
   },
