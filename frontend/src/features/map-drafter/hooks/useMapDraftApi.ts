@@ -19,8 +19,8 @@ export function useMapDraftApi(roomId: string | null, side?: string) {
   );
 
   const applyAction = useCallback(
-    (map: string) => api.applyAction({ map }),
-    [api.applyAction], // eslint-disable-line react-hooks/exhaustive-deps
+    (map: string) => api.applyAction({ map, step: api.state?.step }),
+    [api.applyAction, api.state?.step], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const setPending = useCallback(

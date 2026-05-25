@@ -70,11 +70,22 @@ async def _auto_advance(room_id: str, expected_step: int, delay: float) -> None:
     except asyncio.CancelledError:
         return
 
+    fire_time = time.time()
     async with get_room_lock(room_id):
         state = await get_room(room_id, Table.STRIKER_DRAFTS)
         if state is None or state["done"] or state["step"] != expected_step:
+            actual_step = state["step"] if state else "N/A"
+            logger.info(
+                "[room=%s] [step=%d] Auto-advance skipped: current step=%s done=%s",
+                room_id,
+                expected_step,
+                actual_step,
+                state["done"] if state else "N/A",
+            )
             return
 
+        step_started_at = state.get("stepStartedAt")
+        elapsed = round(fire_time - step_started_at, 3) if step_started_at else None
         seq_step = STRIKER_SEQUENCE[expected_step]
 
         banned_strikers = {
@@ -107,12 +118,15 @@ async def _auto_advance(room_id: str, expected_step: int, delay: float) -> None:
             state["blueName"] if seq_step["team"] == Team.BLUE else state["redName"]
         )
         logger.info(
-            "[room=%s] [side=%s] [step=%d] Auto-advance: %s -> %s",
+            "[room=%s] [side=%s] [step=%d] Auto-advance: %s -> %s (elapsed=%.3fs, pending=%s, stepStartedAt=%.3f)",
             room_id,
             seq_step["team"],
             expected_step,
             seq_step["action"],
             chosen_striker,
+            elapsed if elapsed is not None else -1,
+            pending,
+            step_started_at if step_started_at is not None else -1,
         )
         new_actions = state["actions"] + [
             {"striker": chosen_striker, "team": team_name, "action": seq_step["action"]}

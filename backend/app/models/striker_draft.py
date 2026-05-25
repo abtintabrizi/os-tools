@@ -14,6 +14,7 @@ class CreateStrikerDraftRoomRequest(BaseModel):
 
 class StrikerDraftActionRequest(BaseModel):
     striker: str | None = None
+    step: int
 
 
 class StrikerDraftPendingRequest(BaseModel):
