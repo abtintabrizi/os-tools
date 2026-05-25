@@ -120,6 +120,16 @@ async def set_pending(room_id: str, body: MapDraftPendingRequest):
         else:
             updated["pendingRed"] = body.map
 
+        step_started_at = state.get("stepStartedAt")
+        elapsed = round(time.time() - step_started_at, 3) if step_started_at else None
+        logger.info(
+            "[room=%s] [side=%s] [step=%d] Pending: %s (elapsed=%.3fs)",
+            room_id,
+            body.side,
+            state.get("step", -1),
+            body.map,
+            elapsed if elapsed is not None else -1,
+        )
         await save_room(room_id, updated, Table.MAP_DRAFTS)
 
     await manager.broadcast(room_id, updated, side=body.side)
@@ -143,6 +153,24 @@ async def apply_action(room_id: str, body: MapDraftActionRequest):
             raise HTTPException(status_code=400, detail="Draft is already complete")
 
         step = state["step"]
+        now = time.time()
+        step_started_at = state.get("stepStartedAt")
+        elapsed = round(now - step_started_at, 3) if step_started_at else None
+
+        if body.step != step:
+            logger.warning(
+                "[room=%s] [step=%d] Action rejected: client submitted step=%d but current step=%d (elapsed=%.3fs, likely timer raced)",
+                room_id,
+                step,
+                body.step,
+                step,
+                elapsed if elapsed is not None else -1,
+            )
+            raise HTTPException(
+                status_code=409,
+                detail=f"Step mismatch: expected {step}, got {body.step}",
+            )
+
         currentSequence = SEQUENCE_MAPPING[state["bestOf"]]
         if step >= len(currentSequence):
             raise HTTPException(status_code=400, detail="No more steps remaining")
@@ -160,12 +188,14 @@ async def apply_action(room_id: str, body: MapDraftActionRequest):
             state["blueName"] if seq_step["team"] == Team.BLUE else state["redName"]
         )
         logger.info(
-            "[room=%s] [side=%s] [step=%d] User action: %s -> %s",
+            "[room=%s] [side=%s] [step=%d] User action: %s -> %s (elapsed=%.3fs, stepStartedAt=%.3f)",
             room_id,
             seq_step["team"],
             step,
             seq_step["action"],
             body.map,
+            elapsed if elapsed is not None else -1,
+            step_started_at if step_started_at is not None else -1,
         )
         new_actions = state["actions"] + [
             {"map": body.map, "team": team_name, "action": seq_step["action"]}

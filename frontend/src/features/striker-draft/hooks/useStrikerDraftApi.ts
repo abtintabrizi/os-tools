@@ -21,8 +21,9 @@ export function useStrikerDraftApi(roomId: string | null, side?: string) {
   );
 
   const applyAction = useCallback(
-    (striker: string | null) => api.applyAction({ striker }),
-    [api.applyAction], // eslint-disable-line react-hooks/exhaustive-deps
+    (striker: string | null) =>
+      api.applyAction({ striker, step: api.state?.step }),
+    [api.applyAction, api.state?.step], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const setPending = useCallback(

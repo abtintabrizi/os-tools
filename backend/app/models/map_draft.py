@@ -12,6 +12,7 @@ class CreateMapDraftRoomRequest(BaseModel):
 
 class MapDraftActionRequest(BaseModel):
     map: str
+    step: int
 
 
 class MapDraftPendingRequest(BaseModel):
