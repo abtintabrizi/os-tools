@@ -184,9 +184,6 @@ async def apply_action(room_id: str, body: MapDraftActionRequest):
 
         seq_step = currentSequence[step]
         new_step = step + 1
-        team_name = (
-            state["blueName"] if seq_step["team"] == Team.BLUE else state["redName"]
-        )
         logger.info(
             "[room=%s] [side=%s] [step=%d] User action: %s -> %s (elapsed=%.3fs, stepStartedAt=%.3f)",
             room_id,
@@ -198,7 +195,12 @@ async def apply_action(room_id: str, body: MapDraftActionRequest):
             step_started_at if step_started_at is not None else -1,
         )
         new_actions = state["actions"] + [
-            {"map": body.map, "team": team_name, "action": seq_step["action"]}
+            {
+                "map": body.map,
+                "team": seq_step["team"],
+                "step": step,
+                "action": seq_step["action"],
+            }
         ]
         done = new_step >= len(currentSequence)
         if done:
