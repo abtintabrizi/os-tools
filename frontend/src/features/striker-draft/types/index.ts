@@ -21,7 +21,8 @@ import type { Team, DraftAction } from "@/features/common/constants/constants";
 
 export interface StrikerDraftAction {
   striker: string;
-  team: string | null;
+  team: Team | null;
+  step: number;
   action: string;
 }
 

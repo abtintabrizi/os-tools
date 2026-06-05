@@ -38,9 +38,7 @@ export function MapSidebarCard({
     .map((step, globalIdx) => ({ ...step, globalIdx }))
     .filter((step) => step.team === (isBlue ? Team.Blue : Team.Red));
   const teamActions: MapDraftAction[] = state
-    ? state.actions.filter(
-        (a) => a.team === (isBlue ? state.blueName : state.redName),
-      )
+    ? state.actions.filter((a) => a.team === (isBlue ? Team.Blue : Team.Red))
     : [];
   const pendingMap = state
     ? isBlue

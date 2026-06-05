@@ -87,9 +87,6 @@ async def _auto_advance(room_id: str, expected_step: int, delay: float) -> None:
         if not chosen_map or chosen_map not in available:
             chosen_map = random.choice(available)
 
-        team_name = (
-            state["blueName"] if seq_step["team"] == Team.BLUE else state["redName"]
-        )
         logger.info(
             "[room=%s] [side=%s] [step=%d] Auto-advance: %s -> %s (elapsed=%.3fs, pending=%s, stepStartedAt=%.3f)",
             room_id,
@@ -102,7 +99,12 @@ async def _auto_advance(room_id: str, expected_step: int, delay: float) -> None:
             step_started_at if step_started_at is not None else -1,
         )
         new_actions = state["actions"] + [
-            {"map": chosen_map, "team": team_name, "action": seq_step["action"]}
+            {
+                "map": chosen_map,
+                "team": seq_step["team"],
+                "step": expected_step,
+                "action": seq_step["action"],
+            }
         ]
         new_step = expected_step + 1
         done = new_step >= len(sequence)

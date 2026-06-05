@@ -484,7 +484,7 @@ export default function DraftPage() {
                         : isBanned
                           ? "!cursor-default opacity-25 border-tools-red/10 grayscale"
                           : isPicked
-                            ? pickAction?.team === blueName
+                            ? pickAction?.team === Team.Blue
                               ? "!cursor-default border-tools-blue/70"
                               : "!cursor-default border-tools-red/70"
                             : side === Team.Spectator
@@ -509,12 +509,12 @@ export default function DraftPage() {
                           <div className="absolute top-1 right-1">
                             <span
                               className={`font-mono text-xs font-bold tracking-widest uppercase px-1.5 py-0.5 rounded ${
-                                pickAction.team === blueName
+                                pickAction.team === Team.Blue
                                   ? "bg-tools-blue/70 text-white"
                                   : "bg-tools-red/70 text-white"
                               }`}
                             >
-                              {pickAction.team === blueName
+                              {pickAction.team === Team.Blue
                                 ? blueName
                                 : redName}
                             </span>

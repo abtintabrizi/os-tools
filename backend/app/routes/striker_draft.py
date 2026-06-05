@@ -197,11 +197,13 @@ async def apply_action(room_id: str, body: StrikerDraftActionRequest):
                 raise HTTPException(status_code=400, detail="Striker already used")
 
         new_step = step + 1
-        team_name = (
-            state["blueName"] if seq_step["team"] == Team.BLUE else state["redName"]
-        )
         new_actions = state["actions"] + [
-            {"striker": body.striker, "team": team_name, "action": seq_step["action"]}
+            {
+                "striker": body.striker,
+                "team": seq_step["team"],
+                "step": step,
+                "action": seq_step["action"],
+            }
         ]
         done = new_step >= len(STRIKER_SEQUENCE)
         logger.info(

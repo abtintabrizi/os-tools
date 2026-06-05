@@ -35,9 +35,7 @@ export function SidebarCard({
     globalIdx: i,
   })).filter((step) => step.team === (isBlue ? Team.Blue : Team.Red));
   const teamActions: StrikerDraftAction[] = state
-    ? state.actions.filter(
-        (a) => a.team === (isBlue ? state.blueName : state.redName),
-      )
+    ? state.actions.filter((a) => a.team === (isBlue ? Team.Blue : Team.Red))
     : [];
   const pendingStriker = state
     ? isBlue

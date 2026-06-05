@@ -1,4 +1,5 @@
 import { ActionType } from "@/features/common/types";
+import type { Team } from "@/features/common/constants/constants";
 
 export enum Sequence {
   BO1 = "bo1",
@@ -8,7 +9,8 @@ export enum Sequence {
 
 export interface MapDraftAction {
   map: string;
-  team: string | null;
+  team: Team | null;
+  step: number | null;
   action: ActionType;
 }
 

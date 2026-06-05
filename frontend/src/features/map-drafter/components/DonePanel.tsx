@@ -6,6 +6,7 @@ import {
   CURRENT_AWAKENING_POOL,
   DEFAULT_BANNED_AWAKENINGS,
   Awakening,
+  Team,
 } from "@/features/common/constants/constants";
 import { useMapDraftContext } from "@/features/map-drafter/context/MapDraftContext";
 import { deriveMapStatuses } from "@/features/map-drafter/utils";
@@ -249,7 +250,7 @@ export default function DonePanel() {
       {/* Map cards */}
       <div className="flex flex-row flex-wrap justify-center gap-3">
         {picks.map((pick) => {
-          const isBlue = pick.team === blueName;
+          const isBlue = pick.team === Team.Blue;
           const borderClass = isBlue
             ? "border-tools-blue/40"
             : "border-tools-red/40";
@@ -278,7 +279,7 @@ export default function DonePanel() {
                   </div>
                   <div className="font-bold leading-tight">{pick.map}</div>
                   <div className={`font-mono tracking-widest ${teamClass}`}>
-                    {pick.team}
+                    {pick.team === Team.Blue ? blueName : redName}
                   </div>
                 </div>
               </div>
