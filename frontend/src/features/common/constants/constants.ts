@@ -230,7 +230,6 @@ export const ALL_AWAKENINGS = [
 ].sort((a, b) => a.name.localeCompare(b.name));
 
 export const CURRENT_AWAKENING_POOL = [
-  Awakening.AmongTitans,
   Awakening.Aerials,
   Awakening.Berserker,
   Awakening.BuiltDifferent,
@@ -238,15 +237,11 @@ export const CURRENT_AWAKENING_POOL = [
   Awakening.Deadeye,
   Awakening.Demolitionist,
   Awakening.ExplosiveEntrance,
-  Awakening.ExtraSpecial,
   Awakening.GlassCannon,
   Awakening.HeavyImpact,
   Awakening.Hotshot,
   Awakening.MissilePropulsion,
-  Awakening.Monumentalist,
   Awakening.OmegaInfusedAccelerator,
-  Awakening.OneTwoPunch,
-  Awakening.OrbDancer,
   Awakening.PeakPerformance,
   Awakening.ReptileRemedy,
   Awakening.Stinger,
@@ -256,14 +251,19 @@ export const CURRENT_AWAKENING_POOL = [
   Awakening.SparkOfAgility,
   Awakening.SparkOfFocus,
   Awakening.SparkOfStrength,
-  Awakening.AdrenalineRush,
   Awakening.Chronoboost,
   Awakening.RapidFire,
   Awakening.FireUp,
-  Awakening.Catalyst,
   Awakening.FightOrFlight,
   Awakening.SiegeMachine,
   Awakening.RecoveryDrone,
+  Awakening.SpecializedTraining,
+  Awakening.Egoist,
+  Awakening.PrizeFighter,
+  Awakening.OrbPonderer,
+  Awakening.MightOfTheColossus,
+  Awakening.StacksOnStacks,
+  Awakening.KnifesEdge,
 ].sort((a, b) => a.localeCompare(b));
 
 export const AWAKENING_CONFLICTS: Partial<Record<Awakening, Awakening[]>> = {
