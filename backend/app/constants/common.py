@@ -74,7 +74,6 @@ class Awakening(StrEnum):
 ALL_AWAKENINGS = list(Awakening)
 
 CURRENT_AWAKENING_POOL = [
-    Awakening.AmongTitans,
     Awakening.Aerials,
     Awakening.Berserker,
     Awakening.BuiltDifferent,
@@ -82,15 +81,11 @@ CURRENT_AWAKENING_POOL = [
     Awakening.Deadeye,
     Awakening.Demolitionist,
     Awakening.ExplosiveEntrance,
-    Awakening.ExtraSpecial,
     Awakening.GlassCannon,
     Awakening.HeavyImpact,
     Awakening.Hotshot,
     Awakening.MissilePropulsion,
-    Awakening.Monumentalist,
     Awakening.OmegaInfusedAccelerator,
-    Awakening.OneTwoPunch,
-    Awakening.OrbDancer,
     Awakening.PeakPerformance,
     Awakening.ReptileRemedy,
     Awakening.Stinger,
@@ -100,14 +95,19 @@ CURRENT_AWAKENING_POOL = [
     Awakening.SparkOfAgility,
     Awakening.SparkOfFocus,
     Awakening.SparkOfStrength,
-    Awakening.AdrenalineRush,
     Awakening.Chronoboost,
     Awakening.RapidFire,
     Awakening.FireUp,
-    Awakening.Catalyst,
     Awakening.FightOrFlight,
     Awakening.SiegeMachine,
     Awakening.RecoveryDrone,
+    Awakening.SpecializedTraining,
+    Awakening.Egoist,
+    Awakening.PrizeFighter,
+    Awakening.OrbPonderer,
+    Awakening.MightOfTheColossus,
+    Awakening.StacksOnStacks,
+    Awakening.KnifesEdge,
 ]
 
 AWAKENING_CONFLICTS: dict[Awakening, list[Awakening]] = {
