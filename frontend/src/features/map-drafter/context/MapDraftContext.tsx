@@ -59,6 +59,7 @@ export function MapDraftProvider({ children }: { children: ReactNode }) {
   const [side, setSide] = useState<Side>(urlSide ?? Team.Spectator);
   const [roomId, setRoomId] = useState<string | null>(urlRoom);
   const [lobbyState, setLobbyState] = useState<MapDraftState | null>(null);
+  const [localPending, setLocalPending] = useState<string | null>(null);
 
   const {
     state,
@@ -70,6 +71,21 @@ export function MapDraftProvider({ children }: { children: ReactNode }) {
     ready,
     setStrikerRoom,
   } = useMapDraftApi(roomId, side);
+
+  useEffect(() => {
+    setLocalPending(null);
+  }, [state?.step]);
+
+  const clientState = state
+    ? {
+        ...state,
+        ...(side === Team.Blue
+          ? { pendingBlue: localPending }
+          : side === Team.Red
+            ? { pendingRed: localPending }
+            : {}),
+      }
+    : null;
 
   // Redirect from base path when URL has room+side params (e.g. from a shared lobby link)
   useEffect(() => {
@@ -104,6 +120,7 @@ export function MapDraftProvider({ children }: { children: ReactNode }) {
 
   async function handlePending(map: string | null) {
     if (side === Team.Blue || side === Team.Red) {
+      setLocalPending(map);
       await setPending(side, map);
     }
   }
@@ -134,7 +151,7 @@ export function MapDraftProvider({ children }: { children: ReactNode }) {
   return (
     <MapDraftContext.Provider
       value={{
-        state,
+        state: clientState,
         lobbyState,
         loading,
         error,

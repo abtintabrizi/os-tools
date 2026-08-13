@@ -34,7 +34,6 @@ export default function DraftPage() {
   } = useStrikerDraftContext();
   const [timeLeft, setTimeLeft] = useState<number>(TIMER_SECONDS);
   const [countdownLeft, setCountdownLeft] = useState(0);
-  const [localPending, setLocalPending] = useState<string | null>(null);
   const clockOffsetRef = useRef(0);
   const stepStartedAtRef = useRef<number | null>(null);
   const [showNoBanModal, setShowNoBanModal] = useState(false);
@@ -113,10 +112,6 @@ export default function DraftPage() {
     };
   }, [countdownLeft]);
 
-  useEffect(() => {
-    setLocalPending(null);
-  }, [state?.step]);
-
   if (loading) return <LoadingScreen message="Connecting to draft..." />;
   if (!state)
     return (
@@ -136,13 +131,12 @@ export default function DraftPage() {
   const isMyTurn = currentSeqStep !== null && currentSeqStep.team === side;
   const isBanning = currentSeqStep?.action === DraftAction.Ban;
 
-  const serverPending =
+  const pending =
     side === Team.Blue
       ? state.pendingBlue
       : side === Team.Red
         ? state.pendingRed
         : null;
-  const pending = localPending ?? serverPending;
 
   const bannedSet = new Set(
     actions.filter((a) => a.action === DraftAction.Ban).map((a) => a.striker),
@@ -163,7 +157,6 @@ export default function DraftPage() {
 
   function handleStrikerClick(name: string) {
     if (!isMyTurn || bannedSet.has(name) || pickedSet.has(name)) return;
-    setLocalPending(name);
     handlePending(name);
   }
 

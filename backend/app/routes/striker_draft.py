@@ -138,7 +138,6 @@ async def set_pending(room_id: str, body: StrikerDraftPendingRequest):
         )
         await save_room(room_id, updated, Table.STRIKER_DRAFTS)
 
-    await manager.broadcast(room_id, updated, side=body.side)
     return updated
 
 
