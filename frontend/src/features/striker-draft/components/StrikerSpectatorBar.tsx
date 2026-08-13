@@ -139,7 +139,7 @@ function StrikerCard({
             </div>
           </motion.div>
         )}
-        {isCurrent && !completedAction && !pendingEntry && (
+        {isCurrent && !completedAction && (
           <div className="absolute inset-0 flex items-center justify-center">
             <AnimatedNumber
               value={timeLeft}
