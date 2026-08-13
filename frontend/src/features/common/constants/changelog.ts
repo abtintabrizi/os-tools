@@ -9,6 +9,7 @@ export const changelog: ChangelogEntry[] = [
     notes: [
       "Added the best of two map draft format",
       "Made pending selection visibility client side only",
+      "Added a replay feature to both map/striker draft",
     ],
   },
   {
