@@ -27,14 +27,25 @@ export const BO1_SEQUENCE: SequenceStep[] = [
   { team: Team.Red, action: DraftAction.Pick, gameNum: 1 },
 ];
 
+export const BO2_SEQUENCE: SequenceStep[] = [
+  { team: Team.Blue, action: DraftAction.Ban },
+  { team: Team.Red, action: DraftAction.Ban },
+  { team: Team.Red, action: DraftAction.Ban },
+  { team: Team.Blue, action: DraftAction.Ban },
+  { team: Team.Red, action: DraftAction.Pick, gameNum: 1 },
+  { team: Team.Blue, action: DraftAction.Pick, gameNum: 2 },
+];
+
 export const SEQUENCE_MAP: Record<SequenceKey, SequenceStep[]> = {
   [Sequence.BO1]: BO1_SEQUENCE,
   [Sequence.BO3]: BO3_SEQUENCE,
   [Sequence.BO3EU]: BO3EU_SEQUENCE,
+  [Sequence.BO2]: BO2_SEQUENCE,
 };
 
 export const SEQUENCE_LABELS: Record<SequenceKey, string> = {
   [Sequence.BO1]: "BO1",
+  [Sequence.BO2]: "BO2",
   [Sequence.BO3]: "BO3",
   [Sequence.BO3EU]: "BO3 (EU)",
 };

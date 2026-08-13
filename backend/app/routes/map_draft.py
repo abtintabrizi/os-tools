@@ -132,7 +132,6 @@ async def set_pending(room_id: str, body: MapDraftPendingRequest):
         )
         await save_room(room_id, updated, Table.MAP_DRAFTS)
 
-    await manager.broadcast(room_id, updated, side=body.side)
     return updated
 
 

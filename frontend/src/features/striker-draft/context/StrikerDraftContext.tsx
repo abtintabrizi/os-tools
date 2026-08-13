@@ -57,9 +57,25 @@ export function StrikerDraftProvider({ children }: { children: ReactNode }) {
   const [side, setSide] = useState<Side>(urlSide ?? Team.Spectator);
   const [roomId, setRoomId] = useState<string | null>(urlRoom);
   const [lobbyState, setLobbyState] = useState<StrikerDraftState | null>(null);
+  const [localPending, setLocalPending] = useState<string | null>(null);
 
   const { state, loading, error, create, applyAction, setPending, ready } =
     useStrikerDraftApi(roomId, side);
+
+  useEffect(() => {
+    setLocalPending(null);
+  }, [state?.step]);
+
+  const clientState = state
+    ? {
+        ...state,
+        ...(side === Team.Blue
+          ? { pendingBlue: localPending }
+          : side === Team.Red
+            ? { pendingRed: localPending }
+            : {}),
+      }
+    : null;
 
   useEffect(() => {
     const pathname = window.location.pathname;
@@ -94,6 +110,7 @@ export function StrikerDraftProvider({ children }: { children: ReactNode }) {
 
   async function handlePending(striker: string | null) {
     if (side === Team.Blue || side === Team.Red) {
+      setLocalPending(striker);
       await setPending(side, striker);
     }
   }
@@ -115,7 +132,7 @@ export function StrikerDraftProvider({ children }: { children: ReactNode }) {
   return (
     <StrikerDraftContext.Provider
       value={{
-        state,
+        state: clientState,
         lobbyState,
         loading,
         error,

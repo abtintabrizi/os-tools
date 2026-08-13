@@ -5,6 +5,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    date: "2026-08-13",
+    notes: [
+      "Added the best of two map draft format",
+      "Made pending selection visibility client side only",
+    ],
+  },
+  {
     date: "2026-06-12",
     notes: ["Updated awakenings to match the June 12 patch"],
   },

@@ -191,8 +191,8 @@ export default function SetupPage() {
           <div className="text-sm font-mono tracking-widest uppercase">
             Format
           </div>
-          <div className="flex flex-row gap-3 w-full">
-            {(Object.keys(SEQUENCE_MAP) as SequenceKey[]).map((seq) => {
+          <div className="grid grid-cols-2 gap-3 w-full">
+            {(Object.keys(SEQUENCE_MAP) as SequenceKey[]).sort().map((seq) => {
               const selected = seq === bestOf;
               return (
                 <button

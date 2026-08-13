@@ -26,7 +26,6 @@ export default function DraftPage() {
     useMapDraftContext();
   const [timeLeft, setTimeLeft] = useState<number>(TIMER_SECONDS);
   const [countdownLeft, setCountdownLeft] = useState(0);
-  const [localPending, setLocalPending] = useState<string | null>(null);
   const clockOffsetRef = useRef(0);
   const stepStartedAtRef = useRef<number | null>(null);
   const navigate = useNavigate();
@@ -104,10 +103,6 @@ export default function DraftPage() {
     };
   }, [countdownLeft]);
 
-  useEffect(() => {
-    setLocalPending(null);
-  }, [state?.step]);
-
   if (loading) return <LoadingScreen message="Connecting to draft..." />;
   if (!state) return <ErrorScreen message="Room not found. Check your link." />;
 
@@ -123,13 +118,12 @@ export default function DraftPage() {
     : null;
   const isMyTurn = currentSeqStep !== null && currentSeqStep.team === side;
 
-  const serverPending =
+  const pending =
     side === Team.Blue
       ? state.pendingBlue
       : side === Team.Red
         ? state.pendingRed
         : null;
-  const pending = localPending ?? serverPending;
 
   const mapStatuses = deriveMapStatuses(state, sequence);
 
@@ -142,7 +136,6 @@ export default function DraftPage() {
 
   function handleMapClick(map: string) {
     if (!isMyTurn || mapStatuses[map] !== "available") return;
-    setLocalPending(map);
     handlePending(map);
   }
 

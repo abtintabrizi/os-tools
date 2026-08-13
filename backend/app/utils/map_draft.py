@@ -25,14 +25,12 @@ def get_room_lock(room_id: str) -> asyncio.Lock:
 
 
 def append_decider(maps: list[str], actions: list[dict], best_of: str) -> list[dict]:
-    if best_of == Sequence.BO1:
+    if best_of not in [Sequence.BO3, Sequence.BO3EU]:
         return actions
     used = {a["map"] for a in actions}
     remaining = [m for m in maps if m not in used]
     if len(remaining) == 1:
-        return actions + [
-            {"map": remaining[0], "team": None, "action": DraftAction.PICK}
-        ]
+        return actions + [{"map": remaining[0], "team": None, "action": DraftAction.PICK}]
     return actions
 
 
@@ -46,9 +44,7 @@ def cancel_timer(room_id: str) -> None:
 def spawn_timer(room_id: str, step: int, delay: float = TIMER_SECONDS) -> None:
     cancel_timer(room_id)
     timers[room_id] = asyncio.create_task(_auto_advance(room_id, step, delay))
-    logger.info(
-        "[room=%s] Timer spawned for step=%d, delay=%.1fs", room_id, step, delay
-    )
+    logger.info("[room=%s] Timer spawned for step=%d, delay=%.1fs", room_id, step, delay)
 
 
 async def _auto_advance(room_id: str, expected_step: int, delay: float) -> None:
