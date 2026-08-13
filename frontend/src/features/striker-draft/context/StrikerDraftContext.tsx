@@ -47,20 +47,21 @@ function getUrlParams() {
   return {
     roomId: params.get("room"),
     side: params.get("side") as Side | null,
+    replay: params.get("replay") === "1",
   };
 }
 
 export function StrikerDraftProvider({ children }: { children: ReactNode }) {
-  const { roomId: urlRoom, side: urlSide } = getUrlParams();
+  const { roomId: urlRoom, side: urlSide, replay } = getUrlParams();
   const navigate = useNavigate();
 
-  const [side, setSide] = useState<Side>(urlSide ?? Team.Spectator);
+  const [side, setSide] = useState<Side>(replay ? Team.Spectator : (urlSide ?? Team.Spectator));
   const [roomId, setRoomId] = useState<string | null>(urlRoom);
   const [lobbyState, setLobbyState] = useState<StrikerDraftState | null>(null);
   const [localPending, setLocalPending] = useState<string | null>(null);
 
   const { state, loading, error, create, applyAction, setPending, ready } =
-    useStrikerDraftApi(roomId, side);
+    useStrikerDraftApi(roomId, side, !replay);
 
   useEffect(() => {
     setLocalPending(null);
@@ -105,10 +106,12 @@ export function StrikerDraftProvider({ children }: { children: ReactNode }) {
   }
 
   async function handleAction(striker: string | null) {
+    if (replay) return;
     await applyAction(striker);
   }
 
   async function handlePending(striker: string | null) {
+    if (replay) return;
     if (side === Team.Blue || side === Team.Red) {
       setLocalPending(striker);
       await setPending(side, striker);
@@ -116,6 +119,7 @@ export function StrikerDraftProvider({ children }: { children: ReactNode }) {
   }
 
   async function handleReady() {
+    if (replay) return;
     if (side === Team.Blue || side === Team.Red) {
       await ready(side);
     }

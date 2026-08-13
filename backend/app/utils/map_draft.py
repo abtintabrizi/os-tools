@@ -8,6 +8,7 @@ from app.constants.map_draft import SEQUENCE_MAPPING, Sequence
 from app.constants.tables import Table
 from app.utils.supabase import get_room, save_room
 from app.utils.ws import manager
+from app.utils.replay import append_replay_event, state_for_client
 
 logger = logging.getLogger(__name__)
 
@@ -103,6 +104,11 @@ async def _auto_advance(room_id: str, expected_step: int, delay: float) -> None:
             }
         ]
         new_step = expected_step + 1
+        replay_events = append_replay_event(
+            state,
+            {"type": "action", "side": seq_step["team"], "step": expected_step, "value": chosen_map},
+            fire_time,
+        )
         done = new_step >= len(sequence)
         if done:
             new_actions = append_decider(state["maps"], new_actions, state["bestOf"])
@@ -115,11 +121,12 @@ async def _auto_advance(room_id: str, expected_step: int, delay: float) -> None:
             "pendingBlue": None,
             "pendingRed": None,
             "stepStartedAt": None if done else time.time(),
+            "replayEvents": replay_events,
         }
 
         await save_room(room_id, updated, Table.MAP_DRAFTS)
 
-    await manager.broadcast(room_id, updated)
+    await manager.broadcast(room_id, state_for_client(updated))
 
     if not done:
         spawn_timer(room_id, new_step)

@@ -9,12 +9,12 @@ import {
   DraftAction,
   Team,
 } from "@/features/common/constants/constants";
-import type { StrikerDraftAction } from "@/features/striker-draft/types";
-import { useStrikerDraftContext } from "@/features/striker-draft/context/StrikerDraftContext";
+import type { StrikerDraftAction, StrikerDraftState } from "@/features/striker-draft/types";
 import { STRIKER_SEQUENCE } from "@/features/striker-draft/constants";
 
 interface StrikerCardProps {
   completedAction: StrikerDraftAction | undefined;
+  pendingStriker: string | null;
   isBan: boolean;
   isBlue: boolean;
   teamName: string;
@@ -24,6 +24,7 @@ interface StrikerCardProps {
 
 function StrikerCard({
   completedAction,
+  pendingStriker,
   isBan,
   isBlue,
   teamName,
@@ -33,6 +34,9 @@ function StrikerCard({
   const wasFilledOnMount = useRef(!!completedAction);
   const strikerEntry = completedAction?.striker
     ? ALL_STRIKERS.find((s) => s.name === completedAction.striker)
+    : null;
+  const pendingEntry = pendingStriker
+    ? ALL_STRIKERS.find((s) => s.name === pendingStriker)
     : null;
   const isNoBan = !!completedAction && !completedAction.striker;
 
@@ -75,6 +79,20 @@ function StrikerCard({
                 transition={{ duration: 0.65, ease: [0.25, 0, 0, 1] }}
               />
             </motion.div>
+          )}
+        </AnimatePresence>
+        <AnimatePresence>
+          {!completedAction && pendingEntry && (
+            <motion.img
+              key={`pending-${pendingEntry.name}`}
+              src={pendingEntry.icon}
+              alt={pendingEntry.name}
+              className="absolute inset-0 w-full h-full object-cover blur-[1px] brightness-60"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+            />
           )}
         </AnimatePresence>
         {completedAction && !wasFilledOnMount.current && !isNoBan && (
@@ -121,7 +139,7 @@ function StrikerCard({
             </div>
           </motion.div>
         )}
-        {isCurrent && !completedAction && (
+        {isCurrent && !completedAction && !pendingEntry && (
           <div className="absolute inset-0 flex items-center justify-center">
             <AnimatedNumber
               value={timeLeft}
@@ -139,6 +157,8 @@ function StrikerCard({
       <span className="font-mono text-xs text-white/40 text-center leading-tight w-20 line-clamp-2 min-h-7.5">
         {completedAction
           ? (completedAction.striker ?? "No Ban")
+          : pendingEntry
+            ? pendingEntry.name
           : isBan
             ? "Ban"
             : "Pick"}
@@ -150,15 +170,14 @@ function StrikerCard({
 interface StrikerSpectatorBarProps {
   timeLeft: number;
   countdownLeft: number;
+  state: StrikerDraftState;
 }
 
 export function StrikerSpectatorBar({
   timeLeft,
   countdownLeft,
+  state,
 }: StrikerSpectatorBarProps) {
-  const { state } = useStrikerDraftContext();
-  if (!state) return null;
-
   const {
     step,
     done,
@@ -267,11 +286,17 @@ export function StrikerSpectatorBar({
             const isBan = s.action === DraftAction.Ban;
             const teamName = isBlue ? blueName : redName;
             const isCurrent = !done && i === step;
+            const pendingStriker = isCurrent
+              ? isBlue
+                ? state.pendingBlue
+                : state.pendingRed
+              : null;
 
             return (
               <StrikerCard
                 key={i}
                 completedAction={completedAction}
+                pendingStriker={pendingStriker}
                 isBan={isBan}
                 isBlue={isBlue}
                 teamName={teamName}

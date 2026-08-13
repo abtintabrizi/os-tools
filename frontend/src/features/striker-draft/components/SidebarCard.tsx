@@ -9,10 +9,10 @@ import {
 import { AnimatedNumber } from "@/features/common/components/AnimatedNumber";
 import type {
   StrikerDraftAction,
+  StrikerDraftState,
   IndexedStep,
 } from "@/features/striker-draft/types";
 import { useStrikerColor } from "@/features/striker-draft/hooks/useStrikerColor";
-import { useStrikerDraftContext } from "@/features/striker-draft/context/StrikerDraftContext";
 import { STRIKER_SEQUENCE } from "@/features/striker-draft/constants";
 
 interface SidebarCardProps {
@@ -20,6 +20,7 @@ interface SidebarCardProps {
   cardIndex: number;
   isBlue: boolean;
   timeLeft: number;
+  state: StrikerDraftState;
 }
 
 export function SidebarCard({
@@ -27,24 +28,17 @@ export function SidebarCard({
   cardIndex,
   isBlue,
   timeLeft,
+  state,
 }: SidebarCardProps) {
-  const { state } = useStrikerDraftContext();
-
   const teamSteps: IndexedStep[] = STRIKER_SEQUENCE.map((step, i) => ({
     ...step,
     globalIdx: i,
   })).filter((step) => step.team === (isBlue ? Team.Blue : Team.Red));
-  const teamActions: StrikerDraftAction[] = state
-    ? state.actions.filter((a) => a.team === (isBlue ? Team.Blue : Team.Red))
-    : [];
-  const pendingStriker = state
-    ? isBlue
-      ? state.pendingBlue
-      : state.pendingRed
-    : null;
-  const currentStep = state?.step ?? 0;
-  const done = state?.done ?? false;
-  const bothReady = (state?.readyBlue && state?.readyRed) ?? false;
+  const teamActions: StrikerDraftAction[] = state.actions.filter((a) => a.team === (isBlue ? Team.Blue : Team.Red));
+  const pendingStriker = isBlue ? state.pendingBlue : state.pendingRed;
+  const currentStep = state.step;
+  const done = state.done;
+  const bothReady = state.readyBlue && state.readyRed;
 
   const filled = teamActions[cardIndex];
   const wasFilledOnMount = useRef(!!filled);

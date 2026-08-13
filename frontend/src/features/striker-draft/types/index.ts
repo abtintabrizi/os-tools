@@ -12,6 +12,8 @@ export interface StrikerDraftState {
   pendingBlue: string | null;
   pendingRed: string | null;
   stepStartedAt: number | null;
+  replayStartedAt?: number | null;
+  replayEvents?: import("@/features/common/types").ReplayEvent[];
   bannedStarts: string[] | null;
   awakeningMode: "random" | "custom";
   serverTime?: number;

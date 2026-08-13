@@ -12,8 +12,8 @@ export interface CreateStrikerRoomConfig {
   bannedStarts?: string[];
 }
 
-export function useStrikerDraftApi(roomId: string | null, side?: string) {
-  const api = useRoomApi<StrikerDraftState>(roomId, "striker-draft", side);
+export function useStrikerDraftApi(roomId: string | null, side?: string, live = true) {
+  const api = useRoomApi<StrikerDraftState>(roomId, "striker-draft", side, live);
 
   const create = useCallback(
     (config: CreateStrikerRoomConfig) => api.create(config),

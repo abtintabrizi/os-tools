@@ -8,8 +8,7 @@ import {
   Team,
 } from "@/features/common/constants/constants";
 import { Sequence } from "@/features/map-drafter/types";
-import type { MapDraftAction } from "@/features/map-drafter/types";
-import { useMapDraftContext } from "@/features/map-drafter/context/MapDraftContext";
+import type { MapDraftAction, MapDraftState } from "@/features/map-drafter/types";
 import { SEQUENCE_MAP } from "@map-drafter/constants.ts";
 import { deriveMapStatuses } from "@/features/map-drafter/utils";
 
@@ -21,6 +20,7 @@ interface SequenceStep {
 
 interface SpectatorCardProps {
   completedAction: MapDraftAction | undefined;
+  pendingMap: string | null;
   isBan: boolean;
   isBlue: boolean;
   teamName: string;
@@ -31,6 +31,7 @@ interface SpectatorCardProps {
 
 function SpectatorCard({
   completedAction,
+  pendingMap,
   isBan,
   isBlue,
   teamName,
@@ -41,6 +42,9 @@ function SpectatorCard({
   const wasFilledOnMount = useRef(!!completedAction);
   const mapEntry = completedAction
     ? ALL_MAPS.find((m) => m.name === completedAction.map)
+    : null;
+  const pendingEntry = pendingMap
+    ? ALL_MAPS.find((m) => m.name === pendingMap)
     : null;
 
   return (
@@ -82,6 +86,20 @@ function SpectatorCard({
                 transition={{ duration: 0.65, ease: [0.25, 0, 0, 1] }}
               />
             </motion.div>
+          )}
+        </AnimatePresence>
+        <AnimatePresence>
+          {!completedAction && pendingEntry && (
+            <motion.img
+              key={`pending-${pendingEntry.name}`}
+              src={pendingEntry.icon}
+              alt={pendingEntry.name}
+              className="absolute inset-0 w-full h-full object-cover blur-[1px] brightness-60"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+            />
           )}
         </AnimatePresence>
         {completedAction && !wasFilledOnMount.current && (
@@ -128,7 +146,7 @@ function SpectatorCard({
             </span>
           </motion.div>
         )}
-        {isCurrent && !completedAction && (
+        {isCurrent && !completedAction && !pendingEntry && (
           <div className="absolute inset-0 flex items-center justify-center">
             <AnimatedNumber
               value={timeLeft}
@@ -144,7 +162,7 @@ function SpectatorCard({
         )}
       </div>
       <span className="font-mono text-xs text-white/40 text-center leading-tight w-20 line-clamp-2 min-h-7.5">
-        {completedAction?.map ?? (isBan ? "Ban" : `G${pickNumber}`)}
+        {completedAction?.map ?? pendingEntry?.name ?? (isBan ? "Ban" : `G${pickNumber}`)}
       </span>
     </div>
   );
@@ -219,12 +237,10 @@ function DeciderCard({ mapName }: { mapName: string | undefined }) {
 interface SpectatorBarProps {
   timeLeft: number;
   countdownLeft: number;
+  state: MapDraftState;
 }
 
-export function SpectatorBar({ timeLeft, countdownLeft }: SpectatorBarProps) {
-  const { state } = useMapDraftContext();
-  if (!state) return null;
-
+export function SpectatorBar({ timeLeft, countdownLeft, state }: SpectatorBarProps) {
   const { step, done, actions, blueName, redName, readyBlue, readyRed } = state;
   const sequence: SequenceStep[] = SEQUENCE_MAP[state.bestOf];
   const bothReady = readyBlue && readyRed;
@@ -294,12 +310,18 @@ export function SpectatorBar({ timeLeft, countdownLeft }: SpectatorBarProps) {
             const isBan = s.action === DraftAction.Ban;
             const teamName = isBlue ? blueName : redName;
             const isCurrent = !done && i === step;
+            const pendingMap = isCurrent
+              ? isBlue
+                ? state.pendingBlue
+                : state.pendingRed
+              : null;
             const pickNumber = !isBan ? (sequence[i].gameNum ?? 1) : null;
 
             return (
               <SpectatorCard
                 key={i}
                 completedAction={completedAction}
+                pendingMap={pendingMap}
                 isBan={isBan}
                 isBlue={isBlue}
                 teamName={teamName}

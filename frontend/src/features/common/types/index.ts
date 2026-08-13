@@ -8,3 +8,12 @@ export interface SequenceStep {
   action: DraftAction;
   gameNum?: number;
 }
+export type ReplayEvent =
+  | { type: "pending"; atMs: number; side: Team; value: string | null }
+  | {
+      type: "action";
+      atMs: number;
+      side: Team;
+      step: number;
+      value: string | null;
+    };

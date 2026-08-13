@@ -49,14 +49,15 @@ function getUrlParams() {
   return {
     roomId: params.get("room"),
     side: params.get("side") as Side | null,
+    replay: params.get("replay") === "1",
   };
 }
 
 export function MapDraftProvider({ children }: { children: ReactNode }) {
-  const { roomId: urlRoom, side: urlSide } = getUrlParams();
+  const { roomId: urlRoom, side: urlSide, replay } = getUrlParams();
   const navigate = useNavigate();
 
-  const [side, setSide] = useState<Side>(urlSide ?? Team.Spectator);
+  const [side, setSide] = useState<Side>(replay ? Team.Spectator : (urlSide ?? Team.Spectator));
   const [roomId, setRoomId] = useState<string | null>(urlRoom);
   const [lobbyState, setLobbyState] = useState<MapDraftState | null>(null);
   const [localPending, setLocalPending] = useState<string | null>(null);
@@ -70,7 +71,7 @@ export function MapDraftProvider({ children }: { children: ReactNode }) {
     setPending,
     ready,
     setStrikerRoom,
-  } = useMapDraftApi(roomId, side);
+  } = useMapDraftApi(roomId, side, !replay);
 
   useEffect(() => {
     setLocalPending(null);
@@ -115,10 +116,12 @@ export function MapDraftProvider({ children }: { children: ReactNode }) {
   }
 
   async function handleAction(map: string) {
+    if (replay) return;
     await applyAction(map);
   }
 
   async function handlePending(map: string | null) {
+    if (replay) return;
     if (side === Team.Blue || side === Team.Red) {
       setLocalPending(map);
       await setPending(side, map);
@@ -126,6 +129,7 @@ export function MapDraftProvider({ children }: { children: ReactNode }) {
   }
 
   async function handleReady() {
+    if (replay) return;
     if (side === Team.Blue || side === Team.Red) {
       await ready(side);
     }

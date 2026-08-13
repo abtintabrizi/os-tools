@@ -1,4 +1,4 @@
-import { ActionType } from "@/features/common/types";
+import { ActionType, type ReplayEvent } from "@/features/common/types";
 import type { Team } from "@/features/common/constants/constants";
 
 export enum Sequence {
@@ -29,6 +29,8 @@ export interface MapDraftState {
   pendingBlue: string | null;
   pendingRed: string | null;
   stepStartedAt: number | null;
+  replayStartedAt?: number | null;
+  replayEvents?: ReplayEvent[];
   strikerLobbies: Record<string, { roomId: string; firstPick: string }> | null;
   bannedAwakenings: string[] | null;
   serverTime?: number;
