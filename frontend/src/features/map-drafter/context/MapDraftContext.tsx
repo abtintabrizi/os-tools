@@ -82,6 +82,15 @@ export function MapDraftProvider({ children }: { children: ReactNode }) {
   } = useMapDraftApi(roomId, side, !replay);
 
   useEffect(() => {
+    if (!replay || loading || !state) return;
+    if (state.done && state.replayEvents?.length) return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete("replay");
+    url.searchParams.delete("side");
+    window.location.replace(url.toString());
+  }, [loading, replay, state]);
+
+  useEffect(() => {
     setLocalPending(null);
   }, [state?.step]);
 
