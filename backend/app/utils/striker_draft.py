@@ -14,6 +14,7 @@ from app.constants.striker_draft import STRIKER_SEQUENCE, STRIKER_POOL
 from app.constants.tables import Table
 from app.utils.supabase import get_room, save_room
 from app.utils.ws import manager
+from app.utils.replay import append_replay_event, state_for_client
 
 logger = logging.getLogger(__name__)
 
@@ -134,6 +135,11 @@ async def _auto_advance(room_id: str, expected_step: int, delay: float) -> None:
             }
         ]
         new_step = expected_step + 1
+        replay_events = append_replay_event(
+            state,
+            {"type": "action", "side": seq_step["team"], "step": expected_step, "value": chosen_striker},
+            fire_time,
+        )
         done = new_step >= len(STRIKER_SEQUENCE)
 
         updated = {
@@ -144,11 +150,12 @@ async def _auto_advance(room_id: str, expected_step: int, delay: float) -> None:
             "pendingBlue": None,
             "pendingRed": None,
             "stepStartedAt": None if done else time.time(),
+            "replayEvents": replay_events,
         }
 
         await save_room(room_id, updated, Table.STRIKER_DRAFTS)
 
-    await manager.broadcast(room_id, updated)
+    await manager.broadcast(room_id, state_for_client(updated))
 
     if not done:
         spawn_timer(room_id, new_step)

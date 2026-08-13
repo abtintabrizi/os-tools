@@ -22,6 +22,7 @@ from app.utils.map_draft import (
     timers,
 )
 from app.utils.ws import manager
+from app.utils.replay import append_replay_event, state_for_client
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +51,8 @@ async def create_room(body: CreateMapDraftRoomRequest):
         "pendingBlue": None,
         "pendingRed": None,
         "stepStartedAt": None,
+        "replayStartedAt": None,
+        "replayEvents": [],
         "strikerLobbies": None,
         "bannedAwakenings": None,
     }
@@ -62,7 +65,7 @@ async def create_room(body: CreateMapDraftRoomRequest):
         body.bestOf,
         body.maps,
     )
-    return state
+    return state_for_client(state)
 
 
 @router.get("/rooms/{room_id}")
@@ -70,7 +73,7 @@ async def get_room_route(room_id: str):
     state = await get_room(room_id, Table.MAP_DRAFTS)
     if state is None:
         raise HTTPException(status_code=404, detail="Room not found")
-    return state
+    return state_for_client(state)
 
 
 @router.post("/rooms/{room_id}/ready")
@@ -92,16 +95,19 @@ async def set_ready(room_id: str, body: ReadyRequest):
     COUNTDOWN_SECONDS = 5
     now_both_ready = updated["readyBlue"] and updated["readyRed"]
     if now_both_ready and not already_both_ready:
-        updated["stepStartedAt"] = time.time() + COUNTDOWN_SECONDS
+        started_at = time.time()
+        updated["replayStartedAt"] = started_at
+        updated["replayEvents"] = []
+        updated["stepStartedAt"] = started_at + COUNTDOWN_SECONDS
 
     await save_room(room_id, updated, Table.MAP_DRAFTS)
-    await manager.broadcast(room_id, updated)
+    await manager.broadcast(room_id, state_for_client(updated))
     logger.info("[room=%s] [side=%s] Ready", room_id, body.side)
 
     if now_both_ready and not already_both_ready:
         spawn_timer(room_id, updated["step"], delay=TIMER_SECONDS + COUNTDOWN_SECONDS)
 
-    return updated
+    return state_for_client(updated, body.side)
 
 
 @router.post("/rooms/{room_id}/pending")
@@ -119,6 +125,10 @@ async def set_pending(room_id: str, body: MapDraftPendingRequest):
             updated["pendingBlue"] = body.map
         else:
             updated["pendingRed"] = body.map
+        updated["replayEvents"] = append_replay_event(
+            state,
+            {"type": "pending", "side": body.side, "value": body.map},
+        )
 
         step_started_at = state.get("stepStartedAt")
         elapsed = round(time.time() - step_started_at, 3) if step_started_at else None
@@ -132,7 +142,7 @@ async def set_pending(room_id: str, body: MapDraftPendingRequest):
         )
         await save_room(room_id, updated, Table.MAP_DRAFTS)
 
-    return updated
+    return state_for_client(updated, body.side)
 
 
 @router.post("/rooms/{room_id}/action")
@@ -201,6 +211,11 @@ async def apply_action(room_id: str, body: MapDraftActionRequest):
                 "action": seq_step["action"],
             }
         ]
+        replay_events = append_replay_event(
+            state,
+            {"type": "action", "side": seq_step["team"], "step": step, "value": body.map},
+            now,
+        )
         done = new_step >= len(currentSequence)
         if done:
             new_actions = append_decider(state["maps"], new_actions, state["bestOf"])
@@ -213,16 +228,17 @@ async def apply_action(room_id: str, body: MapDraftActionRequest):
             "pendingBlue": None,
             "pendingRed": None,
             "stepStartedAt": None if done else time.time(),
+            "replayEvents": replay_events,
         }
         cancel_timer(room_id)
         await save_room(room_id, updated, Table.MAP_DRAFTS)
 
-    await manager.broadcast(room_id, updated)
+    await manager.broadcast(room_id, state_for_client(updated))
 
     if not done:
         spawn_timer(room_id, new_step)
 
-    return updated
+    return state_for_client(updated, seq_step["team"])
 
 
 @router.post("/rooms/{room_id}/striker-room")
@@ -258,9 +274,7 @@ async def websocket_endpoint(room_id: str, ws: WebSocket):
         state = await get_room(room_id, Table.MAP_DRAFTS)
         if state is not None:
             masked_state = {
-                **state,
-                "pendingBlue": state.get("pendingBlue") if side == Team.BLUE else None,
-                "pendingRed": state.get("pendingRed") if side == Team.RED else None,
+                **state_for_client(state, side),
                 "serverTime": time.time(),
             }
             await ws.send_json(masked_state)

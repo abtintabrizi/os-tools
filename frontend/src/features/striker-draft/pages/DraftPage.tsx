@@ -21,10 +21,13 @@ import {
   BackButton,
   HomeButton,
 } from "@/features/common/components/NavButtons";
+import { useDraftReplay } from "@/features/common/hooks/useDraftReplay";
+import { ReplayControls } from "@/features/common/components/ReplayControls";
+import { ReplayTimeline } from "@/features/common/components/ReplayTimeline";
 
 export default function DraftPage() {
   const {
-    state,
+    state: completedState,
     side,
     loading,
     error,
@@ -32,6 +35,20 @@ export default function DraftPage() {
     handlePending,
     handleReady,
   } = useStrikerDraftContext();
+  const isReplay =
+    new URLSearchParams(window.location.search).get("replay") === "1";
+  const {
+    state,
+    playing,
+    togglePlaying,
+    restart,
+    nextAction,
+    previousAction,
+    hasNextAction,
+    hasPreviousAction,
+    elapsedMs,
+    durationMs,
+  } = useDraftReplay(completedState, isReplay);
   const [timeLeft, setTimeLeft] = useState<number>(TIMER_SECONDS);
   const [countdownLeft, setCountdownLeft] = useState(0);
   const clockOffsetRef = useRef(0);
@@ -132,11 +149,15 @@ export default function DraftPage() {
   const isBanning = currentSeqStep?.action === DraftAction.Ban;
 
   const pending =
-    side === Team.Blue
-      ? state.pendingBlue
-      : side === Team.Red
-        ? state.pendingRed
-        : null;
+    isReplay && currentSeqStep
+      ? currentSeqStep.team === Team.Blue
+        ? state.pendingBlue
+        : state.pendingRed
+      : side === Team.Blue
+        ? state.pendingBlue
+        : side === Team.Red
+          ? state.pendingRed
+          : null;
 
   const bannedSet = new Set(
     actions.filter((a) => a.action === DraftAction.Ban).map((a) => a.striker),
@@ -163,6 +184,13 @@ export default function DraftPage() {
   async function handleConfirm() {
     if (!pending) return;
     await handleAction(pending);
+  }
+
+  function watchReplay() {
+    const url = new URL(window.location.href);
+    url.searchParams.set("side", Team.Spectator);
+    url.searchParams.set("replay", "1");
+    window.location.assign(url.toString());
   }
 
   function sideLabel() {
@@ -197,6 +225,15 @@ export default function DraftPage() {
         </div>
 
         <div className="flex justify-end items-center gap-3">
+          {done && !isReplay && state.replayEvents?.length ? (
+            <button
+              type="button"
+              onClick={watchReplay}
+              className="font-mono text-xs tracking-widest uppercase px-3 py-1.5 rounded border border-tools-gold/40 text-tools-gold bg-tools-gold/6 hover:bg-tools-gold/14 transition"
+            >
+              Watch Replay
+            </button>
+          ) : null}
           <span className="text-sm tracking-wider font-bold">
             {blueName} vs {redName}
           </span>
@@ -265,6 +302,7 @@ export default function DraftPage() {
               cardIndex={i}
               isBlue
               timeLeft={timeLeft}
+              state={state}
             />
           ))}
         </div>
@@ -581,10 +619,32 @@ export default function DraftPage() {
           </div>
 
           {side === Team.Spectator && (
-            <StrikerSpectatorBar
-              timeLeft={timeLeft}
-              countdownLeft={countdownLeft}
-            />
+            <>
+              {isReplay && state.replayEvents?.length ? (
+                <>
+                  <ReplayTimeline
+                    events={state.replayEvents}
+                    actions={completedState?.actions ?? []}
+                    elapsedMs={elapsedMs}
+                    durationMs={durationMs}
+                  />
+                  <ReplayControls
+                    playing={playing}
+                    onTogglePlaying={togglePlaying}
+                    onRestart={restart}
+                    onPreviousAction={previousAction}
+                    onNextAction={nextAction}
+                    hasPreviousAction={hasPreviousAction}
+                    hasNextAction={hasNextAction}
+                  />
+                </>
+              ) : null}
+              <StrikerSpectatorBar
+                timeLeft={timeLeft}
+                countdownLeft={countdownLeft}
+                state={state}
+              />
+            </>
           )}
         </div>
 
@@ -602,6 +662,7 @@ export default function DraftPage() {
               cardIndex={i}
               isBlue={false}
               timeLeft={timeLeft}
+              state={state}
             />
           ))}
         </div>

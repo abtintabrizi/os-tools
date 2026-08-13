@@ -7,8 +7,7 @@ import {
   Team,
 } from "@/features/common/constants/constants";
 import { AnimatedNumber } from "@/features/common/components/AnimatedNumber";
-import type { MapDraftAction } from "@/features/map-drafter/types";
-import { useMapDraftContext } from "@/features/map-drafter/context/MapDraftContext";
+import type { MapDraftAction, MapDraftState } from "@/features/map-drafter/types";
 import { SEQUENCE_MAP } from "@map-drafter/constants.ts";
 
 interface SequenceStep {
@@ -23,6 +22,7 @@ interface MapSidebarCardProps {
   cardIndex: number;
   isBlue: boolean;
   timeLeft: number;
+  state: MapDraftState;
 }
 
 export function MapSidebarCard({
@@ -30,24 +30,17 @@ export function MapSidebarCard({
   cardIndex,
   isBlue,
   timeLeft,
+  state,
 }: MapSidebarCardProps) {
-  const { state } = useMapDraftContext();
-
-  const sequence = state ? SEQUENCE_MAP[state.bestOf] : [];
+  const sequence = SEQUENCE_MAP[state.bestOf];
   const teamSteps = sequence
     .map((step, globalIdx) => ({ ...step, globalIdx }))
     .filter((step) => step.team === (isBlue ? Team.Blue : Team.Red));
-  const teamActions: MapDraftAction[] = state
-    ? state.actions.filter((a) => a.team === (isBlue ? Team.Blue : Team.Red))
-    : [];
-  const pendingMap = state
-    ? isBlue
-      ? state.pendingBlue
-      : state.pendingRed
-    : null;
-  const currentStep = state?.step ?? 0;
-  const done = state?.done ?? false;
-  const bothReady = (state?.readyBlue && state?.readyRed) ?? false;
+  const teamActions: MapDraftAction[] = state.actions.filter((a) => a.team === (isBlue ? Team.Blue : Team.Red));
+  const pendingMap = isBlue ? state.pendingBlue : state.pendingRed;
+  const currentStep = state.step;
+  const done = state.done;
+  const bothReady = state.readyBlue && state.readyRed;
 
   const filled = teamActions[cardIndex];
   const wasFilledOnMount = useRef(!!filled);

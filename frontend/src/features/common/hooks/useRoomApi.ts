@@ -22,6 +22,7 @@ export function useRoomApi<T>(
   roomId: string | null,
   path: string,
   side?: string,
+  live = true,
 ): RoomApi<T> {
   const [state, setState] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
@@ -83,14 +84,14 @@ export function useRoomApi<T>(
       };
     }
 
-    connect();
+    if (live) connect();
 
     return () => {
       cancelled = true;
       wsRef.current?.close();
       wsRef.current = null;
     };
-  }, [roomId, path, side]);
+  }, [roomId, path, side, live]);
 
   const create = useCallback(
     async (config: object): Promise<T> => {
