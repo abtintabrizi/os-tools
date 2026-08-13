@@ -60,6 +60,14 @@ export function StrikerDraftProvider({ children }: { children: ReactNode }) {
   const [lobbyState, setLobbyState] = useState<StrikerDraftState | null>(null);
   const [localPending, setLocalPending] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!replay) return;
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has("side")) return;
+    url.searchParams.delete("side");
+    window.history.replaceState({}, "", url.toString());
+  }, [replay]);
+
   const { state, loading, error, create, applyAction, setPending, ready } =
     useStrikerDraftApi(roomId, side, !replay);
 
@@ -84,7 +92,7 @@ export function StrikerDraftProvider({ children }: { children: ReactNode }) {
       pathname === "/striker-draft" || pathname === "/striker-draft/";
     if (!isBasePath) return;
     const search = window.location.search;
-    if (urlRoom && urlSide) {
+    if (urlRoom && (urlSide || replay)) {
       navigate(`/striker-draft/draft${search}`, { replace: true });
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
