@@ -62,6 +62,14 @@ export function MapDraftProvider({ children }: { children: ReactNode }) {
   const [lobbyState, setLobbyState] = useState<MapDraftState | null>(null);
   const [localPending, setLocalPending] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!replay) return;
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has("side")) return;
+    url.searchParams.delete("side");
+    window.history.replaceState({}, "", url.toString());
+  }, [replay]);
+
   const {
     state,
     loading,
@@ -94,7 +102,7 @@ export function MapDraftProvider({ children }: { children: ReactNode }) {
     const isBasePath = pathname === "/map-draft" || pathname === "/map-draft/";
     if (!isBasePath) return;
     const search = window.location.search;
-    if (urlRoom && urlSide) {
+    if (urlRoom && (urlSide || replay)) {
       navigate(`/map-draft/draft${search}`, { replace: true });
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps

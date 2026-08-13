@@ -188,7 +188,7 @@ export default function DraftPage() {
 
   function watchReplay() {
     const url = new URL(window.location.href);
-    url.searchParams.set("side", Team.Spectator);
+    url.searchParams.delete("side");
     url.searchParams.set("replay", "1");
     window.location.assign(url.toString());
   }
