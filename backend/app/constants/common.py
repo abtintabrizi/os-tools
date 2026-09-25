@@ -31,6 +31,7 @@ class Awakening(StrEnum):
     FightOrFlight = "Fight or Flight"
     FireUp = "Fire Up!"
     GlassCannon = "Glass Cannon"
+    HeavyHanded = "Heavy Handed"
     HeavyImpact = "Heavy Impact"
     Hotshot = "Hotshot"
     InnerFocus = "Inner Focus"
@@ -47,6 +48,7 @@ class Awakening(StrEnum):
     PerfectForm = "Perfect Form"
     Primetime = "Primetime"
     PrizeFighter = "Prize Fighter"
+    QuickReflexes = "Quick Reflexes"
     QuickStrike = "Quick Strike"
     Rampage = "Rampage"
     RapidFire = "Rapid Fire"
@@ -74,40 +76,40 @@ class Awakening(StrEnum):
 ALL_AWAKENINGS = list(Awakening)
 
 CURRENT_AWAKENING_POOL = [
-    Awakening.Aerials,
+    Awakening.AdrenalineRush,
+    Awakening.Chronoboost,
     Awakening.Berserker,
+    Awakening.BigFish,
     Awakening.BuiltDifferent,
     Awakening.BulkUp,
     Awakening.Deadeye,
     Awakening.Demolitionist,
     Awakening.ExplosiveEntrance,
     Awakening.GlassCannon,
+    Awakening.HeavyHanded,
     Awakening.HeavyImpact,
     Awakening.Hotshot,
+    Awakening.InnerFocus,
+    Awakening.MightOfTheColossus,
     Awakening.MissilePropulsion,
     Awakening.OmegaInfusedAccelerator,
+    Awakening.OneTwoPunch,
+    Awakening.OrbReplicator,
     Awakening.PeakPerformance,
-    Awakening.ReptileRemedy,
+    Awakening.PerfectForm,
+    Awakening.QuickReflexes,
+    Awakening.RapidFire,
     Awakening.Stinger,
-    Awakening.TeamPlayer,
     Awakening.TempoSwing,
     Awakening.TimelessCreator,
+    Awakening.SiegeMachine,
     Awakening.SparkOfAgility,
     Awakening.SparkOfFocus,
+    Awakening.SparkOfResilience,
     Awakening.SparkOfStrength,
-    Awakening.Chronoboost,
-    Awakening.RapidFire,
-    Awakening.FireUp,
-    Awakening.FightOrFlight,
-    Awakening.SiegeMachine,
-    Awakening.RecoveryDrone,
     Awakening.SpecializedTraining,
-    Awakening.Egoist,
-    Awakening.PrizeFighter,
-    Awakening.OrbPonderer,
-    Awakening.MightOfTheColossus,
     Awakening.StacksOnStacks,
-    Awakening.KnifesEdge,
+    Awakening.SuperSurge,
 ]
 
 AWAKENING_CONFLICTS: dict[Awakening, list[Awakening]] = {
@@ -169,6 +171,7 @@ AWAKENING_CONFLICTS: dict[Awakening, list[Awakening]] = {
         Awakening.Berserker,
     ],
     Awakening.SparkOfAgility: [
+        Awakening.QuickReflexes,
         Awakening.SparkOfFocus,
         Awakening.SparkOfResilience,
         Awakening.SparkOfStrength,
@@ -263,6 +266,7 @@ AWAKENING_CONFLICTS: dict[Awakening, list[Awakening]] = {
         Awakening.InnerFocus,
     ],
     Awakening.SuperSurge: [
+        Awakening.QuickReflexes,
         Awakening.TwinDrive,
         Awakening.Chronoboost,
         Awakening.Aerials,
@@ -289,6 +293,7 @@ AWAKENING_CONFLICTS: dict[Awakening, list[Awakening]] = {
         Awakening.SiegeMachine,
     ],
     Awakening.Hotshot: [
+        Awakening.HeavyHanded,
         Awakening.RapidFire,
         Awakening.SparkOfFocus,
         Awakening.TeamPlayer,
@@ -361,6 +366,7 @@ AWAKENING_CONFLICTS: dict[Awakening, list[Awakening]] = {
         Awakening.Catalyst,
     ],
     Awakening.StaggerSwagger: [
+        Awakening.QuickReflexes,
         Awakening.BigFish,
         Awakening.BulkUp,
         Awakening.PeakPerformance,
@@ -380,6 +386,7 @@ AWAKENING_CONFLICTS: dict[Awakening, list[Awakening]] = {
         Awakening.Berserker,
     ],
     Awakening.OneTwoPunch: [
+        Awakening.HeavyHanded,
         Awakening.PerfectForm,
         Awakening.HeavyImpact,
         Awakening.SparkOfStrength,
@@ -389,6 +396,7 @@ AWAKENING_CONFLICTS: dict[Awakening, list[Awakening]] = {
         Awakening.MightOfTheColossus,
     ],
     Awakening.StacksOnStacks: [
+        Awakening.QuickReflexes,
         Awakening.StaggerSwagger,
         Awakening.GlassCannon,
         Awakening.SparkOfAgility,
@@ -404,6 +412,7 @@ AWAKENING_CONFLICTS: dict[Awakening, list[Awakening]] = {
         Awakening.OmegaInfusedAccelerator,
     ],
     Awakening.Chronoboost: [
+        Awakening.QuickReflexes,
         Awakening.SuperSurge,
         Awakening.CastToLast,
         Awakening.Aerials,
@@ -412,6 +421,7 @@ AWAKENING_CONFLICTS: dict[Awakening, list[Awakening]] = {
         Awakening.ExplosiveEntrance,
     ],
     Awakening.GlassCannon: [
+        Awakening.QuickReflexes,
         Awakening.StacksOnStacks,
         Awakening.Deadeye,
         Awakening.MissilePropulsion,
@@ -440,6 +450,7 @@ AWAKENING_CONFLICTS: dict[Awakening, list[Awakening]] = {
         Awakening.MightOfTheColossus,
     ],
     Awakening.PeakPerformance: [
+        Awakening.QuickReflexes,
         Awakening.StaggerSwagger,
         Awakening.BigFish,
         Awakening.BulkUp,
@@ -474,6 +485,7 @@ AWAKENING_CONFLICTS: dict[Awakening, list[Awakening]] = {
         Awakening.Berserker,
     ],
     Awakening.Aerials: [
+        Awakening.QuickReflexes,
         Awakening.Deadeye,
         Awakening.MissilePropulsion,
         Awakening.SuperSurge,
@@ -483,6 +495,8 @@ AWAKENING_CONFLICTS: dict[Awakening, list[Awakening]] = {
         Awakening.SiegeMachine,
     ],
     Awakening.QuickStrike: [
+        Awakening.QuickReflexes,
+        Awakening.HeavyHanded,
         Awakening.Hotshot,
         Awakening.BuiltDifferent,
         Awakening.BigFish,
@@ -511,6 +525,7 @@ AWAKENING_CONFLICTS: dict[Awakening, list[Awakening]] = {
         Awakening.ReptileRemedy,
     ],
     Awakening.OrbDancer: [
+        Awakening.QuickReflexes,
         Awakening.OrbPonderer,
         Awakening.StacksOnStacks,
         Awakening.StaggerSwagger,
@@ -594,6 +609,7 @@ AWAKENING_CONFLICTS: dict[Awakening, list[Awakening]] = {
         Awakening.SparkOfResilience,
     ],
     Awakening.Egoist: [
+        Awakening.QuickReflexes,
         Awakening.FireUp,
         Awakening.Catalyst,
         Awakening.QuickStrike,
@@ -619,6 +635,7 @@ AWAKENING_CONFLICTS: dict[Awakening, list[Awakening]] = {
         Awakening.QuickStrike,
     ],
     Awakening.AmongTitans: [
+        Awakening.QuickReflexes,
         Awakening.SparkOfAgility,
         Awakening.FireUp,
         Awakening.OrbReplicator,
@@ -645,6 +662,7 @@ AWAKENING_CONFLICTS: dict[Awakening, list[Awakening]] = {
         Awakening.MightOfTheColossus,
     ],
     Awakening.FightOrFlight: [
+        Awakening.QuickReflexes,
         Awakening.TwinDrive,
         Awakening.StaggerSwagger,
         Awakening.AmongTitans,
@@ -661,6 +679,7 @@ AWAKENING_CONFLICTS: dict[Awakening, list[Awakening]] = {
         Awakening.OmegaInfusedAccelerator,
     ],
     Awakening.KnifesEdge: [
+        Awakening.QuickReflexes,
         Awakening.FightOrFlight,
         Awakening.GlassCannon,
         Awakening.Unstoppable,
@@ -677,6 +696,8 @@ AWAKENING_CONFLICTS: dict[Awakening, list[Awakening]] = {
         Awakening.Berserker,
     ],
     Awakening.TeamPlayer: [
+        Awakening.QuickReflexes,
+        Awakening.HeavyHanded,
         Awakening.FireUp,
         Awakening.OrbReplicator,
         Awakening.QuickStrike,
@@ -733,6 +754,7 @@ AWAKENING_CONFLICTS: dict[Awakening, list[Awakening]] = {
         Awakening.Catalyst,
     ],
     Awakening.ExplosiveEntrance: [
+        Awakening.QuickReflexes,
         Awakening.BuiltDifferent,
         Awakening.HeavyImpact,
         Awakening.SuperSurge,
@@ -803,6 +825,7 @@ AWAKENING_CONFLICTS: dict[Awakening, list[Awakening]] = {
         Awakening.Berserker,
     ],
     Awakening.OmegaInfusedAccelerator: [
+        Awakening.QuickReflexes,
         Awakening.AmongTitans,
         Awakening.GlassCannon,
         Awakening.PeakPerformance,
@@ -846,6 +869,33 @@ AWAKENING_CONFLICTS: dict[Awakening, list[Awakening]] = {
         Awakening.Reverberation,
         Awakening.SparkOfFocus,
         Awakening.TwinDrive,
+    ],
+    Awakening.HeavyHanded: [
+        Awakening.QuickReflexes,
+        Awakening.QuickStrike,
+        Awakening.TeamPlayer,
+        Awakening.Hotshot,
+        Awakening.OneTwoPunch,
+    ],
+    Awakening.QuickReflexes: [
+        Awakening.HeavyHanded,
+        Awakening.QuickStrike,
+        Awakening.TeamPlayer,
+        Awakening.StacksOnStacks,
+        Awakening.Chronoboost,
+        Awakening.SuperSurge,
+        Awakening.Aerials,
+        Awakening.ExplosiveEntrance,
+        Awakening.GlassCannon,
+        Awakening.PeakPerformance,
+        Awakening.FightOrFlight,
+        Awakening.OmegaInfusedAccelerator,
+        Awakening.OrbDancer,
+        Awakening.AmongTitans,
+        Awakening.SparkOfAgility,
+        Awakening.Egoist,
+        Awakening.KnifesEdge,
+        Awakening.StaggerSwagger,
     ],
 }
 
