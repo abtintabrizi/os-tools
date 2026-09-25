@@ -20,6 +20,7 @@ app = FastAPI()
 ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "https://os-tools-theta.vercel.app",
+    "https://os-tools-preview.vercel.app",
     "https://drafter2.bestieinslot.com",
     "https://drafter.bestieinslot.com",
 ]
