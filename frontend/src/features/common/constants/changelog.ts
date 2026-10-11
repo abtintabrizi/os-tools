@@ -9,6 +9,7 @@ export const changelog: ChangelogEntry[] = [
     notes: [
       "Added the South American best of three map draft format",
       "Fixed an issue with the replay system not working",
+      "Improved the UI/UX of the draft lobby screen",
     ],
   },
   {
