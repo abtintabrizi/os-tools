@@ -26,7 +26,7 @@ export default function LobbyPage() {
   if (loading || !room)
     return <LoadingScreen message="Connecting to draft..." />;
 
-  const { roomId, bestOf, blueName, redName } = room;
+  const { roomId, bestOf, blueName, redName, done } = room;
 
   function buildUrl(side: Side): string {
     const url = new URL(window.location.origin + "/map-draft/draft");
@@ -42,7 +42,7 @@ export default function LobbyPage() {
   }
 
   async function copyAll() {
-    const text = `${blueName} - ${blueUrl}\n${redName} - ${redUrl}\nSPECTATOR - ${spectatorUrl}\nREPLAY${!room.done ? " (unavailable until draft complete)" : ""} - ${replayUrl}`;
+    const text = `${blueName} - ${blueUrl}\n${redName} - ${redUrl}\nSPECTATOR - ${spectatorUrl}\nREPLAY${!done ? " (unavailable until draft complete)" : ""} - ${replayUrl}`;
     await navigator.clipboard.writeText(text);
     setCopied("all");
     setTimeout(() => setCopied(null), 2000);

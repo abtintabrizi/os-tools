@@ -39,6 +39,7 @@ export default function LobbyPage() {
     map,
     awakenings,
     awakeningMode,
+    done,
   } = room;
   const isRandom = awakeningMode === "random";
 
@@ -56,7 +57,7 @@ export default function LobbyPage() {
   }
 
   async function copyAll() {
-    const text = `${blueName} - ${blueUrl}\n${redName} - ${redUrl}\nSPECTATOR - ${spectatorUrl}\nREPLAY${!room.done ? " (unavailable until draft complete)" : ""} - ${replayUrl}`;
+    const text = `${blueName} - ${blueUrl}\n${redName} - ${redUrl}\nSPECTATOR - ${spectatorUrl}\nREPLAY${!done ? " (unavailable until draft complete)" : ""} - ${replayUrl}`;
     await navigator.clipboard.writeText(text);
     setCopied("all");
     setTimeout(() => setCopied(null), 2000);
