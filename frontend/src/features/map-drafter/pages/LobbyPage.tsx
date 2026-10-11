@@ -8,12 +8,13 @@ import {
   HomeButton,
 } from "@/features/common/components/NavButtons";
 import LoadingScreen from "@/features/common/components/LoadingScreen";
+import LobbyLink from "@/features/common/components/LobbyLink";
 import LobbyReplayLink from "@/features/common/components/LobbyReplayLink";
 import { SEQUENCE_LABELS } from "@/features/map-drafter/constants";
 
 export default function LobbyPage() {
   const { lobbyState, state, loading, handleSidePick } = useMapDraftContext();
-  const [copied, setCopied] = useState<Side | "all" | null>(null);
+  const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
 
   const room =
@@ -35,17 +36,11 @@ export default function LobbyPage() {
     return url.toString();
   }
 
-  async function copy(url: string, side: Side) {
-    await navigator.clipboard.writeText(url);
-    setCopied(side);
-    setTimeout(() => setCopied(null), 2000);
-  }
-
   async function copyAll() {
     const text = `${blueName} - ${blueUrl}\n${redName} - ${redUrl}\nSPECTATOR - ${spectatorUrl}\nREPLAY${!done ? " (unavailable until draft complete)" : ""} - ${replayUrl}`;
     await navigator.clipboard.writeText(text);
-    setCopied("all");
-    setTimeout(() => setCopied(null), 2000);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
 
   const blueUrl = buildUrl(Team.Blue);
@@ -59,12 +54,6 @@ export default function LobbyPage() {
 
   const baseBtn =
     "px-2.5 py-2.5 rounded-lg font-head text-sm font-bold transition-all duration-150";
-  const blueBtn =
-    "border border-tools-blue/35 text-tools-blue bg-tools-blue/6 hover:bg-tools-blue/14";
-  const redBtn =
-    "border border-tools-red/35 text-tools-red bg-tools-red/6 hover:bg-tools-red/14";
-  const neutralBtn =
-    "border border-white/7 bg-transparent hover:border-white/15 hover:bg-white/5";
 
   return (
     <div className="min-h-screen py-6 flex items-center justify-center">
@@ -86,85 +75,41 @@ export default function LobbyPage() {
             className={`${baseBtn} border border-tools-gold/40 text-tools-gold bg-tools-gold/6 hover:bg-tools-gold/14`}
             onClick={copyAll}
           >
-            {copied === "all" ? "Copied!" : "Copy all links"}
+            {copied ? "Copied!" : "Copy all links"}
           </button>
         </div>
 
         <div className="flex flex-col gap-3 bg-tools-carbon border border-white/7 rounded-2xl p-6">
-          <div className="flex flex-col gap-2">
-            <div className="text-xs font-mono font-bold tracking-widest text-tools-blue">
-              {blueName} — Blue side
-            </div>
-            <div className="bg-tools-graphite border border-white/7 rounded-lg py-2.5 px-3 font-mono text-xs break-all leading-relaxed">
-              {blueUrl}
-            </div>
-            <div className="flex gap-2.5 flex-wrap">
-              <button
-                className={`${baseBtn} ${blueBtn}`}
-                onClick={() => copy(blueUrl, Team.Blue)}
-              >
-                {copied === Team.Blue ? "Copied!" : "Copy blue link"}
-              </button>
-              <button
-                className={`${baseBtn} ${blueBtn}`}
-                onClick={() => handleSidePick(Team.Blue)}
-              >
-                Enter as {blueName}
-              </button>
-            </div>
-          </div>
+          <LobbyLink
+            title={`${blueName} — Blue side`}
+            url={blueUrl}
+            copyLabel="Copy blue link"
+            actionLabel="Enter as blue team"
+            tone="blue"
+            onEnter={() => handleSidePick(Team.Blue)}
+          />
 
           <div className="h-px bg-tools-gold my-3" />
 
-          <div className="flex flex-col gap-2">
-            <div className="text-xs font-mono font-bold tracking-widest text-tools-red">
-              {redName} — Red side
-            </div>
-            <div className="bg-tools-graphite border border-white/7 rounded-lg py-2.5 px-3 font-mono text-xs break-all leading-relaxed">
-              {redUrl}
-            </div>
-            <div className="flex gap-2.5 flex-wrap">
-              <button
-                className={`${baseBtn} ${redBtn}`}
-                onClick={() => copy(redUrl, Team.Red)}
-              >
-                {copied === Team.Red ? "Copied!" : "Copy red link"}
-              </button>
-              <button
-                className={`${baseBtn} ${redBtn}`}
-                onClick={() => handleSidePick(Team.Red)}
-              >
-                Enter as {redName}
-              </button>
-            </div>
-          </div>
+          <LobbyLink
+            title={`${redName} — Red side`}
+            url={redUrl}
+            copyLabel="Copy red link"
+            actionLabel="Enter as red team"
+            tone="red"
+            onEnter={() => handleSidePick(Team.Red)}
+          />
 
           <div className="h-px bg-tools-gold my-3" />
 
-          <div className="flex flex-col gap-2">
-            <div className="text-xs font-mono font-bold tracking-widest">
-              Spectator
-            </div>
-            <div className="bg-tools-graphite border border-white/7 rounded-lg py-2.5 px-3 font-mono text-xs break-all leading-relaxed">
-              {spectatorUrl}
-            </div>
-            <div className="flex gap-2.5 flex-wrap">
-              <button
-                className={`${baseBtn} ${neutralBtn}`}
-                onClick={() => copy(spectatorUrl, Team.Spectator)}
-              >
-                {copied === Team.Spectator ? "Copied!" : "Copy spectator link"}
-              </button>
-              <div className="flex gap-2.5 flex-wrap">
-                <button
-                  className={`${baseBtn} ${neutralBtn}`}
-                  onClick={() => handleSidePick(Team.Spectator)}
-                >
-                  Enter as Spectator
-                </button>
-              </div>
-            </div>
-          </div>
+          <LobbyLink
+            title={"Spectator"}
+            url={spectatorUrl}
+            copyLabel="Copy spectator link"
+            actionLabel="Enter as spectator"
+            tone="neutral"
+            onEnter={() => handleSidePick(Team.Spectator)}
+          />
           <LobbyReplayLink
             url={replayUrl}
             available={replayAvailable}
