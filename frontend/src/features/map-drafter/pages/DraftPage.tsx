@@ -64,7 +64,10 @@ export default function DraftPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (!params.get("room") || !params.get("side")) {
+    if (
+      !params.get("room") ||
+      (!params.get("side") && params.get("replay") !== "1")
+    ) {
       navigate("/map-draft", { replace: true });
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -188,7 +191,7 @@ export default function DraftPage() {
   const redBadgeClass = "bg-tools-red-dim text-tools-red";
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-dvh flex flex-col overflow-hidden">
       {/* Header */}
       <header className="grid grid-cols-3 px-6 border-b border-white/7 bg-tools-void/70 h-16 items-center shrink-0">
         <div className="flex items-center gap-3">
@@ -278,7 +281,7 @@ export default function DraftPage() {
       </div>
 
       {/* Main body */}
-      <div className="flex flex-row flex-1 overflow-hidden">
+      <div className="flex flex-row flex-1 min-h-0 overflow-hidden">
         {/* Blue sidebar */}
         <div className="p-4 border-r border-white/7 flex flex-col gap-2.5 w-1/6 shrink-0 overflow-y-auto">
           <div
@@ -299,8 +302,8 @@ export default function DraftPage() {
         </div>
 
         {/* Center */}
-        <div className="px-5 pt-5 flex flex-col flex-1">
-          <div className="flex-1 flex flex-col">
+        <div className="px-5 flex flex-col flex-1 min-h-0 min-w-0">
+          <div className="pt-5 flex-1 min-h-0 overflow-y-auto flex flex-col">
             {!bothReady ? (
               <div className="flex flex-col items-center justify-center h-full gap-8">
                 <div className="flex gap-6">

@@ -6,7 +6,11 @@ import {
 import { useMapDraftContext } from "@/features/map-drafter/context/MapDraftContext";
 import { useToast } from "@/features/common/components/Toast";
 import Spinner from "@/features/common/components/Spinner";
-import { SEQUENCE_MAP, SEQUENCE_LABELS } from "@map-drafter/constants.ts";
+import {
+  FORMAT_GROUPS,
+  SEQUENCE_MAP,
+  SEQUENCE_LABELS,
+} from "@map-drafter/constants.ts";
 import { Sequence, SequenceKey } from "@/features/map-drafter/types";
 import { HomeButton } from "@/features/common/components/NavButtons";
 
@@ -137,7 +141,7 @@ export default function SetupPage() {
   }
 
   return (
-    <div className="h-screen flex justify-center items-center">
+    <div className="min-h-screen flex justify-center items-center px-4 py-6">
       <div className="w-full max-w-160 flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <HomeButton />
@@ -153,7 +157,7 @@ export default function SetupPage() {
           Map <span className="text-tools-gold">Draft</span>
         </h1>
 
-        <div className="flex flex-col gap-4 bg-tools-carbon border border-white/7 rounded-2xl p-6">
+        <div className="flex flex-col gap-4 bg-tools-carbon border border-white/7 rounded-2xl p-4">
           <div className="text-sm font-mono tracking-widest uppercase">
             Teams
           </div>
@@ -176,7 +180,7 @@ export default function SetupPage() {
                 Red
               </span>
               <input
-                className="w-full bg-tools-graphite border border-white/7 rounded-lg py-2.5 pr-3 pl-16 font-head font-semibold outline-none transition-colors duration-200 focus:border-white/15"
+                className="w-full bg-tools-graphite border border-white/7 rounded-lg py-2 pr-3 pl-16 font-head font-semibold outline-none transition-colors duration-200 focus:border-white/15"
                 type="text"
                 placeholder="Team B"
                 maxLength={24}
@@ -187,27 +191,43 @@ export default function SetupPage() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-4 bg-tools-carbon border border-white/7 rounded-2xl p-6">
+        <div className="flex flex-col gap-3 bg-tools-carbon border border-white/7 rounded-2xl p-4">
           <div className="text-sm font-mono tracking-widest uppercase">
             Format
           </div>
-          <div className="grid grid-cols-2 gap-3 w-full">
-            {(Object.keys(SEQUENCE_MAP) as SequenceKey[]).sort().map((seq) => {
-              const selected = seq === bestOf;
-              return (
-                <button
-                  key={seq}
-                  className={`w-full border rounded-lg p-2 font-mono font-semibold transition-colors duration-200 uppercase ${
-                    selected
-                      ? "border-tools-gold/40 bg-tools-gold/6"
-                      : "bg-tools-graphite border-white/7"
-                  }`}
-                  onClick={() => handleBestOfChange(seq)}
+          <div className="grid gap-3 sm:grid-cols-[3fr_2fr]">
+            {FORMAT_GROUPS.map((group) => (
+              <fieldset
+                key={group.label}
+                className="min-w-0 rounded-xl border border-white/10 bg-tools-void/60 p-2"
+              >
+                <legend className="px-1 text-xs font-mono tracking-widest uppercase text-white/60">
+                  {group.label}
+                </legend>
+                <div
+                  className={`grid gap-2 w-full ${group.formats.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}
                 >
-                  {SEQUENCE_LABELS[seq]}
-                </button>
-              );
-            })}
+                  {group.formats.map((seq) => {
+                    const selected = seq === bestOf;
+                    return (
+                      <button
+                        key={seq}
+                        type="button"
+                        aria-pressed={selected}
+                        className={`w-full border rounded-lg px-2 py-2 text-sm font-mono font-semibold transition-colors duration-200 uppercase ${
+                          selected
+                            ? "border-tools-gold/40 bg-tools-gold/6"
+                            : "bg-tools-graphite border-white/7"
+                        }`}
+                        onClick={() => handleBestOfChange(seq)}
+                      >
+                        {SEQUENCE_LABELS[seq]}
+                      </button>
+                    );
+                  })}
+                </div>
+              </fieldset>
+            ))}
           </div>
 
           <div className="flex items-center justify-between h-6">

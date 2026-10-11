@@ -198,6 +198,7 @@ export default function SetupPage() {
 
                 return (
                   <button
+                    key={a}
                     type="button"
                     className={classNames(
                       "flex flex-col bg-tools-graphite items-center gap-1 p-2 rounded-lg transition-all duration-150 border ",
