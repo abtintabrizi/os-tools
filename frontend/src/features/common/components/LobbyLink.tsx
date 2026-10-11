@@ -39,6 +39,12 @@ export default function LobbyLink({
 }: LobbyLinkProps) {
   const [copied, setCopied] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const displayUrl = url.replace(/^https?:\/\//, "");
+  const queryStart = displayUrl.indexOf("?");
+  const urlPrefix =
+    queryStart === -1 ? displayUrl : displayUrl.slice(0, queryStart);
+  const queryParts =
+    queryStart === -1 ? [] : displayUrl.slice(queryStart + 1).split("&");
 
   useEffect(
     () => () => {
@@ -71,9 +77,46 @@ export default function LobbyLink({
             onClick={copy}
             aria-label={copyLabel}
             title="Click to copy link"
-            className={`w-full h-full text-left bg-tools-graphite border border-white/7 hover:border-white/20 rounded-lg py-2.5 px-3 font-mono text-xs break-all leading-relaxed transition-colors ${available ? "" : "text-white/40"}`}
+            className={`w-full h-full text-left bg-tools-graphite border border-white/7 hover:border-white/20 rounded-lg py-2.5 px-3 font-mono text-xs truncate leading-relaxed transition-colors ${available ? "" : "text-white/40"}`}
           >
-            {url}
+            {urlPrefix}
+            {queryParts.map((part, index) => {
+              const equalsIndex = part.indexOf("=");
+              const name =
+                equalsIndex === -1 ? part : part.slice(0, equalsIndex);
+              const value =
+                equalsIndex === -1 ? null : part.slice(equalsIndex + 1);
+              const pairColors = [
+                "text-tools-gold",
+                "text-violet-300",
+                "text-emerald-300",
+              ];
+              const colorIndex =
+                name === "room"
+                  ? 0
+                  : name === "side"
+                    ? 1
+                    : name === "replay"
+                      ? 2
+                      : index;
+              const pairColor = available
+                ? pairColors[colorIndex % pairColors.length]
+                : "text-white/40";
+              return (
+                <span key={index}>
+                  <span className="text-white/30">
+                    {index === 0 ? "?" : "&"}
+                  </span>
+                  <span className={pairColor}>{name}</span>
+                  {value !== null && (
+                    <>
+                      <span className="text-white/30">=</span>
+                      <span className={pairColor}>{value}</span>
+                    </>
+                  )}
+                </span>
+              );
+            })}
           </button>
           {copied && (
             <span
