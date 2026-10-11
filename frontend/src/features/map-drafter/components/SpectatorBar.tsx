@@ -7,9 +7,11 @@ import {
   DraftAction,
   Team,
 } from "@/features/common/constants/constants";
-import { Sequence } from "@/features/map-drafter/types";
-import type { MapDraftAction, MapDraftState } from "@/features/map-drafter/types";
-import { SEQUENCE_MAP } from "@map-drafter/constants.ts";
+import type {
+  MapDraftAction,
+  MapDraftState,
+} from "@/features/map-drafter/types";
+import { BO3_FORMATS, SEQUENCE_MAP } from "@map-drafter/constants.ts";
 import { deriveMapStatuses } from "@/features/map-drafter/utils";
 
 interface SequenceStep {
@@ -162,7 +164,9 @@ function SpectatorCard({
         )}
       </div>
       <span className="font-mono text-xs text-white/40 text-center leading-tight w-20 line-clamp-2 min-h-7.5">
-        {completedAction?.map ?? pendingEntry?.name ?? (isBan ? "Ban" : `G${pickNumber}`)}
+        {completedAction?.map ??
+          pendingEntry?.name ??
+          (isBan ? "Ban" : `G${pickNumber}`)}
       </span>
     </div>
   );
@@ -240,7 +244,11 @@ interface SpectatorBarProps {
   state: MapDraftState;
 }
 
-export function SpectatorBar({ timeLeft, countdownLeft, state }: SpectatorBarProps) {
+export function SpectatorBar({
+  timeLeft,
+  countdownLeft,
+  state,
+}: SpectatorBarProps) {
   const { step, done, actions, blueName, redName, readyBlue, readyRed } = state;
   const sequence: SequenceStep[] = SEQUENCE_MAP[state.bestOf];
   const bothReady = readyBlue && readyRed;
@@ -331,8 +339,7 @@ export function SpectatorBar({ timeLeft, countdownLeft, state }: SpectatorBarPro
               />
             );
           })}
-          {(state.bestOf === Sequence.BO3 ||
-            state.bestOf === Sequence.BO3EU) && (
+          {BO3_FORMATS.includes(state.bestOf) && (
             <DeciderCard mapName={deciderMap} />
           )}
         </div>

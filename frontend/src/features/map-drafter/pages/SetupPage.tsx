@@ -6,7 +6,11 @@ import {
 import { useMapDraftContext } from "@/features/map-drafter/context/MapDraftContext";
 import { useToast } from "@/features/common/components/Toast";
 import Spinner from "@/features/common/components/Spinner";
-import { SEQUENCE_MAP, SEQUENCE_LABELS } from "@map-drafter/constants.ts";
+import {
+  FORMAT_GROUPS,
+  SEQUENCE_MAP,
+  SEQUENCE_LABELS,
+} from "@map-drafter/constants.ts";
 import { Sequence, SequenceKey } from "@/features/map-drafter/types";
 import { HomeButton } from "@/features/common/components/NavButtons";
 
@@ -137,7 +141,7 @@ export default function SetupPage() {
   }
 
   return (
-    <div className="h-screen flex justify-center items-center">
+    <div className="min-h-screen flex justify-center items-center px-4 py-6">
       <div className="w-full max-w-160 flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <HomeButton />
@@ -149,7 +153,7 @@ export default function SetupPage() {
             Copy Config Link
           </button>
         </div>
-        <h1 className="text-7xl font-extrabold leading-none tracking-tight">
+        <h1 className="text-5xl font-extrabold leading-none tracking-tight">
           Map <span className="text-tools-gold">Draft</span>
         </h1>
 
@@ -191,24 +195,35 @@ export default function SetupPage() {
           <div className="text-sm font-mono tracking-widest uppercase">
             Format
           </div>
-          <div className="grid grid-cols-2 gap-3 w-full">
-            {(Object.keys(SEQUENCE_MAP) as SequenceKey[]).sort().map((seq) => {
-              const selected = seq === bestOf;
-              return (
-                <button
-                  key={seq}
-                  className={`w-full border rounded-lg p-2 font-mono font-semibold transition-colors duration-200 uppercase ${
-                    selected
-                      ? "border-tools-gold/40 bg-tools-gold/6"
-                      : "bg-tools-graphite border-white/7"
-                  }`}
-                  onClick={() => handleBestOfChange(seq)}
-                >
-                  {SEQUENCE_LABELS[seq]}
-                </button>
-              );
-            })}
-          </div>
+          {FORMAT_GROUPS.map((group) => (
+            <fieldset key={group.label} className="min-w-0">
+              <legend className="mb-2 text-xs font-mono tracking-widest uppercase text-white/50">
+                {group.label}
+              </legend>
+              <div
+                className={`grid gap-3 w-full ${group.formats.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}
+              >
+                {group.formats.map((seq) => {
+                  const selected = seq === bestOf;
+                  return (
+                    <button
+                      key={seq}
+                      type="button"
+                      aria-pressed={selected}
+                      className={`w-full border rounded-lg p-2 font-mono font-semibold transition-colors duration-200 uppercase ${
+                        selected
+                          ? "border-tools-gold/40 bg-tools-gold/6"
+                          : "bg-tools-graphite border-white/7"
+                      }`}
+                      onClick={() => handleBestOfChange(seq)}
+                    >
+                      {SEQUENCE_LABELS[seq]}
+                    </button>
+                  );
+                })}
+              </div>
+            </fieldset>
+          ))}
 
           <div className="flex items-center justify-between h-6">
             <div className="text-sm font-mono tracking-widest uppercase">

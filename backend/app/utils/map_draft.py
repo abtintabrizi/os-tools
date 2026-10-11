@@ -4,7 +4,7 @@ import random
 import time
 
 from app.constants.common import TIMER_SECONDS, Team, DraftAction
-from app.constants.map_draft import SEQUENCE_MAPPING, Sequence
+from app.constants.map_draft import BO3_SEQUENCES, SEQUENCE_MAPPING
 from app.constants.tables import Table
 from app.utils.supabase import get_room, save_room
 from app.utils.ws import manager
@@ -26,7 +26,7 @@ def get_room_lock(room_id: str) -> asyncio.Lock:
 
 
 def append_decider(maps: list[str], actions: list[dict], best_of: str) -> list[dict]:
-    if best_of not in [Sequence.BO3, Sequence.BO3EU]:
+    if best_of not in BO3_SEQUENCES:
         return actions
     used = {a["map"] for a in actions}
     remaining = [m for m in maps if m not in used]
