@@ -13,6 +13,7 @@ import {
   HomeButton,
 } from "@/features/common/components/NavButtons";
 import LoadingScreen from "@/features/common/components/LoadingScreen";
+import LobbyReplayLink from "@/features/common/components/LobbyReplayLink";
 
 export default function LobbyPage() {
   const { lobbyState, state, loading, handleSidePick } =
@@ -20,7 +21,8 @@ export default function LobbyPage() {
   const [copied, setCopied] = useState<Side | "all" | null>(null);
   const navigate = useNavigate();
 
-  const room = lobbyState ?? state;
+  const room =
+    state?.roomId === lobbyState?.roomId ? state : (lobbyState ?? state);
 
   useEffect(() => {
     if (!loading && !room) navigate("/striker-draft", { replace: true });
@@ -37,6 +39,7 @@ export default function LobbyPage() {
     map,
     awakenings,
     awakeningMode,
+    done,
   } = room;
   const isRandom = awakeningMode === "random";
 
@@ -54,7 +57,7 @@ export default function LobbyPage() {
   }
 
   async function copyAll() {
-    const text = `${blueName} - ${blueUrl}\n${redName} - ${redUrl}\nSPECTATOR - ${spectatorUrl}`;
+    const text = `${blueName} - ${blueUrl}\n${redName} - ${redUrl}\nSPECTATOR - ${spectatorUrl}\nREPLAY${!done ? " (unavailable until draft complete)" : ""} - ${replayUrl}`;
     await navigator.clipboard.writeText(text);
     setCopied("all");
     setTimeout(() => setCopied(null), 2000);
@@ -63,6 +66,11 @@ export default function LobbyPage() {
   const blueUrl = buildUrl(Team.Blue);
   const redUrl = buildUrl(Team.Red);
   const spectatorUrl = buildUrl(Team.Spectator);
+  const replayLink = new URL(spectatorUrl);
+  replayLink.searchParams.delete("side");
+  replayLink.searchParams.set("replay", "1");
+  const replayUrl = replayLink.toString();
+  const replayAvailable = Boolean(room.done && room.replayEvents?.length);
 
   const baseBtn =
     "px-2.5 py-2.5 rounded-lg font-head text-sm font-bold transition-all duration-150";
@@ -74,10 +82,10 @@ export default function LobbyPage() {
     "border border-white/7 bg-transparent hover:border-white/15 hover:bg-white/5";
 
   return (
-    <div className="h-screen flex justify-center items-center">
+    <div className="min-h-screen py-6 flex justify-center items-center">
       <div className="grid grid-cols-3 gap-5 p-5">
         {isRandom && bannedStarts && bannedStarts.length > 0 && (
-          <div className="flex flex-col gap-4 bg-tools-carbon border border-white/7 rounded-2xl p-6 justify-center items-center">
+          <div className="self-start flex flex-col gap-4 bg-tools-carbon border border-white/7 rounded-2xl p-6 justify-center items-center">
             <div className="text-sm font-mono tracking-widest uppercase w-full">
               Starting Awakenings — Banned
             </div>
@@ -212,6 +220,11 @@ export default function LobbyPage() {
                 </div>
               </div>
             </div>
+            <LobbyReplayLink
+              url={replayUrl}
+              available={replayAvailable}
+              completed={room.done}
+            />
           </div>
         </div>
       </div>

@@ -26,12 +26,19 @@ black .                                                     # Format all backend
 
 No test suite exists in either package.
 
-## Formatting & Linting
+## Formatting, Linting & Build Validation
 
 Always run after making changes to frontend files:
 
 1. `npx prettier --write <file>` — format changed `.ts` / `.tsx` files. Config is in `frontend/.prettierrc`.
 2. `npx eslint <file>` — check for lint errors. Fix any warnings/errors before finishing.
+3. `npm run build` — run from `frontend/` after formatting and linting. This runs `tsc` to check TypeScript types, then `vite build` to verify production bundling, imports, assets, and build configuration. Output goes to `frontend/dist/`; this does not deploy the app.
+
+Formatting checks code style, ESLint checks code rules, and TypeScript checks types. Passing lint does not mean TypeScript passes. Always complete all three steps after frontend changes and fix any errors before finishing. If a check is blocked, explicitly report what could not be verified.
+
+For quick intermediate type checks, run `npx tsc --noEmit` from `frontend/`; this does not replace the final production build.
+
+On Windows PowerShell, use `npm.cmd` and `npx.cmd` if execution policy blocks the `.ps1` wrappers.
 
 Always run after making changes to backend files:
 
