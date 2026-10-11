@@ -4,8 +4,6 @@ A real-time draft tool for competitive play, supporting both map selection and s
 
 Live at: [drafter.bestieinslot.com](https://drafter.bestieinslot.com)
 
-Live at: [https://os-tools-theta.vercel.app/](https://https://os-tools-theta.vercel.app/)
-
 ---
 
 ## Features

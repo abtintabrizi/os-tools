@@ -5,6 +5,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    date: "2026-10-10",
+    notes: [
+      "Added the South American best of three map draft format",
+      "Fixed an issue with the replay system not working",
+    ],
+  },
+  {
     date: "2026-08-13",
     notes: [
       "Added the best of two map draft format",

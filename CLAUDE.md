@@ -5,6 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ### Frontend (`frontend/`)
+
 ```bash
 npm run dev      # Dev server on http://localhost:5173
 npm run build    # tsc + vite build (type-check included)
@@ -13,6 +14,7 @@ npx prettier --write .  # Format all frontend files
 ```
 
 ### Backend (`backend/`)
+
 ```bash
 # Activate venv first (Windows)
 source .venv/Scripts/activate
@@ -27,10 +29,12 @@ No test suite exists in either package.
 ## Formatting & Linting
 
 Always run after making changes to frontend files:
+
 1. `npx prettier --write <file>` — format changed `.ts` / `.tsx` files. Config is in `frontend/.prettierrc`.
 2. `npx eslint <file>` — check for lint errors. Fix any warnings/errors before finishing.
 
 Always run after making changes to backend files:
+
 - `black <file>` — format changed `.py` files. Black is in `requirements.txt` and available when the venv is active.
 
 ## Architecture
@@ -49,6 +53,7 @@ features/
 ```
 
 Each feature follows the same internal pattern:
+
 - `pages/` — SetupPage → LobbyPage → DraftPage (three-step flow)
 - `context/` — single React Context + Provider that owns all state for the feature; consumed by pages and components via `useXxxDraftContext()`
 - `hooks/useXxxDraftApi` — all HTTP and WebSocket calls; returns state derived from the WebSocket stream
@@ -75,6 +80,7 @@ app/
 ```
 
 Each draft type has 6 endpoints:
+
 - `POST /rooms` — create room, persist initial state
 - `GET /rooms/{id}` — fetch current state
 - `POST /rooms/{id}/ready` — mark a team ready; starts timer when both sides are ready
@@ -100,13 +106,19 @@ Each room has two awakenings (one per team), either randomly generated or custom
 4. Create a new feature module in `frontend/src/features/` mirroring the `map-drafter` or `striker-draft` structure
 5. Add routes in `frontend/src/app/router.tsx`
 
+## Testing
+
+Do not create test files.
+
 ## Environment
 
 **Backend** (`backend/.env`):
+
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 
 **Frontend** (`frontend/.env`):
+
 - `VITE_API_BASE_URL` — backend base URL; defaults to `http://127.0.0.1:8000` if unset
 
 CORS allowed origins are hardcoded in `backend/app/main.py`.
