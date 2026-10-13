@@ -2,13 +2,7 @@ import { useRef } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { AnimatedNumber } from "@/features/common/components/AnimatedNumber";
 
-import {
-  ALL_STRIKERS,
-  ALL_MAPS,
-  ALL_AWAKENINGS,
-  DraftAction,
-  Team,
-} from "@/features/common/constants/constants";
+import { ALL_STRIKERS, ALL_MAPS, ALL_AWAKENINGS, DraftAction, Team } from "@/features/common/constants/constants";
 import type { StrikerDraftAction, StrikerDraftState } from "@/features/striker-draft/types";
 import { STRIKER_SEQUENCE } from "@/features/striker-draft/constants";
 
@@ -32,12 +26,8 @@ function StrikerCard({
   timeLeft,
 }: StrikerCardProps) {
   const wasFilledOnMount = useRef(!!completedAction);
-  const strikerEntry = completedAction?.striker
-    ? ALL_STRIKERS.find((s) => s.name === completedAction.striker)
-    : null;
-  const pendingEntry = pendingStriker
-    ? ALL_STRIKERS.find((s) => s.name === pendingStriker)
-    : null;
+  const strikerEntry = completedAction?.striker ? ALL_STRIKERS.find((s) => s.name === completedAction.striker) : null;
+  const pendingEntry = pendingStriker ? ALL_STRIKERS.find((s) => s.name === pendingStriker) : null;
   const isNoBan = !!completedAction && !completedAction.striker;
 
   return (
@@ -100,9 +90,7 @@ function StrikerCard({
             key={completedAction.striker}
             className="absolute inset-0 pointer-events-none"
             style={{
-              background: isBan
-                ? "rgba(239,68,68,0.2)"
-                : "rgba(34,197,94,0.15)",
+              background: isBan ? "rgba(239,68,68,0.2)" : "rgba(34,197,94,0.15)",
             }}
             initial={{ opacity: 1 }}
             animate={{ opacity: 0 }}
@@ -144,11 +132,7 @@ function StrikerCard({
             <AnimatedNumber
               value={timeLeft}
               className={`font-mono font-bold tabular-nums text-2xl ${
-                timeLeft <= 5
-                  ? "text-tools-red"
-                  : timeLeft <= 10
-                    ? "text-amber-400"
-                    : "text-white/70"
+                timeLeft <= 5 ? "text-tools-red" : timeLeft <= 10 ? "text-amber-400" : "text-white/70"
               }`}
             />
           </div>
@@ -159,9 +143,9 @@ function StrikerCard({
           ? (completedAction.striker ?? "No Ban")
           : pendingEntry
             ? pendingEntry.name
-          : isBan
-            ? "Ban"
-            : "Pick"}
+            : isBan
+              ? "Ban"
+              : "Pick"}
       </span>
     </div>
   );
@@ -173,22 +157,8 @@ interface StrikerSpectatorBarProps {
   state: StrikerDraftState;
 }
 
-export function StrikerSpectatorBar({
-  timeLeft,
-  countdownLeft,
-  state,
-}: StrikerSpectatorBarProps) {
-  const {
-    step,
-    done,
-    actions,
-    blueName,
-    redName,
-    readyBlue,
-    readyRed,
-    map,
-    awakenings,
-  } = state;
+export function StrikerSpectatorBar({ timeLeft, countdownLeft, state }: StrikerSpectatorBarProps) {
+  const { step, done, actions, blueName, redName, readyBlue, readyRed, map, awakenings } = state;
   const bothReady = readyBlue && readyRed;
 
   const mapEntry = ALL_MAPS.find((m) => m.name === map);
@@ -201,28 +171,19 @@ export function StrikerSpectatorBar({
       <div className="flex items-center gap-4 shrink-0">
         {mapEntry && (
           <div className="w-20 flex flex-col items-center gap-1">
-            <img
-              src={mapEntry.icon}
-              alt={map}
-              className="w-16 h-16 rounded-lg object-cover"
-            />
+            {mapEntry.icon && <img src={mapEntry.icon} alt={map} className="w-16 h-16 rounded-lg object-cover" />}
             <span className="font-mono text-[10px] font-semibold text-white/60 text-center w-full line-clamp-2 leading-tight">
               {map}
             </span>
           </div>
         )}
-        {mapEntry && awakenings.length > 0 && (
-          <div className="w-px h-12 bg-white/10" />
-        )}
+        {mapEntry && awakenings.length > 0 && <div className="w-px h-12 bg-white/10" />}
         {awakenings.map((aw) => {
           const awEntry = ALL_AWAKENINGS.find((a) => a.name === aw);
+
           return awEntry ? (
             <div key={aw} className="w-20 flex flex-col items-center gap-1">
-              <img
-                src={awEntry.icon}
-                alt={aw}
-                className="w-16 h-16 object-contain"
-              />
+              <img src={awEntry.icon} alt={aw} className="w-16 h-16 object-contain" />
               <span className="font-mono text-[10px] text-white/50 text-center w-full line-clamp-2 leading-tight">
                 {aw}
               </span>
@@ -239,17 +200,13 @@ export function StrikerSpectatorBar({
             >
               Blue
             </span>
-            <span className="font-mono text-sm font-bold max-w-full truncate">
-              {blueName}
-            </span>
+            <span className="font-mono text-sm font-bold max-w-full truncate">{blueName}</span>
             {readyBlue ? (
               <span className="font-mono text-xs tracking-widest uppercase text-tools-green-light bg-tools-green/10 px-3 py-1 rounded border border-tools-green/20">
                 Ready
               </span>
             ) : (
-              <span className="font-mono text-xs tracking-widest uppercase text-white/25 px-3 py-1">
-                Not ready
-              </span>
+              <span className="font-mono text-xs tracking-widest uppercase text-white/25 px-3 py-1">Not ready</span>
             )}
           </div>
           <div className="w-px bg-white/7 self-stretch" />
@@ -259,24 +216,19 @@ export function StrikerSpectatorBar({
             >
               Red
             </span>
-            <span className="font-mono text-sm font-bold max-w-full truncate">
-              {redName}
-            </span>
+            <span className="font-mono text-sm font-bold max-w-full truncate">{redName}</span>
             {readyRed ? (
               <span className="font-mono text-xs tracking-widest uppercase text-tools-green-light bg-tools-green/10 px-3 py-1 rounded border border-tools-green/20">
                 Ready
               </span>
             ) : (
-              <span className="font-mono text-xs tracking-widest uppercase text-white/25 px-3 py-1">
-                Not ready
-              </span>
+              <span className="font-mono text-xs tracking-widest uppercase text-white/25 px-3 py-1">Not ready</span>
             )}
           </div>
         </div>
       ) : countdownLeft > 0 && actions.length === 0 ? (
         <span className="font-mono text-sm tracking-widest text-white/50">
-          Starting in{" "}
-          <strong className="text-tools-gold">{countdownLeft}</strong>
+          Starting in <strong className="text-tools-gold">{countdownLeft}</strong>
         </span>
       ) : (
         <div className="flex gap-2">
@@ -286,11 +238,7 @@ export function StrikerSpectatorBar({
             const isBan = s.action === DraftAction.Ban;
             const teamName = isBlue ? blueName : redName;
             const isCurrent = !done && i === step;
-            const pendingStriker = isCurrent
-              ? isBlue
-                ? state.pendingBlue
-                : state.pendingRed
-              : null;
+            const pendingStriker = isCurrent ? (isBlue ? state.pendingBlue : state.pendingRed) : null;
 
             return (
               <StrikerCard

@@ -1,12 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { SEQUENCE_MAP } from "@map-drafter/constants.ts";
-import {
-  ALL_MAPS,
-  TIMER_SECONDS,
-  Team,
-  DraftAction,
-} from "@/features/common/constants/constants";
+import { ALL_MAPS, TIMER_SECONDS, Team, DraftAction } from "@/features/common/constants/constants";
 import { deriveMapStatuses } from "@/features/map-drafter/utils";
 import LoadingScreen from "@/features/common/components/LoadingScreen";
 import ErrorScreen from "@/features/map-drafter/components/ErrorScreen";
@@ -16,25 +11,14 @@ import DonePanel from "@/features/map-drafter/components/DonePanel";
 import { MapSidebarCard } from "@/features/map-drafter/components/MapSidebarCard";
 import { AnimatedNumber } from "@/features/common/components/AnimatedNumber";
 import { SpectatorBar } from "@/features/map-drafter/components/SpectatorBar";
-import {
-  BackButton,
-  HomeButton,
-} from "@/features/common/components/NavButtons";
+import { BackButton, HomeButton } from "@/features/common/components/NavButtons";
 import { useDraftReplay } from "@/features/common/hooks/useDraftReplay";
 import { ReplayControls } from "@/features/common/components/ReplayControls";
 import { ReplayTimeline } from "@/features/common/components/ReplayTimeline";
 
 export default function DraftPage() {
-  const {
-    state: completedState,
-    side,
-    loading,
-    handleAction,
-    handlePending,
-    handleReady,
-  } = useMapDraftContext();
-  const isReplay =
-    new URLSearchParams(window.location.search).get("replay") === "1";
+  const { state: completedState, side, loading, handleAction, handlePending, handleReady } = useMapDraftContext();
+  const isReplay = new URLSearchParams(window.location.search).get("replay") === "1";
   const {
     state,
     playing,
@@ -64,57 +48,57 @@ export default function DraftPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (
-      !params.get("room") ||
-      (!params.get("side") && params.get("replay") !== "1")
-    ) {
+    if (!params.get("room") || (!params.get("side") && params.get("replay") !== "1")) {
       navigate("/map-draft", { replace: true });
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (
-      !state?.stepStartedAt ||
-      state.done ||
-      !state.readyBlue ||
-      !state.readyRed
-    ) {
+    if (!state?.stepStartedAt || state.done || !state.readyBlue || !state.readyRed) {
       setTimeLeft(TIMER_SECONDS);
+
       return;
     }
+
     function tick() {
       const stepStartedAt = stepStartedAtRef.current;
       if (!stepStartedAt) {
         setTimeLeft(TIMER_SECONDS);
+
         return;
       }
       const now = Date.now() / 1000 + clockOffsetRef.current;
       if (now < stepStartedAt) {
         setTimeLeft(TIMER_SECONDS);
+
         return;
       }
-      setTimeLeft(
-        Math.max(0, Math.ceil(TIMER_SECONDS - (now - stepStartedAt))),
-      );
+      setTimeLeft(Math.max(0, Math.ceil(TIMER_SECONDS - (now - stepStartedAt))));
     }
+
     tick();
     const id = setInterval(tick, 250);
+
     return () => clearInterval(id);
   }, [state?.stepStartedAt, state?.done, state?.readyBlue, state?.readyRed]);
 
   useEffect(() => {
     if (!state?.stepStartedAt || !state.readyBlue || !state.readyRed) return;
+
     function tick() {
       const stepStartedAt = stepStartedAtRef.current;
       if (!stepStartedAt) {
         setCountdownLeft(0);
+
         return;
       }
       const now = Date.now() / 1000 + clockOffsetRef.current;
       setCountdownLeft(Math.max(0, Math.ceil(stepStartedAt - now)));
     }
+
     tick();
     const id = setInterval(tick, 100);
+
     return () => clearInterval(id);
   }, [state?.stepStartedAt, state?.readyBlue, state?.readyRed]);
 
@@ -124,6 +108,7 @@ export default function DraftPage() {
     } else {
       document.title = "OS Map Draft";
     }
+
     return () => {
       document.title = "OS Map Draft";
     };
@@ -135,13 +120,8 @@ export default function DraftPage() {
   const bothReady = state.readyBlue && state.readyRed;
   const { step, done, maps, actions, blueName, redName } = state;
   const sequence = SEQUENCE_MAP[state.bestOf];
-  const currentSeqStep =
-    !done && step < sequence.length ? sequence[step] : null;
-  const currentTeam = currentSeqStep
-    ? currentSeqStep.team === Team.Blue
-      ? blueName
-      : redName
-    : null;
+  const currentSeqStep = !done && step < sequence.length ? sequence[step] : null;
+  const currentTeam = currentSeqStep ? (currentSeqStep.team === Team.Blue ? blueName : redName) : null;
   const isMyTurn = currentSeqStep !== null && currentSeqStep.team === side;
 
   const pending =
@@ -157,12 +137,8 @@ export default function DraftPage() {
 
   const mapStatuses = deriveMapStatuses(state, sequence);
 
-  const blueSeqSteps = sequence
-    .map((s, globalIdx) => ({ ...s, globalIdx }))
-    .filter((s) => s.team === Team.Blue);
-  const redSeqSteps = sequence
-    .map((s, globalIdx) => ({ ...s, globalIdx }))
-    .filter((s) => s.team === Team.Red);
+  const blueSeqSteps = sequence.map((s, globalIdx) => ({ ...s, globalIdx })).filter((s) => s.team === Team.Blue);
+  const redSeqSteps = sequence.map((s, globalIdx) => ({ ...s, globalIdx })).filter((s) => s.team === Team.Red);
 
   function handleMapClick(map: string) {
     if (!isMyTurn || mapStatuses[map] !== "available") return;
@@ -184,6 +160,7 @@ export default function DraftPage() {
   function sideLabel() {
     if (side === Team.Blue) return blueName;
     if (side === Team.Red) return redName;
+
     return "Spectating";
   }
 
@@ -209,11 +186,7 @@ export default function DraftPage() {
         </div>
 
         <div className="flex items-center justify-center">
-          <StepTracker
-            step={step}
-            sequence={SEQUENCE_MAP[state.bestOf]}
-            done={done}
-          />
+          <StepTracker step={step} sequence={SEQUENCE_MAP[state.bestOf]} done={done} />
         </div>
 
         <div className="flex justify-end items-center gap-3">
@@ -237,19 +210,14 @@ export default function DraftPage() {
         <div />
         <div className="flex items-center justify-center gap-3">
           {!bothReady ? (
-            <span className="font-mono text-sm tracking-widest">
-              Waiting for both teams to ready up
-            </span>
+            <span className="font-mono text-sm tracking-widest">Waiting for both teams to ready up</span>
           ) : countdownLeft > 0 && actions.length === 0 ? (
             <span className="font-mono text-sm tracking-widest">
-              Starting in{" "}
-              <strong className="text-tools-gold">{countdownLeft}</strong>
+              Starting in <strong className="text-tools-gold">{countdownLeft}</strong>
             </span>
           ) : done ? (
             <>
-              <span className="font-mono text-sm tracking-widest">
-                Draft complete
-              </span>
+              <span className="font-mono text-sm tracking-widest">Draft complete</span>
               <span className="font-mono text-sm tracking-widest py-0.75 px-2.5 rounded uppercase bg-tools-gold/10 text-tools-gold">
                 Done
               </span>
@@ -290,14 +258,7 @@ export default function DraftPage() {
             {blueName}
           </div>
           {blueSeqSteps.map((s, i) => (
-            <MapSidebarCard
-              key={s.globalIdx}
-              step={s}
-              cardIndex={i}
-              isBlue
-              timeLeft={timeLeft}
-              state={state}
-            />
+            <MapSidebarCard key={s.globalIdx} step={s} cardIndex={i} isBlue timeLeft={timeLeft} state={state} />
           ))}
         </div>
 
@@ -313,9 +274,7 @@ export default function DraftPage() {
                     >
                       Blue
                     </span>
-                    <span className="font-mono text-sm font-bold max-w-full truncate">
-                      {blueName}
-                    </span>
+                    <span className="font-mono text-sm font-bold max-w-full truncate">{blueName}</span>
                     {state.readyBlue ? (
                       <span className="font-mono text-xs tracking-widest uppercase text-tools-green-light bg-tools-green/10 px-3 py-1.5 rounded border border-tools-green/20">
                         Ready
@@ -342,9 +301,7 @@ export default function DraftPage() {
                     >
                       Red
                     </span>
-                    <span className="font-mono text-sm font-bold max-w-full truncate">
-                      {redName}
-                    </span>
+                    <span className="font-mono text-sm font-bold max-w-full truncate">{redName}</span>
                     {state.readyRed ? (
                       <span className="font-mono text-xs tracking-widest uppercase text-tools-green-light bg-tools-green/10 px-3 py-1.5 rounded border border-tools-green/20">
                         Ready
@@ -366,9 +323,7 @@ export default function DraftPage() {
               </div>
             ) : countdownLeft > 0 && actions.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full gap-4">
-                <span className="font-mono text-lg tracking-widest uppercase text-white/40">
-                  Draft starting in
-                </span>
+                <span className="font-mono text-lg tracking-widest uppercase text-white/40">Draft starting in</span>
                 <AnimatedNumber
                   value={countdownLeft}
                   className="font-mono font-bold tabular-nums text-8xl text-tools-gold"
@@ -381,11 +336,7 @@ export default function DraftPage() {
                 <AnimatedNumber
                   value={timeLeft}
                   className={`font-mono font-bold tabular-nums mb-4 text-6xl transition-colors ${
-                    timeLeft <= 5
-                      ? "text-tools-red"
-                      : timeLeft <= 10
-                        ? "text-amber-400"
-                        : "text-white/30"
+                    timeLeft <= 5 ? "text-tools-red" : timeLeft <= 10 ? "text-amber-400" : "text-white/30"
                   }`}
                 />
                 <div className="grid grid-cols-4 gap-3 mb-3">
@@ -394,25 +345,17 @@ export default function DraftPage() {
                     const isDecider = status === "decider";
                     const clickable = status === "available" && isMyTurn;
                     const isPick = status.startsWith("picked-");
-                    const gameNum = isPick
-                      ? status.replace("picked-g", "")
-                      : null;
-                    const image = ALL_MAPS.find((m) => m.name === map)?.image;
+                    const gameNum = isPick ? status.replace("picked-g", "") : null;
+                    const image = ALL_MAPS.find((m) => m.name === map)?.blurredImage;
                     const pickAction = isPick
-                      ? actions.find(
-                          (a) => a.map === map && a.action === DraftAction.Pick,
-                        )
+                      ? actions.find((a) => a.map === map && a.action === DraftAction.Pick)
                       : null;
                     const pickTeam = pickAction?.team ?? null;
                     const banTeam =
                       status === "banned"
-                        ? (actions.find(
-                            (a) =>
-                              a.map === map && a.action === DraftAction.Ban,
-                          )?.team ?? null)
+                        ? (actions.find((a) => a.map === map && a.action === DraftAction.Ban)?.team ?? null)
                         : null;
-                    const isBanning =
-                      currentSeqStep?.action === DraftAction.Ban;
+                    const isBanning = currentSeqStep?.action === DraftAction.Ban;
 
                     const isSelected = pending === map;
 
@@ -436,19 +379,8 @@ export default function DraftPage() {
                     ].join(" ");
 
                     return (
-                      <button
-                        key={map}
-                        className={cardClass}
-                        onClick={() => handleMapClick(map)}
-                        disabled={!clickable}
-                      >
-                        {image && (
-                          <img
-                            src={image}
-                            alt={map}
-                            className="w-full h-full object-cover"
-                          />
-                        )}
+                      <button key={map} className={cardClass} onClick={() => handleMapClick(map)} disabled={!clickable}>
+                        {image && <img src={image} alt={map} className="w-full h-full object-cover" />}
                         <div className="absolute inset-0 bg-linear-to-t from-black/70 to-transparent" />
                         {isPick && pickTeam && (
                           <div className="absolute inset-0 flex items-center justify-center">
@@ -475,11 +407,7 @@ export default function DraftPage() {
                           <span className="font-semibold leading-tight line-through text-tools-red-light">
                             {status === "banned" ? map : ""}
                           </span>
-                          {status !== "banned" && (
-                            <span className="font-semibold leading-tight">
-                              {map}
-                            </span>
-                          )}
+                          {status !== "banned" && <span className="font-semibold leading-tight">{map}</span>}
                         </div>
                       </button>
                     );
@@ -524,11 +452,7 @@ export default function DraftPage() {
                   />
                 </>
               ) : null}
-              <SpectatorBar
-                timeLeft={timeLeft}
-                countdownLeft={countdownLeft}
-                state={state}
-              />
+              <SpectatorBar timeLeft={timeLeft} countdownLeft={countdownLeft} state={state} />
             </>
           )}
         </div>
@@ -541,14 +465,7 @@ export default function DraftPage() {
             {redName}
           </div>
           {redSeqSteps.map((s, i) => (
-            <MapSidebarCard
-              key={s.globalIdx}
-              step={s}
-              cardIndex={i}
-              isBlue={false}
-              timeLeft={timeLeft}
-              state={state}
-            />
+            <MapSidebarCard key={s.globalIdx} step={s} cardIndex={i} isBlue={false} timeLeft={timeLeft} state={state} />
           ))}
         </div>
       </div>

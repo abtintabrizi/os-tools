@@ -1,16 +1,9 @@
 import { useEffect, useState } from "react";
-import {
-  ALL_MAPS,
-  CURRENT_MAP_POOL,
-} from "@/features/common/constants/constants";
+import { ALL_MAPS, CURRENT_MAP_POOL } from "@/features/common/constants/constants";
 import { useMapDraftContext } from "@/features/map-drafter/context/MapDraftContext";
 import { useToast } from "@/features/common/components/Toast";
 import Spinner from "@/features/common/components/Spinner";
-import {
-  FORMAT_GROUPS,
-  SEQUENCE_MAP,
-  SEQUENCE_LABELS,
-} from "@map-drafter/constants.ts";
+import { FORMAT_GROUPS, SEQUENCE_MAP, SEQUENCE_LABELS } from "@map-drafter/constants.ts";
 import { Sequence, SequenceKey } from "@/features/map-drafter/types";
 import { HomeButton } from "@/features/common/components/NavButtons";
 
@@ -19,10 +12,12 @@ export default function SetupPage() {
   const { handleLaunch } = useMapDraftContext();
   const [blueName, setBlueName] = useState(() => {
     const params = new URLSearchParams(window.location.search);
+
     return params.get("blue") ?? "";
   });
   const [redName, setRedName] = useState(() => {
     const params = new URLSearchParams(window.location.search);
+
     return params.get("red") ?? "";
   });
   const [bestOf, setBestOf] = useState<SequenceKey>(() => {
@@ -30,9 +25,11 @@ export default function SetupPage() {
     const urlFormat = params.get("format");
     if (urlFormat && urlFormat in SEQUENCE_MAP) {
       localStorage.setItem("mapDraftBestOf", urlFormat);
+
       return urlFormat as SequenceKey;
     }
     const stored = localStorage.getItem("mapDraftBestOf") as SequenceKey | null;
+
     return stored && stored in SEQUENCE_MAP ? stored : Sequence.BO3;
   });
   const [enabledMaps, setEnabledMaps] = useState<Set<string>>(() => {
@@ -42,12 +39,9 @@ export default function SetupPage() {
       const urlPool = params.get("pool");
       if (urlPool) {
         const parsed = JSON.parse(urlPool) as string[];
-        if (
-          Array.isArray(parsed) &&
-          parsed.length > 0 &&
-          parsed.every((m) => allMapNames.has(m))
-        ) {
+        if (Array.isArray(parsed) && parsed.length > 0 && parsed.every((m) => allMapNames.has(m))) {
           localStorage.setItem("mapDraftEnabledMaps", JSON.stringify(parsed));
+
           return new Set(parsed);
         }
       }
@@ -60,18 +54,14 @@ export default function SetupPage() {
     } catch {
       // ignore parse errors, fall back to default
     }
+
     return new Set(CURRENT_MAP_POOL);
   });
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (
-      params.has("pool") ||
-      params.has("format") ||
-      params.has("blue") ||
-      params.has("red")
-    ) {
+    if (params.has("pool") || params.has("format") || params.has("blue") || params.has("red")) {
       window.history.replaceState(null, "", window.location.pathname);
     }
   }, []);
@@ -82,6 +72,7 @@ export default function SetupPage() {
       if (next.has(map)) next.delete(map);
       else next.add(map);
       localStorage.setItem("mapDraftEnabledMaps", JSON.stringify([...next]));
+
       return next;
     });
   }
@@ -93,10 +84,7 @@ export default function SetupPage() {
 
   function resetEnabledMaps() {
     setEnabledMaps(new Set(CURRENT_MAP_POOL));
-    localStorage.setItem(
-      "mapDraftEnabledMaps",
-      JSON.stringify(CURRENT_MAP_POOL),
-    );
+    localStorage.setItem("mapDraftEnabledMaps", JSON.stringify(CURRENT_MAP_POOL));
   }
 
   function handleCopyConfigLink() {
@@ -117,9 +105,7 @@ export default function SetupPage() {
   }
 
   async function handleSubmit() {
-    const maps = ALL_MAPS.filter((m) => enabledMaps.has(m.name)).map(
-      (m) => m.name,
-    );
+    const maps = ALL_MAPS.filter((m) => enabledMaps.has(m.name)).map((m) => m.name);
     setLoading(true);
     try {
       await handleLaunch({
@@ -130,8 +116,7 @@ export default function SetupPage() {
       });
     } catch (e) {
       toast({
-        message:
-          e instanceof Error ? e.message : "An unexpected error occurred",
+        message: e instanceof Error ? e.message : "An unexpected error occurred",
         variant: "error",
         position: "top-center",
       });
@@ -158,9 +143,7 @@ export default function SetupPage() {
         </h1>
 
         <div className="flex flex-col gap-4 bg-tools-carbon border border-white/7 rounded-2xl p-4">
-          <div className="text-sm font-mono tracking-widest uppercase">
-            Teams
-          </div>
+          <div className="text-sm font-mono tracking-widest uppercase">Teams</div>
           <div className="grid grid-cols-2 gap-3">
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-mono font-bold tracking-widest py-0.5 px-1.75 rounded pointer-events-none bg-tools-blue-dim text-tools-blue">
@@ -192,32 +175,24 @@ export default function SetupPage() {
         </div>
 
         <div className="flex flex-col gap-3 bg-tools-carbon border border-white/7 rounded-2xl p-4">
-          <div className="text-sm font-mono tracking-widest uppercase">
-            Format
-          </div>
+          <div className="text-sm font-mono tracking-widest uppercase">Format</div>
           <div className="grid gap-3 sm:grid-cols-[3fr_2fr]">
             {FORMAT_GROUPS.map((group) => (
-              <fieldset
-                key={group.label}
-                className="min-w-0 rounded-xl border border-white/10 bg-tools-void/60 p-2"
-              >
+              <fieldset key={group.label} className="min-w-0 rounded-xl border border-white/10 bg-tools-void/60 p-2">
                 <legend className="px-1 text-xs font-mono tracking-widest uppercase text-white/60">
                   {group.label}
                 </legend>
-                <div
-                  className={`grid gap-2 w-full ${group.formats.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}
-                >
+                <div className={`grid gap-2 w-full ${group.formats.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
                   {group.formats.map((seq) => {
                     const selected = seq === bestOf;
+
                     return (
                       <button
                         key={seq}
                         type="button"
                         aria-pressed={selected}
                         className={`w-full border rounded-lg px-2 py-2 text-sm font-mono font-semibold transition-colors duration-200 uppercase ${
-                          selected
-                            ? "border-tools-gold/40 bg-tools-gold/6"
-                            : "bg-tools-graphite border-white/7"
+                          selected ? "border-tools-gold/40 bg-tools-gold/6" : "bg-tools-graphite border-white/7"
                         }`}
                         onClick={() => handleBestOfChange(seq)}
                       >
@@ -231,12 +206,9 @@ export default function SetupPage() {
           </div>
 
           <div className="flex items-center justify-between h-6">
-            <div className="text-sm font-mono tracking-widest uppercase">
-              Map pool — click to toggle
-            </div>
+            <div className="text-sm font-mono tracking-widest uppercase">Map pool — click to toggle</div>
             <div className="flex items-center gap-3">
-              {(enabledMaps.size !== CURRENT_MAP_POOL.length ||
-                !CURRENT_MAP_POOL.every((m) => enabledMaps.has(m))) && (
+              {(enabledMaps.size !== CURRENT_MAP_POOL.length || !CURRENT_MAP_POOL.every((m) => enabledMaps.has(m))) && (
                 <button
                   onClick={resetEnabledMaps}
                   type="button"
@@ -255,13 +227,12 @@ export default function SetupPage() {
           <div className="grid grid-cols-3 gap-2">
             {ALL_MAPS.map((map) => {
               const on = enabledMaps.has(map.name);
+
               return (
                 <button
                   key={map.name}
                   className={`border rounded-lg py-2.5 px-3.5 font-head text-sm font-medium flex items-center gap-2 transition-all duration-150 select-none text-left ${
-                    on
-                      ? "border-tools-gold/40  bg-tools-gold/6"
-                      : "bg-tools-graphite border-white/7 "
+                    on ? "border-tools-gold/40  bg-tools-gold/6" : "bg-tools-graphite border-white/7 "
                   }`}
                   onClick={() => toggleMap(map.name)}
                 >
@@ -282,11 +253,7 @@ export default function SetupPage() {
           onClick={handleSubmit}
           disabled={loading || enabledMaps.size !== 7}
         >
-          {loading ? (
-            <Spinner size="lg" primary="white" secondary="black" />
-          ) : (
-            "Create Map Draft Room →"
-          )}
+          {loading ? <Spinner size="lg" primary="white" secondary="black" /> : "Create Map Draft Room →"}
         </button>
       </div>
     </div>

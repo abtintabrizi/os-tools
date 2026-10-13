@@ -4,8 +4,10 @@ import MapDraft from "@/routes/MapDraft";
 import StrikerDraft from "@/routes/StrikerDraft";
 import MapDraftPages from "@/features/map-drafter/pages";
 import StrikerDraftPages from "@/features/striker-draft/pages";
+import TacticsPage from "@/features/tactics/pages/TacticsPage";
 
 export const router = createBrowserRouter([
+  { path: "/tactics", element: <TacticsPage /> },
   {
     path: "/",
     element: <Home />,

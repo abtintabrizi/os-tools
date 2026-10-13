@@ -17,10 +17,7 @@ import type { IndexedStep } from "@/features/striker-draft/types";
 import { SidebarCard } from "@/features/striker-draft/components/SidebarCard";
 import { AnimatedNumber } from "@/features/common/components/AnimatedNumber";
 import { StrikerSpectatorBar } from "@/features/striker-draft/components/StrikerSpectatorBar";
-import {
-  BackButton,
-  HomeButton,
-} from "@/features/common/components/NavButtons";
+import { BackButton, HomeButton } from "@/features/common/components/NavButtons";
 import { useDraftReplay } from "@/features/common/hooks/useDraftReplay";
 import { ReplayControls } from "@/features/common/components/ReplayControls";
 import { ReplayTimeline } from "@/features/common/components/ReplayTimeline";
@@ -35,8 +32,7 @@ export default function DraftPage() {
     handlePending,
     handleReady,
   } = useStrikerDraftContext();
-  const isReplay =
-    new URLSearchParams(window.location.search).get("replay") === "1";
+  const isReplay = new URLSearchParams(window.location.search).get("replay") === "1";
   const {
     state,
     playing,
@@ -67,57 +63,57 @@ export default function DraftPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (
-      !params.get("room") ||
-      (!params.get("side") && params.get("replay") !== "1")
-    ) {
+    if (!params.get("room") || (!params.get("side") && params.get("replay") !== "1")) {
       navigate("/striker-draft", { replace: true });
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (
-      !state?.stepStartedAt ||
-      state.done ||
-      !state.readyBlue ||
-      !state.readyRed
-    ) {
+    if (!state?.stepStartedAt || state.done || !state.readyBlue || !state.readyRed) {
       setTimeLeft(TIMER_SECONDS);
+
       return;
     }
+
     function tick() {
       const stepStartedAt = stepStartedAtRef.current;
       if (!stepStartedAt) {
         setTimeLeft(TIMER_SECONDS);
+
         return;
       }
       const now = Date.now() / 1000 + clockOffsetRef.current;
       if (now < stepStartedAt) {
         setTimeLeft(TIMER_SECONDS);
+
         return;
       }
-      setTimeLeft(
-        Math.max(0, Math.ceil(TIMER_SECONDS - (now - stepStartedAt))),
-      );
+      setTimeLeft(Math.max(0, Math.ceil(TIMER_SECONDS - (now - stepStartedAt))));
     }
+
     tick();
     const id = setInterval(tick, 250);
+
     return () => clearInterval(id);
   }, [state?.stepStartedAt, state?.done, state?.readyBlue, state?.readyRed]);
 
   useEffect(() => {
     if (!state?.stepStartedAt || !state.readyBlue || !state.readyRed) return;
+
     function tick() {
       const stepStartedAt = stepStartedAtRef.current;
       if (!stepStartedAt) {
         setCountdownLeft(0);
+
         return;
       }
       const now = Date.now() / 1000 + clockOffsetRef.current;
       setCountdownLeft(Math.max(0, Math.ceil(stepStartedAt - now)));
     }
+
     tick();
     const id = setInterval(tick, 100);
+
     return () => clearInterval(id);
   }, [state?.stepStartedAt, state?.readyBlue, state?.readyRed]);
 
@@ -127,27 +123,20 @@ export default function DraftPage() {
     } else {
       document.title = "OS Map Draft";
     }
+
     return () => {
       document.title = "OS Map Draft";
     };
   }, [countdownLeft]);
 
   if (loading) return <LoadingScreen message="Connecting to draft..." />;
-  if (!state)
-    return (
-      <ErrorScreen message={error ?? "Room not found. Check your link."} />
-    );
+  if (!state) return <ErrorScreen message={error ?? "Room not found. Check your link."} />;
 
   const bothReady = state.readyBlue && state.readyRed;
   const { step, done, actions, blueName, redName, map, awakenings } = state;
 
-  const currentSeqStep =
-    !done && step < STRIKER_SEQUENCE.length ? STRIKER_SEQUENCE[step] : null;
-  const currentTeam = currentSeqStep
-    ? currentSeqStep.team === Team.Blue
-      ? blueName
-      : redName
-    : null;
+  const currentSeqStep = !done && step < STRIKER_SEQUENCE.length ? STRIKER_SEQUENCE[step] : null;
+  const currentTeam = currentSeqStep ? (currentSeqStep.team === Team.Blue ? blueName : redName) : null;
   const isMyTurn = currentSeqStep !== null && currentSeqStep.team === side;
   const isBanning = currentSeqStep?.action === DraftAction.Ban;
 
@@ -162,12 +151,8 @@ export default function DraftPage() {
           ? state.pendingRed
           : null;
 
-  const bannedSet = new Set(
-    actions.filter((a) => a.action === DraftAction.Ban).map((a) => a.striker),
-  );
-  const pickedSet = new Set(
-    actions.filter((a) => a.action === DraftAction.Pick).map((a) => a.striker),
-  );
+  const bannedSet = new Set(actions.filter((a) => a.action === DraftAction.Ban).map((a) => a.striker));
+  const pickedSet = new Set(actions.filter((a) => a.action === DraftAction.Pick).map((a) => a.striker));
 
   const blueSeqSteps: IndexedStep[] = STRIKER_SEQUENCE.map((s, i) => ({
     ...s,
@@ -199,6 +184,7 @@ export default function DraftPage() {
   function sideLabel() {
     if (side === Team.Blue) return blueName;
     if (side === Team.Red) return redName;
+
     return "Spectating";
   }
 
@@ -247,19 +233,14 @@ export default function DraftPage() {
       <div className="py-3 px-6 bg-tools-carbon border-b border-white/7 flex items-center justify-center h-13 shrink-0">
         <div className="flex items-center gap-3">
           {!bothReady ? (
-            <span className="font-mono text-sm tracking-widest">
-              Waiting for both teams to ready up
-            </span>
+            <span className="font-mono text-sm tracking-widest">Waiting for both teams to ready up</span>
           ) : countdownLeft > 0 && actions.length === 0 ? (
             <span className="font-mono text-sm tracking-widest">
-              Starting in{" "}
-              <strong className="text-tools-gold">{countdownLeft}</strong>
+              Starting in <strong className="text-tools-gold">{countdownLeft}</strong>
             </span>
           ) : done ? (
             <>
-              <span className="font-mono text-sm tracking-widest">
-                Draft complete
-              </span>
+              <span className="font-mono text-sm tracking-widest">Draft complete</span>
               <span className="font-mono text-sm tracking-widest py-0.75 px-2.5 rounded uppercase bg-tools-gold/10 text-tools-gold">
                 Done
               </span>
@@ -299,14 +280,7 @@ export default function DraftPage() {
             {blueName}
           </div>
           {blueSeqSteps.map((s, i) => (
-            <SidebarCard
-              key={s.globalIdx}
-              step={s}
-              cardIndex={i}
-              isBlue
-              timeLeft={timeLeft}
-              state={state}
-            />
+            <SidebarCard key={s.globalIdx} step={s} cardIndex={i} isBlue timeLeft={timeLeft} state={state} />
           ))}
         </div>
 
@@ -319,34 +293,20 @@ export default function DraftPage() {
                 <div className="flex items-end gap-6">
                   {mapEntry && (
                     <div className="flex flex-col items-center gap-1.5">
-                      <img
-                        src={mapEntry.icon}
-                        alt={map}
-                        className="w-16 h-16 rounded-lg object-cover"
-                      />
-                      <span className="font-mono text-xs font-semibold text-white/60">
-                        {map}
-                      </span>
+                      {mapEntry.icon && (
+                        <img src={mapEntry.icon} alt={map} className="w-16 h-16 rounded-lg object-cover" />
+                      )}
+                      <span className="font-mono text-xs font-semibold text-white/60">{map}</span>
                     </div>
                   )}
-                  {mapEntry && awakenings.length > 0 && (
-                    <div className="w-px self-stretch bg-white/10" />
-                  )}
+                  {mapEntry && awakenings.length > 0 && <div className="w-px self-stretch bg-white/10" />}
                   {awakenings.map((aw) => {
                     const awEntry = ALL_AWAKENINGS.find((a) => a.name === aw);
+
                     return awEntry ? (
-                      <div
-                        key={aw}
-                        className="flex flex-col items-center gap-1.5"
-                      >
-                        <img
-                          src={awEntry.icon}
-                          alt={aw}
-                          className="w-16 h-16 object-contain"
-                        />
-                        <span className="font-mono text-xs text-white/60">
-                          {aw}
-                        </span>
+                      <div key={aw} className="flex flex-col items-center gap-1.5">
+                        <img src={awEntry.icon} alt={aw} className="w-16 h-16 object-contain" />
+                        <span className="font-mono text-xs text-white/60">{aw}</span>
                       </div>
                     ) : null;
                   })}
@@ -358,9 +318,7 @@ export default function DraftPage() {
                     >
                       Blue
                     </span>
-                    <span className="font-mono text-sm font-bold max-w-full truncate">
-                      {blueName}
-                    </span>
+                    <span className="font-mono text-sm font-bold max-w-full truncate">{blueName}</span>
                     {state.readyBlue ? (
                       <span className="font-mono text-xs tracking-widest uppercase text-tools-green-light bg-tools-green/10 px-3 py-1.5 rounded border border-tools-green/20">
                         Ready
@@ -385,9 +343,7 @@ export default function DraftPage() {
                     >
                       Red
                     </span>
-                    <span className="font-mono text-sm font-bold max-w-full truncate">
-                      {redName}
-                    </span>
+                    <span className="font-mono text-sm font-bold max-w-full truncate">{redName}</span>
                     {state.readyRed ? (
                       <span className="font-mono text-xs tracking-widest uppercase text-tools-green-light bg-tools-green/10 px-3 py-1.5 rounded border border-tools-green/20">
                         Ready
@@ -412,41 +368,25 @@ export default function DraftPage() {
                 <div className="flex items-end gap-6">
                   {mapEntry && (
                     <div className="flex flex-col items-center gap-1.5">
-                      <img
-                        src={mapEntry.icon}
-                        alt={map}
-                        className="w-16 h-16 rounded-lg object-cover"
-                      />
-                      <span className="font-mono text-xs font-semibold text-white/60">
-                        {map}
-                      </span>
+                      {mapEntry.icon && (
+                        <img src={mapEntry.icon} alt={map} className="w-16 h-16 rounded-lg object-cover" />
+                      )}
+                      <span className="font-mono text-xs font-semibold text-white/60">{map}</span>
                     </div>
                   )}
-                  {mapEntry && awakenings.length > 0 && (
-                    <div className="w-px self-stretch bg-white/10" />
-                  )}
+                  {mapEntry && awakenings.length > 0 && <div className="w-px self-stretch bg-white/10" />}
                   {awakenings.map((aw) => {
                     const awEntry = ALL_AWAKENINGS.find((a) => a.name === aw);
+
                     return awEntry ? (
-                      <div
-                        key={aw}
-                        className="flex flex-col items-center gap-1.5"
-                      >
-                        <img
-                          src={awEntry.icon}
-                          alt={aw}
-                          className="w-16 h-16 object-contain"
-                        />
-                        <span className="font-mono text-xs text-white/60">
-                          {aw}
-                        </span>
+                      <div key={aw} className="flex flex-col items-center gap-1.5">
+                        <img src={awEntry.icon} alt={aw} className="w-16 h-16 object-contain" />
+                        <span className="font-mono text-xs text-white/60">{aw}</span>
                       </div>
                     ) : null;
                   })}
                 </div>
-                <span className="font-mono text-lg tracking-widest uppercase text-white/40">
-                  Draft starting in
-                </span>
+                <span className="font-mono text-lg tracking-widest uppercase text-white/40">Draft starting in</span>
                 <AnimatedNumber
                   value={countdownLeft}
                   className="font-mono font-bold tabular-nums text-8xl text-tools-gold"
@@ -458,34 +398,20 @@ export default function DraftPage() {
                 <div className="flex items-end gap-6">
                   {mapEntry && (
                     <div className="flex flex-col items-center gap-1.5">
-                      <img
-                        src={mapEntry.icon}
-                        alt={map}
-                        className="w-16 h-16 rounded-lg object-cover"
-                      />
-                      <span className="font-mono text-xs font-semibold text-white/60">
-                        {map}
-                      </span>
+                      {mapEntry.icon && (
+                        <img src={mapEntry.icon} alt={map} className="w-16 h-16 rounded-lg object-cover" />
+                      )}
+                      <span className="font-mono text-xs font-semibold text-white/60">{map}</span>
                     </div>
                   )}
-                  {mapEntry && awakenings.length > 0 && (
-                    <div className="w-px self-stretch bg-white/10" />
-                  )}
+                  {mapEntry && awakenings.length > 0 && <div className="w-px self-stretch bg-white/10" />}
                   {awakenings.map((aw) => {
                     const awEntry = ALL_AWAKENINGS.find((a) => a.name === aw);
+
                     return awEntry ? (
-                      <div
-                        key={aw}
-                        className="flex flex-col items-center gap-1.5"
-                      >
-                        <img
-                          src={awEntry.icon}
-                          alt={aw}
-                          className="w-16 h-16 object-contain"
-                        />
-                        <span className="font-mono text-xs text-white/60">
-                          {aw}
-                        </span>
+                      <div key={aw} className="flex flex-col items-center gap-1.5">
+                        <img src={awEntry.icon} alt={aw} className="w-16 h-16 object-contain" />
+                        <span className="font-mono text-xs text-white/60">{aw}</span>
                       </div>
                     ) : null;
                   })}
@@ -498,11 +424,7 @@ export default function DraftPage() {
                     const isSelected = pending === striker.name;
                     const clickable = isAvailable && isMyTurn;
                     const pickAction = isPicked
-                      ? actions.find(
-                          (a) =>
-                            a.striker === striker.name &&
-                            a.action === DraftAction.Pick,
-                        )
+                      ? actions.find((a) => a.striker === striker.name && a.action === DraftAction.Pick)
                       : null;
 
                     const cardClass = [
@@ -548,9 +470,7 @@ export default function DraftPage() {
                                   : "bg-tools-red/70 text-white"
                               }`}
                             >
-                              {pickAction.team === Team.Blue
-                                ? blueName
-                                : redName}
+                              {pickAction.team === Team.Blue ? blueName : redName}
                             </span>
                           </div>
                         )}
@@ -642,11 +562,7 @@ export default function DraftPage() {
                   />
                 </>
               ) : null}
-              <StrikerSpectatorBar
-                timeLeft={timeLeft}
-                countdownLeft={countdownLeft}
-                state={state}
-              />
+              <StrikerSpectatorBar timeLeft={timeLeft} countdownLeft={countdownLeft} state={state} />
             </>
           )}
         </div>
@@ -659,14 +575,7 @@ export default function DraftPage() {
             {redName}
           </div>
           {redSeqSteps.map((s, i) => (
-            <SidebarCard
-              key={s.globalIdx}
-              step={s}
-              cardIndex={i}
-              isBlue={false}
-              timeLeft={timeLeft}
-              state={state}
-            />
+            <SidebarCard key={s.globalIdx} step={s} cardIndex={i} isBlue={false} timeLeft={timeLeft} state={state} />
           ))}
         </div>
       </div>
