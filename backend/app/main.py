@@ -20,6 +20,7 @@ app = FastAPI()
 ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "https://os-tools-theta.vercel.app",
+    "https://os-tools-preview.vercel.app",
     "https://drafter2.bestieinslot.com",
     "https://drafter.bestieinslot.com",
 ]
@@ -27,6 +28,7 @@ ALLOWED_ORIGINS = [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
+    allow_origin_regex=r"^https://os-tools-[a-z0-9-]+-os-tools\.vercel\.app$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
