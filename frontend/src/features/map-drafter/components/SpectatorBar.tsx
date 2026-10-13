@@ -2,15 +2,8 @@ import { useRef } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { AnimatedNumber } from "@/features/common/components/AnimatedNumber";
 
-import {
-  ALL_MAPS,
-  DraftAction,
-  Team,
-} from "@/features/common/constants/constants";
-import type {
-  MapDraftAction,
-  MapDraftState,
-} from "@/features/map-drafter/types";
+import { ALL_MAPS, DraftAction, Team } from "@/features/common/constants/constants";
+import type { MapDraftAction, MapDraftState } from "@/features/map-drafter/types";
 import { BO3_FORMATS, SEQUENCE_MAP } from "@map-drafter/constants.ts";
 import { deriveMapStatuses } from "@/features/map-drafter/utils";
 
@@ -42,12 +35,8 @@ function SpectatorCard({
   timeLeft,
 }: SpectatorCardProps) {
   const wasFilledOnMount = useRef(!!completedAction);
-  const mapEntry = completedAction
-    ? ALL_MAPS.find((m) => m.name === completedAction.map)
-    : null;
-  const pendingEntry = pendingMap
-    ? ALL_MAPS.find((m) => m.name === pendingMap)
-    : null;
+  const mapEntry = completedAction ? ALL_MAPS.find((m) => m.name === completedAction.map) : null;
+  const pendingEntry = pendingMap ? ALL_MAPS.find((m) => m.name === pendingMap) : null;
 
   return (
     <div className="flex flex-col items-center gap-1 w-20">
@@ -61,7 +50,7 @@ function SpectatorCard({
       >
         <div className="absolute inset-0 bg-white/5" />
         <AnimatePresence initial={false}>
-          {mapEntry && (
+          {mapEntry?.icon && (
             <motion.div
               key={mapEntry.name}
               className="absolute inset-0"
@@ -91,7 +80,7 @@ function SpectatorCard({
           )}
         </AnimatePresence>
         <AnimatePresence>
-          {!completedAction && pendingEntry && (
+          {!completedAction && pendingEntry?.icon && (
             <motion.img
               key={`pending-${pendingEntry.name}`}
               src={pendingEntry.icon}
@@ -109,9 +98,7 @@ function SpectatorCard({
             key={completedAction.map}
             className="absolute inset-0 pointer-events-none"
             style={{
-              background: isBan
-                ? "rgba(239,68,68,0.2)"
-                : "rgba(34,197,94,0.15)",
+              background: isBan ? "rgba(239,68,68,0.2)" : "rgba(34,197,94,0.15)",
             }}
             initial={{ opacity: 1 }}
             animate={{ opacity: 0 }}
@@ -153,20 +140,14 @@ function SpectatorCard({
             <AnimatedNumber
               value={timeLeft}
               className={`font-mono font-bold tabular-nums text-2xl ${
-                timeLeft <= 5
-                  ? "text-tools-red"
-                  : timeLeft <= 10
-                    ? "text-amber-400"
-                    : "text-white/70"
+                timeLeft <= 5 ? "text-tools-red" : timeLeft <= 10 ? "text-amber-400" : "text-white/70"
               }`}
             />
           </div>
         )}
       </div>
       <span className="font-mono text-xs text-white/40 text-center leading-tight w-20 line-clamp-2 min-h-7.5">
-        {completedAction?.map ??
-          pendingEntry?.name ??
-          (isBan ? "Ban" : `G${pickNumber}`)}
+        {completedAction?.map ?? pendingEntry?.name ?? (isBan ? "Ban" : `G${pickNumber}`)}
       </span>
     </div>
   );
@@ -178,15 +159,13 @@ function DeciderCard({ mapName }: { mapName: string | undefined }) {
 
   return (
     <div className="flex flex-col items-center gap-1 w-20">
-      <span className="font-mono font-bold tracking-widest uppercase text-center text-tools-gold">
-        Decider
-      </span>
+      <span className="font-mono font-bold tracking-widest uppercase text-center text-tools-gold">Decider</span>
       <div
         className={`relative w-20 h-20 rounded border-2 overflow-hidden border-tools-gold ${!mapName ? "opacity-30" : ""}`}
       >
         <div className="absolute inset-0 bg-white/5" />
         <AnimatePresence initial={false}>
-          {mapEntry && (
+          {mapEntry?.icon && (
             <motion.div
               key={mapEntry.name}
               className="absolute inset-0"
@@ -244,11 +223,7 @@ interface SpectatorBarProps {
   state: MapDraftState;
 }
 
-export function SpectatorBar({
-  timeLeft,
-  countdownLeft,
-  state,
-}: SpectatorBarProps) {
+export function SpectatorBar({ timeLeft, countdownLeft, state }: SpectatorBarProps) {
   const { step, done, actions, blueName, redName, readyBlue, readyRed } = state;
   const sequence: SequenceStep[] = SEQUENCE_MAP[state.bestOf];
   const bothReady = readyBlue && readyRed;
@@ -257,9 +232,7 @@ export function SpectatorBar({
   const blueBadgeClass = "bg-tools-blue-dim text-tools-blue";
   const redBadgeClass = "bg-tools-red-dim text-tools-red";
 
-  const deciderMap = Object.entries(mapStatuses).find(
-    ([, s]) => s === "decider",
-  )?.[0];
+  const deciderMap = Object.entries(mapStatuses).find(([, s]) => s === "decider")?.[0];
 
   return (
     <div className="px-5 border-t border-white/7 h-40 flex items-center gap-5 shrink-0 justify-center">
@@ -271,17 +244,13 @@ export function SpectatorBar({
             >
               Blue
             </span>
-            <span className="font-mono text-sm font-bold max-w-full truncate">
-              {blueName}
-            </span>
+            <span className="font-mono text-sm font-bold max-w-full truncate">{blueName}</span>
             {readyBlue ? (
               <span className="font-mono text-xs tracking-widest uppercase text-tools-green-light bg-tools-green/10 px-3 py-1 rounded border border-tools-green/20">
                 Ready
               </span>
             ) : (
-              <span className="font-mono text-xs tracking-widest uppercase text-white/25 px-3 py-1">
-                Not ready
-              </span>
+              <span className="font-mono text-xs tracking-widest uppercase text-white/25 px-3 py-1">Not ready</span>
             )}
           </div>
           <div className="w-px bg-white/7 self-stretch" />
@@ -291,24 +260,19 @@ export function SpectatorBar({
             >
               Red
             </span>
-            <span className="font-mono text-sm font-bold max-w-full truncate">
-              {redName}
-            </span>
+            <span className="font-mono text-sm font-bold max-w-full truncate">{redName}</span>
             {readyRed ? (
               <span className="font-mono text-xs tracking-widest uppercase text-tools-green-light bg-tools-green/10 px-3 py-1 rounded border border-tools-green/20">
                 Ready
               </span>
             ) : (
-              <span className="font-mono text-xs tracking-widest uppercase text-white/25 px-3 py-1">
-                Not ready
-              </span>
+              <span className="font-mono text-xs tracking-widest uppercase text-white/25 px-3 py-1">Not ready</span>
             )}
           </div>
         </div>
       ) : countdownLeft > 0 && actions.length === 0 ? (
         <span className="font-mono text-sm tracking-widest text-white/50">
-          Starting in{" "}
-          <strong className="text-tools-gold">{countdownLeft}</strong>
+          Starting in <strong className="text-tools-gold">{countdownLeft}</strong>
         </span>
       ) : (
         <div className="flex gap-3 justify-center">
@@ -318,11 +282,7 @@ export function SpectatorBar({
             const isBan = s.action === DraftAction.Ban;
             const teamName = isBlue ? blueName : redName;
             const isCurrent = !done && i === step;
-            const pendingMap = isCurrent
-              ? isBlue
-                ? state.pendingBlue
-                : state.pendingRed
-              : null;
+            const pendingMap = isCurrent ? (isBlue ? state.pendingBlue : state.pendingRed) : null;
             const pickNumber = !isBan ? (sequence[i].gameNum ?? 1) : null;
 
             return (
@@ -339,9 +299,7 @@ export function SpectatorBar({
               />
             );
           })}
-          {BO3_FORMATS.includes(state.bestOf) && (
-            <DeciderCard mapName={deciderMap} />
-          )}
+          {BO3_FORMATS.includes(state.bestOf) && <DeciderCard mapName={deciderMap} />}
         </div>
       )}
     </div>

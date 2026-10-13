@@ -33,16 +33,19 @@ export default function SetupPage() {
   const [loading, setLoading] = useState(false);
   const [map, setMap] = useState(() => {
     const urlMap = getInitialParams().get("map") ?? "";
+
     return ALL_MAP_NAMES.has(urlMap) ? urlMap : "";
   });
   const [awakening, setAwakening] = useState(() => {
     const urlMode = getInitialParams().get("awakeningMode");
+
     return urlMode === "custom" ? "custom" : "random";
   });
   const [customAwakenings, setCustomAwakenings] = useState(() => {
     const params = getInitialParams();
     const first = params.get("awk1") ?? "";
     const second = params.get("awk2") ?? "";
+
     return {
       first: ALL_AWAKENING_NAMES.has(first) ? first : "",
       second: ALL_AWAKENING_NAMES.has(second) ? second : "",
@@ -54,11 +57,9 @@ export default function SetupPage() {
       const urlBanned = params.get("banned");
       if (urlBanned) {
         const parsed = JSON.parse(urlBanned) as Awakening[];
-        if (
-          Array.isArray(parsed) &&
-          parsed.every((a) => ALL_AWAKENING_NAMES.has(a))
-        ) {
+        if (Array.isArray(parsed) && parsed.every((a) => ALL_AWAKENING_NAMES.has(a))) {
           localStorage.setItem("bannedAwakenings", JSON.stringify(parsed));
+
           return parsed;
         }
       }
@@ -71,6 +72,7 @@ export default function SetupPage() {
     } catch {
       // ignore parse errors, fall back to default
     }
+
     return DEFAULT_BANNED_AWAKENINGS;
   });
 
@@ -117,20 +119,17 @@ export default function SetupPage() {
 
   const handleBannedAwakeningToggle = (a: Awakening) => {
     setBannedAwakenings((prev) => {
-      const next = prev.includes(a)
-        ? prev.filter((x) => x !== a)
-        : [...prev, a];
+      const next = prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a];
       localStorage.setItem("bannedAwakenings", JSON.stringify(next));
+
       return next;
     });
   };
 
   const resetBannedAwakenings = () => {
     setBannedAwakenings(() => {
-      localStorage.setItem(
-        "bannedAwakenings",
-        JSON.stringify(DEFAULT_BANNED_AWAKENINGS),
-      );
+      localStorage.setItem("bannedAwakenings", JSON.stringify(DEFAULT_BANNED_AWAKENINGS));
+
       return DEFAULT_BANNED_AWAKENINGS;
     });
   };
@@ -143,16 +142,12 @@ export default function SetupPage() {
         redName,
         map,
         awakeningMode: awakening,
-        customAwakenings:
-          awakening === "custom"
-            ? [customAwakenings.first, customAwakenings.second]
-            : undefined,
+        customAwakenings: awakening === "custom" ? [customAwakenings.first, customAwakenings.second] : undefined,
         bannedStarts: awakening === "random" ? bannedAwakenings : undefined,
       });
     } catch (e) {
       toast({
-        message:
-          e instanceof Error ? e.message : "An unexpected error occurred",
+        message: e instanceof Error ? e.message : "An unexpected error occurred",
         variant: "error",
         position: "top-center",
       });
@@ -162,10 +157,7 @@ export default function SetupPage() {
   }
 
   const isDisabled =
-    loading ||
-    !map ||
-    (awakening === "custom" &&
-      (!customAwakenings.first || !customAwakenings.second));
+    loading || !map || (awakening === "custom" && (!customAwakenings.first || !customAwakenings.second));
 
   return (
     <div className="h-screen flex justify-center items-center">
@@ -174,13 +166,9 @@ export default function SetupPage() {
         {awakening === "random" && (
           <div className="w-full max-w-160 flex flex-col gap-4 bg-tools-carbon border border-white/7 rounded-2xl p-6 justify-center items-center">
             <div className="flex justify-between items-center w-full h-6">
-              <div className="text-sm font-mono tracking-widest uppercase">
-                Starting Awakenings - Click to Toggle
-              </div>
+              <div className="text-sm font-mono tracking-widest uppercase">Starting Awakenings - Click to Toggle</div>
               {(bannedAwakenings.length !== DEFAULT_BANNED_AWAKENINGS.length ||
-                !DEFAULT_BANNED_AWAKENINGS.every((a) =>
-                  bannedAwakenings.includes(a),
-                )) && (
+                !DEFAULT_BANNED_AWAKENINGS.every((a) => bannedAwakenings.includes(a))) && (
                 <button
                   onClick={resetBannedAwakenings}
                   type="button"
@@ -209,14 +197,8 @@ export default function SetupPage() {
                     )}
                     onClick={() => handleBannedAwakeningToggle(a)}
                   >
-                    <img
-                      src={icon}
-                      alt={a}
-                      className="w-12 h-12 object-contain shrink-0"
-                    />
-                    <span className="text-xs text-center leading-tight line-clamp-2">
-                      {a}
-                    </span>
+                    <img src={icon} alt={a} className="w-12 h-12 object-contain shrink-0" />
+                    <span className="text-xs text-center leading-tight line-clamp-2">{a}</span>
                   </button>
                 );
               })}
@@ -241,9 +223,7 @@ export default function SetupPage() {
           </h1>
 
           <div className="flex flex-col gap-4 bg-tools-carbon border border-white/7 rounded-2xl p-6">
-            <div className="text-sm font-mono tracking-widest uppercase">
-              Teams
-            </div>
+            <div className="text-sm font-mono tracking-widest uppercase">Teams</div>
             <div className="grid grid-cols-2 gap-3">
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-mono font-bold tracking-widest py-0.5 px-1.75 rounded pointer-events-none bg-tools-blue-dim text-tools-blue">
@@ -276,9 +256,7 @@ export default function SetupPage() {
 
           <div className="flex flex-col gap-6 bg-tools-carbon border border-white/7 rounded-2xl p-6">
             <div className="flex flex-col gap-4">
-              <div className="text-sm font-mono tracking-widest uppercase">
-                Map
-              </div>
+              <div className="text-sm font-mono tracking-widest uppercase">Map</div>
               <select
                 value={map}
                 onChange={(e) => setMap(e.target.value)}
@@ -294,15 +272,11 @@ export default function SetupPage() {
             </div>
 
             <div className="flex flex-col gap-4">
-              <div className="text-sm font-mono tracking-widest uppercase">
-                Awakenings
-              </div>
+              <div className="text-sm font-mono tracking-widest uppercase">Awakenings</div>
               <div className="flex flex-row gap-3 w-full">
                 <button
                   className={`w-full border rounded-lg p-2 font-mono font-semibold transition-colors duration-200 uppercase ${
-                    awakening === "random"
-                      ? "border-tools-gold/40 bg-tools-gold/6"
-                      : "bg-tools-graphite border-white/7"
+                    awakening === "random" ? "border-tools-gold/40 bg-tools-gold/6" : "bg-tools-graphite border-white/7"
                   }`}
                   onClick={() => setAwakening("random")}
                 >
@@ -310,9 +284,7 @@ export default function SetupPage() {
                 </button>
                 <button
                   className={`w-full border rounded-lg p-2 font-mono font-semibold transition-colors duration-200 uppercase ${
-                    awakening === "custom"
-                      ? "border-tools-gold/40 bg-tools-gold/6"
-                      : "bg-tools-graphite border-white/7"
+                    awakening === "custom" ? "border-tools-gold/40 bg-tools-gold/6" : "bg-tools-graphite border-white/7"
                   }`}
                   onClick={() => setAwakening("custom")}
                 >
@@ -328,9 +300,7 @@ export default function SetupPage() {
                       customAwakenings.second
                         ? [
                             customAwakenings.second,
-                            ...(AWAKENING_CONFLICTS[
-                              customAwakenings.second as Awakening
-                            ] ?? []),
+                            ...(AWAKENING_CONFLICTS[customAwakenings.second as Awakening] ?? []),
                           ]
                         : []
                     }
@@ -340,12 +310,7 @@ export default function SetupPage() {
                     onChange={(v) => handleAwakeningChange("second", v)}
                     exclude={
                       customAwakenings.first
-                        ? [
-                            customAwakenings.first,
-                            ...(AWAKENING_CONFLICTS[
-                              customAwakenings.first as Awakening
-                            ] ?? []),
-                          ]
+                        ? [customAwakenings.first, ...(AWAKENING_CONFLICTS[customAwakenings.first as Awakening] ?? [])]
                         : []
                     }
                   />
@@ -359,11 +324,7 @@ export default function SetupPage() {
             disabled={isDisabled}
             onClick={handleSubmit}
           >
-            {loading ? (
-              <Spinner size="lg" primary="white" secondary="black" />
-            ) : (
-              "Create Striker Draft Room →"
-            )}
+            {loading ? <Spinner size="lg" primary="white" secondary="black" /> : "Create Striker Draft Room →"}
           </button>
         </div>
       </div>

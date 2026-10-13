@@ -22,54 +22,94 @@ export enum GameMap {
   TaikoTemple = "Taiko Temple",
 }
 
-export const ALL_MAPS = [
+export interface MapDefinition {
+  name: string;
+  image?: string;
+  icon?: string;
+  blurredImage?: string;
+  variants?: MapDefinition[];
+}
+
+export const ALL_MAPS: MapDefinition[] = [
   {
     name: GameMap.AhtenCity,
+    blurredImage: "/maps/Ahten_City_Blurred.png",
     image: "/maps/Ahten_City.png",
     icon: "/maps/Ahten_City_Icon.png",
   },
   {
     name: GameMap.AimisApp,
+    blurredImage: "/maps/AiMis_App_Blurred.png",
     image: "/maps/AiMis_App.png",
     icon: "/maps/AiMis_App_Icon.png",
   },
   {
     name: GameMap.AtlasLab,
+    blurredImage: "/maps/Atlas_Lab_Blurred.png",
     image: "/maps/Atlas_Lab.png",
     icon: "/maps/Atlas_Lab_Icon.png",
   },
   {
     name: GameMap.ClarionTestChamber,
+    blurredImage: "/maps/Clarion_Test_Chamber_Blurred.png",
     image: "/maps/Clarion_Test_Chamber.png",
     icon: "/maps/Clarion_Test_Chamber_Icon.png",
+    variants: [
+      {
+        name: "Bass Drop",
+        image: "/maps/Clarion_Test_Chamber_Bass_Drop.png",
+      },
+      {
+        name: "Expanse",
+        image: "/maps/Clarion_Test_Chamber_Expanse.png",
+      },
+      {
+        name: "Maelstrom",
+        image: "/maps/Clarion_Test_Chamber_Maelstrom.png",
+      },
+      {
+        name: "Obscura",
+        image: "/maps/Clarion_Test_Chamber_Obscura.png",
+      },
+      {
+        name: "Xeno",
+        image: "/maps/Clarion_Test_Chamber_Xeno.png",
+      },
+    ],
   },
   {
     name: GameMap.DemonDais,
+    blurredImage: "/maps/Demon_Dais_Blurred.png",
     image: "/maps/Demon_Dais.png",
     icon: "/maps/Demon_Dais_Icon.png",
   },
   {
     name: GameMap.GatesOfObscura,
+    blurredImage: "/maps/Gates_of_Obscura_Blurred.png",
     image: "/maps/Gates_of_Obscura.png",
     icon: "/maps/Gates_of_Obscura_Icon.png",
   },
   {
     name: GameMap.InkysSplashZone,
+    blurredImage: "/maps/Inkys_Splash_Zone_Blurred.png",
     image: "/maps/Inkys_Splash_Zone.png",
     icon: "/maps/Inkys_Splash_Zone_Icon.png",
   },
   {
     name: GameMap.NightMarket,
+    blurredImage: "/maps/Night_Market_Blurred.png",
     image: "/maps/Night_Market.png",
     icon: "/maps/Night_Market_Icon.png",
   },
   {
     name: GameMap.OniVillage,
+    blurredImage: "/maps/Oni_Village_Blurred.png",
     image: "/maps/Oni_Village.png",
     icon: "/maps/Oni_Village_Icon.png",
   },
   {
     name: GameMap.TaikoTemple,
+    blurredImage: "/maps/Taiko_Temple_Blurred.png",
     image: "/maps/Taiko_Temple.png",
     icon: "/maps/Taiko_Temple_Icon.png",
   },
@@ -440,16 +480,8 @@ export const AWAKENING_CONFLICTS: Partial<Record<Awakening, Awakening[]>> = {
     Awakening.Monumentalist,
     Awakening.SiegeMachine,
   ],
-  [Awakening.Monumentalist]: [
-    Awakening.TimelessCreator,
-    Awakening.CastToLast,
-    Awakening.SiegeMachine,
-  ],
-  [Awakening.TimelessCreator]: [
-    Awakening.Monumentalist,
-    Awakening.CastToLast,
-    Awakening.SiegeMachine,
-  ],
+  [Awakening.Monumentalist]: [Awakening.TimelessCreator, Awakening.CastToLast, Awakening.SiegeMachine],
+  [Awakening.TimelessCreator]: [Awakening.Monumentalist, Awakening.CastToLast, Awakening.SiegeMachine],
   [Awakening.Hotshot]: [
     Awakening.HeavyHanded,
     Awakening.RapidFire,
@@ -1057,11 +1089,7 @@ export const AWAKENING_CONFLICTS: Partial<Record<Awakening, Awakening[]>> = {
   ],
 };
 
-export const DEFAULT_BANNED_AWAKENINGS = [
-  Awakening.SparkOfLeadership,
-  Awakening.TeamPlayer,
-  Awakening.FireUp,
-];
+export const DEFAULT_BANNED_AWAKENINGS = [Awakening.SparkOfLeadership, Awakening.TeamPlayer, Awakening.FireUp];
 
 export enum StrikerDirection {
   Left = "left",

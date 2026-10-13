@@ -1,11 +1,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useRef } from "react";
 
-import {
-  ALL_MAPS,
-  DraftAction,
-  Team,
-} from "@/features/common/constants/constants";
+import { ALL_MAPS, DraftAction, Team } from "@/features/common/constants/constants";
 import { AnimatedNumber } from "@/features/common/components/AnimatedNumber";
 import type { MapDraftAction, MapDraftState } from "@/features/map-drafter/types";
 import { SEQUENCE_MAP } from "@map-drafter/constants.ts";
@@ -25,13 +21,7 @@ interface MapSidebarCardProps {
   state: MapDraftState;
 }
 
-export function MapSidebarCard({
-  step: s,
-  cardIndex,
-  isBlue,
-  timeLeft,
-  state,
-}: MapSidebarCardProps) {
+export function MapSidebarCard({ step: s, cardIndex, isBlue, timeLeft, state }: MapSidebarCardProps) {
   const sequence = SEQUENCE_MAP[state.bestOf];
   const teamSteps = sequence
     .map((step, globalIdx) => ({ ...step, globalIdx }))
@@ -46,23 +36,12 @@ export function MapSidebarCard({
   const wasFilledOnMount = useRef(!!filled);
   const isBan = s.action === DraftAction.Ban;
   const isActive = s.globalIdx === currentStep && !done;
-  const status: "filled" | "active" | "pending" = filled
-    ? "filled"
-    : isActive
-      ? "active"
-      : "pending";
+  const status: "filled" | "active" | "pending" = filled ? "filled" : isActive ? "active" : "pending";
 
-  const mapEntry = filled?.map
-    ? ALL_MAPS.find((m) => m.name === filled.map)
-    : null;
-  const pendingEntry =
-    status === "active" && pendingMap
-      ? ALL_MAPS.find((m) => m.name === pendingMap)
-      : null;
+  const mapEntry = filled?.map ? ALL_MAPS.find((m) => m.name === filled.map) : null;
+  const pendingEntry = status === "active" && pendingMap ? ALL_MAPS.find((m) => m.name === pendingMap) : null;
 
-  const nth =
-    teamSteps.slice(0, cardIndex).filter((t) => t.action === s.action).length +
-    1;
+  const nth = teamSteps.slice(0, cardIndex).filter((t) => t.action === s.action).length + 1;
   const label = isBan ? `Ban ${nth}` : `Pick ${s.gameNum ?? nth}`;
 
   const borderClass =
@@ -89,7 +68,7 @@ export function MapSidebarCard({
         }}
       />
       <AnimatePresence initial={false}>
-        {mapEntry && (
+        {mapEntry?.blurredImage && (
           <motion.div
             key={mapEntry.name}
             className="absolute inset-0"
@@ -98,7 +77,7 @@ export function MapSidebarCard({
             transition={{ duration: 0.65, ease: [0.25, 0, 0, 1] }}
           >
             <motion.img
-              src={mapEntry.image}
+              src={mapEntry.blurredImage}
               alt={filled?.map}
               className="absolute inset-0 w-full h-full object-cover"
               style={{
@@ -109,7 +88,7 @@ export function MapSidebarCard({
               transition={{ duration: 0.65, ease: [0.25, 0, 0, 1] }}
             />
             <motion.img
-              src={mapEntry.image}
+              src={mapEntry.blurredImage}
               alt={filled?.map}
               className="absolute inset-0 w-full h-full object-cover"
               style={{ clipPath: "polygon(-2% -2%, -2% 102%, 102% 102%)" }}
@@ -121,10 +100,10 @@ export function MapSidebarCard({
         )}
       </AnimatePresence>
       <AnimatePresence>
-        {pendingEntry && (
+        {pendingEntry?.blurredImage && (
           <motion.img
             key={pendingEntry.name}
-            src={pendingEntry.image}
+            src={pendingEntry.blurredImage}
             alt={pendingEntry.name}
             className="absolute inset-0 w-full h-full object-cover blur-[2px] brightness-50"
             initial={{ opacity: 0 }}
@@ -152,11 +131,7 @@ export function MapSidebarCard({
           <AnimatedNumber
             value={timeLeft}
             className={`font-mono font-bold tabular-nums text-4xl ${
-              timeLeft <= 5
-                ? "text-tools-red"
-                : timeLeft <= 10
-                  ? "text-amber-400"
-                  : "text-white"
+              timeLeft <= 5 ? "text-tools-red" : timeLeft <= 10 ? "text-amber-400" : "text-white"
             }`}
           />
         </div>

@@ -1,4 +1,4 @@
-import { Map, PersonStanding } from "lucide-react";
+import { Map, PersonStanding, PencilRuler } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Changelog from "@/features/common/components/Changelog";
 
@@ -9,24 +9,25 @@ export default function Home() {
   const navigate = useNavigate();
 
   return (
-    <div className="h-screen grid grid-cols-3 gap-4 p-4">
-      <div className="col-start-2 flex justify-center items-center">
+    <div className="min-h-screen grid grid-cols-1 xl:grid-cols-[1fr_2fr_1fr] gap-4 p-4">
+      <div className="xl:col-start-2 flex justify-center items-center">
         <div className="w-full max-w-160 flex flex-col">
           <h1 className="text-7xl font-extrabold leading-none tracking-tight mb-10">
             OS <span className="text-tools-gold">Tools</span>
           </h1>
 
-          <div className="bg-tools-carbon border border-white/7 rounded-2xl p-6 flex flex-row gap-5">
+          <div className="bg-tools-carbon border border-white/7 rounded-2xl p-6 flex flex-wrap sm:flex-nowrap gap-5">
             <button className={btnBase} onClick={() => navigate("/map-draft")}>
               <Map size={60} />
               Map Draft
             </button>
-            <button
-              className={btnBase}
-              onClick={() => navigate("/striker-draft")}
-            >
+            <button className={btnBase} onClick={() => navigate("/striker-draft")}>
               <PersonStanding size={60} />
               Striker Draft
+            </button>
+            <button className={btnBase} onClick={() => navigate("/tactics")}>
+              <PencilRuler size={60} />
+              Tactics
             </button>
           </div>
         </div>
