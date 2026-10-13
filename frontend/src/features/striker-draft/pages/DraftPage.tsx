@@ -121,11 +121,11 @@ export default function DraftPage() {
     if (countdownLeft > 0) {
       document.title = `Starting in ${countdownLeft}...`;
     } else {
-      document.title = "OS Map Draft";
+      document.title = "OS Tools";
     }
 
     return () => {
-      document.title = "OS Map Draft";
+      document.title = "OS Tools";
     };
   }, [countdownLeft]);
 

@@ -5,6 +5,10 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    date: "2026-10-13",
+    notes: ["Added the tactics feature"],
+  },
+  {
     date: "2026-10-12",
     notes: ["Updated awakenings to match the October 12 patch"],
   },
@@ -37,9 +41,7 @@ export const changelog: ChangelogEntry[] = [
   },
   {
     date: "2026-05-24",
-    notes: [
-      "Fixed a bug where teams could accidentally submit a pick for the opposing team",
-    ],
+    notes: ["Fixed a bug where teams could accidentally submit a pick for the opposing team"],
   },
   {
     date: "2026-04-23",
@@ -59,9 +61,7 @@ export const changelog: ChangelogEntry[] = [
   },
   {
     date: "2026-04-18",
-    notes: [
-      "Fixed a timer related bug where server/client timestamps were out of sync",
-    ],
+    notes: ["Fixed a timer related bug where server/client timestamps were out of sync"],
   },
   {
     date: "2026-04-17",

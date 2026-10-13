@@ -1,15 +1,7 @@
 import { BOARD_HEIGHT, BOARD_WIDTH, CORE_SIZE, CORE_CROP, PIECE_SIZE, TEAM_COLORS } from "./constants";
 import { arrowHead } from "./geometry";
 import type { BoardState, Point } from "./types";
-
-function loadImage(src: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const image = new Image();
-    image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error(`Could not load ${src}`));
-    image.src = src;
-  });
-}
+import { loadImage } from "./images";
 
 export async function exportImage(board: BoardState, map: { name: string; image: string }) {
   const sources = [...new Set([map.image, ...board.pieces.map((p) => p.icon)])];
@@ -64,14 +56,19 @@ export async function exportImage(board: BoardState, map: { name: string; image:
         size,
       );
     } else {
+      context.save();
+      context.beginPath();
+      context.arc(piece.position.x, piece.position.y, size / 2, 0, Math.PI * 2);
+      context.clip();
       context.drawImage(images.get(piece.icon)!, x, y, size, size);
+      context.restore();
     }
 
     if (piece.team) {
       context.strokeStyle = TEAM_COLORS[piece.team];
       context.lineWidth = 3;
       context.beginPath();
-      context.roundRect(x, y, size, size, 8);
+      context.arc(piece.position.x, piece.position.y, size / 2, 0, Math.PI * 2);
       context.stroke();
     }
   }

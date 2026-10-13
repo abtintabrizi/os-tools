@@ -13,6 +13,8 @@ instructions still apply.
 - `components/TacticsToolbar.tsx` contains drawing controls and history/reset/export actions.
 - `components/StrikerPalette.tsx` reuses `ALL_STRIKERS` and the shared blue/red team values.
 - `geometry.ts` supplies shared geometry; `exportImage.ts` renders PNGs using an offscreen canvas.
+- `images.ts` caches decoded images for map rendering and export. `hooks/useMapImage.ts` keeps the previous map
+  visible until the selected image is decoded and preloads other maps sequentially in the background.
 
 ## Maps and assets
 
@@ -25,7 +27,8 @@ instructions still apply.
 - `constants.ts` recursively derives `TACTICS_MAPS`: expand nonempty variants instead of offering their parent;
   otherwise include entries with an `image`. Empty/missing variants are safe, and entries without images are skipped.
   Currently this produces 14 options. Names include their parent path and are sorted alphabetically.
-- Tactics defaults to Ahten City, falls back to the first available map, and handles an empty map list.
+- Tactics defaults to Ahten City and falls back to the first available map. The configured tactics map list is expected
+  to contain at least one image; do not add an empty-map screen.
 - `/other/Core.png` has transparent padding. `CORE_CROP` identifies the ball area; keep SVG and PNG cropping aligned
   if the source asset changes.
 
@@ -34,11 +37,25 @@ instructions still apply.
 - Map selection changes only the background. One shared board retains all pieces and drawings across map changes.
 - Use the fixed logical board coordinates from `constants.ts`; convert pointer positions through the SVG transform.
   Resizing must preserve object positions. Fit backgrounds without stretching.
-- Drawings have stable IDs, points, color, and width. Move translates entire drawings. Pieces render above drawings
-  and remain within the board bounds.
+- The page uses a viewport-height grid with automatic toolbar/palette rows and a flexible board row. The board row
+  is a size-query container; fit the board to its available width and height using the logical aspect ratio, capped
+  at 1120px wide. Keep palette and toolbar sizing independent of canvas width to avoid resize feedback loops.
+- Drawings have stable IDs, points, color, and width. Move translates entire drawings. Pieces render above drawings.
+  Dropping a piece outside the board removes it; dropping inside keeps it within the board bounds.
 - Allow unlimited striker pieces, including duplicates. Team selection affects new drops only. Use `DRAG_TYPE` for
   palette drag data and team-colored borders for placed strikers.
-- Keep exactly one core with ID `core`. It is draggable, cannot be deleted, and is recentered by Reset.
+- Start with one core with ID `core`. It can be dragged or deleted like other pieces. Drag the core icon from the palette
+  to restore it at the drop position or reposition the existing core. Reset restores the centered core. Never allow
+  duplicate cores. Core palette drops use the value `core` with `DRAG_TYPE` and do not receive a team color.
+- Keep the blue/red slider switch beside the palette; it controls new striker drops only.
+- Right-click deletes pieces or drawings regardless of the selected tool. All deletions, including dragging pieces
+  off the board, are undoable. Striker portraits and borders are circular in the palette, on the board, and in PNGs.
+- Map selection belongs in the toolbar. Undo/redo/reset/download use labeled icon buttons. Disabled and active tool buttons
+  use the default cursor without hover effects; active tools retain their full opacity.
+- Use a three-column grid for the top row: Home, the toolbar, and an empty column equal in width to the Home column.
+  Center the toolbar in the flexible middle column and size it to its contents without exceeding that column's width.
+  Toolbar controls stay on one row when they fit within that reserved space and wrap into centered rows when needed.
+  Keep tool labels visible rather than hiding them or introducing horizontal scrolling to force one row.
 - Commit a completed placement, move, drawing, deletion, or reset as one undo step. Never mutate history snapshots
   or commit every pointer movement. New commits clear redo history; map/tool/style/team settings are outside history.
 - Escape, pointer cancellation, and lost capture cancel unfinished gestures. History actions, reset, map/tool changes,
@@ -55,5 +72,6 @@ instructions still apply.
 - Do not create test files. After TypeScript changes, format changed files, run ESLint on them, and run
   `npm.cmd run build` from `frontend/`, following the repository instructions.
 - Manually verify map switching/resizing, Clarion options, repeated striker placement and team colors, drawing styles,
-  moving/deleting objects, permanent core behavior, cancellation, undo/redo/reset, PNG export, and session reset.
+  moving/deleting objects, dragging pieces off the board, right-click deletion, core removal/restoration, cancellation,
+  undo/redo/reset, disabled/active controls, map preloading, PNG export, and session reset.
   Report browser checks as unverified if no browser is available.

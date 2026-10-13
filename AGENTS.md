@@ -44,6 +44,27 @@ Always run after making changes to backend files:
 
 - `black <file>` — format changed `.py` files. Black is in `requirements.txt` and available when the venv is active.
 
+## Button States
+
+- Disabled buttons must use `disabled:cursor-default!` to override the global `button { cursor: pointer; }` rule.
+  Use `disabled:opacity-30` or `disabled:opacity-50` when appropriate to indicate unavailable actions.
+- Apply hover styles only to enabled buttons, for example `enabled:hover:bg-white/10`. Disabled buttons must not
+  change background, border, text color, scale, or other visual styles on hover. If existing unconditional hover
+  classes must remain, explicitly override every affected style for the disabled state.
+- Selected tool buttons should also have the default cursor and no hover effects while retaining their selected
+  styling and full opacity. If using `disabled` for a selected tool, override disabled dimming with
+  `disabled:opacity-100!`. Keep accessible labels and selected-state attributes such as `aria-pressed`.
+
+## Maintaining Agent Guidance
+
+After major feature or architecture changes, consider whether adding or updating an `AGENTS.md` in the relevant
+directory would help future work. Document useful local conventions, non-obvious behavior, invariants, and validation
+requirements, and update guidance that the change makes inaccurate. Keep feature-specific details close to the
+feature and repository-wide conventions in this root file.
+
+Do this only when it would be truly helpful. Routine fixes and small changes do not require a new file or an update;
+avoid duplicating existing guidance or turning agent instructions into a change log.
+
 ## Architecture
 
 This is a monorepo with a separate React frontend and FastAPI backend.

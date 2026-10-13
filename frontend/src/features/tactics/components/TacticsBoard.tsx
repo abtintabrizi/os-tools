@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { ALL_STRIKERS } from "@/features/common/constants/constants";
 import { BOARD_WIDTH, BOARD_HEIGHT, CORE_SIZE, CORE_CROP, DRAG_TYPE, PIECE_SIZE, TEAM_COLORS } from "../constants";
 import { arrowHead, clampPoint, pointString } from "../geometry";
 import type { BoardState, Drawing, PlayingTeam, Point, Tool } from "../types";
+import { useMapImage } from "../hooks/useMapImage";
+import { initialBoard } from "../hooks/useTacticsBoard";
 
 type Gesture = {
   pointerId: number;
@@ -40,7 +42,8 @@ export default function TacticsBoard({
   const gesture = useRef<Gesture | null>(null);
   const previewRef = useRef<BoardState | null>(null);
   const [preview, setPreview] = useState<BoardState | null>(null);
-  const [loadedMap, setLoadedMap] = useState("");
+  const clipId = useId();
+  const { displayedMap, loading, failed } = useMapImage(map, onImageError);
 
   const cancel = () => {
     gesture.current = null;
@@ -67,25 +70,33 @@ export default function TacticsBoard({
     if (!matrix) return { x: 0, y: 0 };
     const result = new DOMPoint(clientX, clientY).matrixTransform(matrix.inverse());
 
-    return clampPoint(result);
+    return { x: result.x, y: result.y };
+  };
+
+  const outside = (position: Point) =>
+    position.x < 0 || position.x > BOARD_WIDTH || position.y < 0 || position.y > BOARD_HEIGHT;
+
+  const removeObject = (id: string) => {
+    cancel();
+    commit({
+      drawings: board.drawings.filter((drawing) => drawing.id !== id),
+      pieces: board.pieces.filter((piece) => piece.id !== id),
+    });
   };
 
   const start = (event: ReactPointerEvent<SVGSVGElement>) => {
-    if (event.button !== 0 || loadedMap !== map || gesture.current) return;
+    if (event.button !== 0 || gesture.current) return;
 
     const target = (event.target as Element).closest("[data-object]");
     const id = target?.getAttribute("data-object");
 
     if (tool === "delete") {
-      if (id && id !== "core")
-        commit({
-          drawings: board.drawings.filter((d) => d.id !== id),
-          pieces: board.pieces.filter((p) => p.id !== id),
-        });
+      if (id) removeObject(id);
 
       return;
     }
-    const position = point(event.clientX, event.clientY);
+
+    const position = clampPoint(point(event.clientX, event.clientY));
     if (tool === "move" && !id) return;
 
     const drawing: Drawing | undefined =
@@ -114,7 +125,8 @@ export default function TacticsBoard({
     const current = gesture.current;
     if (!current || current.pointerId !== event.pointerId) return;
 
-    const position = point(event.clientX, event.clientY);
+    const rawPosition = point(event.clientX, event.clientY);
+    const position = current.drawing ? clampPoint(rawPosition) : rawPosition;
     let next: BoardState;
 
     if (current.drawing) {
@@ -135,10 +147,7 @@ export default function TacticsBoard({
           p.id === current.id
             ? {
                 ...p,
-                position: clampPoint(
-                  { x: p.position.x + dx, y: p.position.y + dy },
-                  (p.id === "core" ? CORE_SIZE : PIECE_SIZE) / 2 + 2,
-                ),
+                position: { x: p.position.x + dx, y: p.position.y + dy },
               }
             : p,
         ),
@@ -161,13 +170,27 @@ export default function TacticsBoard({
     if (!current || current.pointerId !== event.pointerId) return;
 
     const end = point(event.clientX, event.clientY);
+    const isPiece = !current.drawing && current.original.pieces.some((piece) => piece.id === current.id);
 
-    if (
+    if (isPiece && outside(end)) {
+      commit({
+        ...current.original,
+        pieces: current.original.pieces.filter((piece) => piece.id !== current.id),
+      });
+    } else if (
       Math.hypot(end.x - current.start.x, end.y - current.start.y) > 2 ||
       (current.drawing?.kind === "freehand" && current.drawing.points.length > 3)
     ) {
       move(event);
-      if (previewRef.current) commit(previewRef.current);
+      if (previewRef.current) {
+        commit({
+          ...previewRef.current,
+          pieces: previewRef.current.pieces.map((piece) => ({
+            ...piece,
+            position: clampPoint(piece.position, (piece.id === "core" ? CORE_SIZE : PIECE_SIZE) / 2 + 2),
+          })),
+        });
+      }
     }
     cancel();
     if (svg.current?.hasPointerCapture(event.pointerId)) svg.current.releasePointerCapture(event.pointerId);
@@ -176,7 +199,10 @@ export default function TacticsBoard({
   const displayed = preview ?? board;
 
   return (
-    <div className="overflow-hidden rounded-xl border border-white/10 bg-tools-carbon">
+    <div
+      className="relative mx-auto shrink-0 overflow-hidden rounded-xl bg-tools-carbon ring-1 ring-inset ring-white/10"
+      style={{ width: `min(100cqw, calc(100cqh * ${BOARD_WIDTH / BOARD_HEIGHT}), 1120px)` }}
+    >
       <svg
         ref={svg}
         viewBox={`0 0 ${BOARD_WIDTH} ${BOARD_HEIGHT}`}
@@ -192,6 +218,13 @@ export default function TacticsBoard({
         onPointerUp={finish}
         onPointerCancel={cancel}
         onLostPointerCapture={cancel}
+        onContextMenu={(event) => {
+          const id = (event.target as Element).closest("[data-object]")?.getAttribute("data-object");
+          if (!id) return;
+
+          event.preventDefault();
+          removeObject(id);
+        }}
         onDragOver={(event) => {
           if (event.dataTransfer.types.includes(DRAG_TYPE)) {
             event.preventDefault();
@@ -200,8 +233,20 @@ export default function TacticsBoard({
         }}
         onDrop={(event) => {
           event.preventDefault();
-          if (loadedMap !== map) return;
-          const striker = ALL_STRIKERS.find((s) => s.name === event.dataTransfer.getData(DRAG_TYPE));
+          const value = event.dataTransfer.getData(DRAG_TYPE);
+
+          if (value === "core") {
+            cancel();
+            const core = {
+              ...initialBoard().pieces[0],
+              position: clampPoint(point(event.clientX, event.clientY), CORE_SIZE / 2 + 2),
+            };
+            commit({ ...board, pieces: [...board.pieces.filter((piece) => piece.id !== "core"), core] });
+
+            return;
+          }
+
+          const striker = ALL_STRIKERS.find((s) => s.name === value);
           if (!striker) return;
           cancel();
           commit({
@@ -219,15 +264,20 @@ export default function TacticsBoard({
           });
         }}
       >
-        <image
-          key={map}
-          href={map}
-          width={BOARD_WIDTH}
-          height={BOARD_HEIGHT}
-          preserveAspectRatio="xMidYMid meet"
-          onLoad={() => setLoadedMap(map)}
-          onError={onImageError}
-        />
+        <defs>
+          <clipPath id={clipId} clipPathUnits="objectBoundingBox">
+            <circle cx="0.5" cy="0.5" r="0.5" />
+          </clipPath>
+        </defs>
+        {displayedMap && (
+          <image
+            href={displayedMap}
+            width={BOARD_WIDTH}
+            height={BOARD_HEIGHT}
+            preserveAspectRatio="xMidYMid meet"
+            onError={onImageError}
+          />
+        )}
         {displayed.drawings.map((d) => (
           <g
             key={d.id}
@@ -271,12 +321,12 @@ export default function TacticsBoard({
                   <image href={p.icon} width={1920} height={1080} onError={onImageError} />
                 </svg>
               ) : (
-                <image href={p.icon} width={size} height={size} onError={onImageError} />
+                <image href={p.icon} width={size} height={size} clipPath={`url(#${clipId})`} onError={onImageError} />
               )}
-              <rect
-                width={size}
-                height={size}
-                rx={p.team ? 8 : 0}
+              <circle
+                cx={size / 2}
+                cy={size / 2}
+                r={size / 2}
                 fill="transparent"
                 stroke={p.team ? TEAM_COLORS[p.team] : "none"}
                 strokeWidth={3}
@@ -285,6 +335,14 @@ export default function TacticsBoard({
           );
         })}
       </svg>
+      {(loading || failed) && (
+        <div
+          className="pointer-events-none absolute left-3 top-3 rounded-lg bg-tools-carbon/90 px-3 py-2 text-xs text-white/70"
+          role="status"
+        >
+          {failed ? "Map could not be loaded" : "Loading map…"}
+        </div>
+      )}
     </div>
   );
 }
