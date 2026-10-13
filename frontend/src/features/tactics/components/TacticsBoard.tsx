@@ -6,6 +6,7 @@ import { arrowHead, clampPoint, pointString } from "../geometry";
 import type { BoardState, Drawing, PlayingTeam, Point, Tool } from "../types";
 import { useMapImage } from "../hooks/useMapImage";
 import { initialBoard } from "../hooks/useTacticsBoard";
+import MapLoading from "./MapLoading";
 
 type Gesture = {
   pointerId: number;
@@ -212,6 +213,7 @@ export default function TacticsBoard({
           cursor: tool === "move" ? "grab" : "crosshair",
         }}
         role="img"
+        aria-busy={loading}
         aria-label="Tactics board. Drag strikers onto the map and use the toolbar to draw."
         onPointerDown={start}
         onPointerMove={move}
@@ -335,12 +337,13 @@ export default function TacticsBoard({
           );
         })}
       </svg>
-      {(loading || failed) && (
+      {loading && <MapLoading />}
+      {failed && (
         <div
           className="pointer-events-none absolute left-3 top-3 rounded-lg bg-tools-carbon/90 px-3 py-2 text-xs text-white/70"
           role="status"
         >
-          {failed ? "Map could not be loaded" : "Loading map…"}
+          Map could not be loaded
         </div>
       )}
     </div>

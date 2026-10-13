@@ -1,0 +1,37 @@
+@keyframes tacticsLoadingReveal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes tacticsLoadingCoreFloat {
+  0%,
+  100% {
+    transform: translateY(-3px) rotate(-8deg);
+  }
+  50% {
+    transform: translateY(3px) rotate(8deg);
+  }
+}
+
+.tactics-map-loading {
+  /* Cached maps can finish before the overlay appears; never delay the map itself. */
+  animation: tacticsLoadingReveal 200ms ease-out 150ms both;
+}
+
+.tactics-map-loading-core {
+  animation: tacticsLoadingCoreFloat 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tactics-map-loading {
+    animation-duration: 0ms;
+  }
+
+  .tactics-map-loading-core {
+    animation: none;
+  }
+}

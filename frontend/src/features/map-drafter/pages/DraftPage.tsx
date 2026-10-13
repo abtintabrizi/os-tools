@@ -263,8 +263,8 @@ export default function DraftPage() {
         </div>
 
         {/* Center */}
-        <div className="px-5 flex flex-col flex-1 min-h-0 min-w-0">
-          <div className="pt-5 flex-1 min-h-0 overflow-y-auto flex flex-col">
+        <div className="flex flex-col flex-1 min-h-0 min-w-0 overflow-hidden">
+          <div className="p-5 flex-1 min-h-0 min-w-0 overflow-x-hidden overflow-y-auto flex flex-col">
             {!bothReady ? (
               <div className="flex flex-col items-center justify-center h-full gap-8">
                 <div className="flex gap-6">
@@ -332,14 +332,14 @@ export default function DraftPage() {
             ) : done ? (
               <DonePanel />
             ) : (
-              <div className="flex flex-col justify-center items-center">
+              <div className="flex w-full min-w-0 flex-col justify-center items-center">
                 <AnimatedNumber
                   value={timeLeft}
                   className={`font-mono font-bold tabular-nums mb-4 text-6xl transition-colors ${
                     timeLeft <= 5 ? "text-tools-red" : timeLeft <= 10 ? "text-amber-400" : "text-white/30"
                   }`}
                 />
-                <div className="grid grid-cols-4 gap-3 mb-3">
+                <div className="grid w-full min-w-0 grid-cols-4 gap-3 mb-3">
                   {maps.map((map) => {
                     const status = mapStatuses[map];
                     const isDecider = status === "decider";
@@ -360,7 +360,7 @@ export default function DraftPage() {
                     const isSelected = pending === map;
 
                     const cardClass = [
-                      "relative rounded-lg overflow-hidden border-2 transition-all duration-200 aspect-video",
+                      "relative min-w-0 rounded-lg overflow-hidden border-2 transition-all duration-200 aspect-video",
                       clickable
                         ? isSelected
                           ? isBanning
