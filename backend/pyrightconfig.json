@@ -1,5 +1,0 @@
-{
-  "venvPath": ".",
-  "pythonVersion": "3.11",
-  "include": ["app"]
-}
