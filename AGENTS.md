@@ -1,48 +1,45 @@
-# CLAUDE.md
+# Repository agent guidance
 
 This file provides guidance to AI agents when working with code in this repository.
 
-## Commands
+## Required reading and code style
 
-### Frontend (`frontend/`)
+At the start of every task, read this file and all applicable directory-level `AGENTS.md`
+files before editing code. For Node backend work, always read `backend/AGENTS.md`,
+including its style conventions. Re-read guidance when it changes during a task.
 
-```bash
-npm run dev      # Dev server on http://localhost:5173
-npm run build    # tsc + vite build (type-check included)
-npm run preview  # Preview production build
-npx prettier --write .  # Format all frontend files
-```
+- Use blank lines to separate logical sections; do not pack unrelated operations together.
+- Separate top-level declarations and class methods with one blank line.
+- Within functions, group related declarations and operations, and separate validation,
+  state changes, persistence, notifications, and return values where applicable.
+- Keep related simple constants together; separate distinct constant tables and type declarations.
+- Do not insert a blank line after every statement or between every object field.
+- Prettier preserves intentional blank lines but does not add logical grouping for you.
+  Review readability manually after formatting.
 
-### Backend (`backend/`)
+## Workspace and validation
 
-```bash
-# Activate venv first (Windows)
-source .venv/Scripts/activate
+The monorepo contains a React/Vite frontend in `frontend/` and an Express 5/TypeScript
+backend in `backend/`. The former Python backend is available in Git history.
+Read `backend/AGENTS.md` before backend changes for architecture, style, and invariants.
 
-python app/main.py                                          # Dev server on http://127.0.0.1:8000
-uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload # Equivalent
-black .                                                     # Format all backend Python files
-```
+Use Node 24 and the pnpm version pinned in root `package.json`. Run `corepack enable`
+once, then `pnpm install --frozen-lockfile` at the root. Do not create npm lockfiles.
 
-No test suite exists in either package.
+- `pnpm dev` starts both apps through Turbo, with Windows shutdown cleanup.
+- Keep `shellEmulator: true` in the workspace config: Windows batch wrappers otherwise
+  return the shell prompt before the development launcher's cleanup finishes.
+- `pnpm build`, `pnpm lint`, and `pnpm typecheck` run both packages' tasks through Turbo.
+- `pnpm --filter @os-tools/backend dev` starts only the backend on port 8000.
+- `pnpm --filter @os-tools/frontend dev` starts only Vite on port 5173.
 
-## Formatting, Linting & Build Validation
-
-Always run after making changes to frontend files:
-
-1. `npx prettier --write <file>` — format changed `.ts` / `.tsx` files. Config is in `frontend/.prettierrc`.
-2. `npx eslint <file>` — check for lint errors. Fix any warnings/errors before finishing.
-3. `npm run build` — run from `frontend/` after formatting and linting. This runs `tsc` to check TypeScript types, then `vite build` to verify production bundling, imports, assets, and build configuration. Output goes to `frontend/dist/`; this does not deploy the app.
-
-Formatting checks code style, ESLint checks code rules, and TypeScript checks types. Passing lint does not mean TypeScript passes. Always complete all three steps after frontend changes and fix any errors before finishing. If a check is blocked, explicitly report what could not be verified.
-
-For quick intermediate type checks, run `npx tsc --noEmit` from `frontend/`; this does not replace the final production build.
-
-On Windows PowerShell, use `npm.cmd` and `npx.cmd` if execution policy blocks the `.ps1` wrappers.
-
-Always run after making changes to backend files:
-
-- `black <file>` — format changed `.py` files. Black is in `requirements.txt` and available when the venv is active.
+After frontend changes, format changed files with `pnpm exec prettier --write <files>`,
+run ESLint without warnings, then run the frontend production build. Run these commands
+from `frontend/` using `pnpm exec eslint <files> --max-warnings 0` and `pnpm build`.
+The build includes TypeScript and Vite validation; lint alone does not check types.
+Backend changes require formatting, lint, typecheck, and build as described in its guide.
+Report any blocked validation. Use `pnpm.cmd` or `corepack.cmd pnpm` if PowerShell blocks wrappers.
+Do not create test files; use temporary command-line smoke checks.
 
 ## Button States
 
@@ -67,7 +64,7 @@ avoid duplicating existing guidance or turning agent instructions into a change 
 
 ## Architecture
 
-This is a monorepo with a separate React frontend and FastAPI backend.
+This is a monorepo with a separate React frontend and Express/TypeScript backend.
 
 ### Frontend
 
@@ -94,59 +91,18 @@ Room identity and side assignment live in URL params (`?room=XXXXX&side=blue`). 
 
 ### Backend
 
-```
-app/
-  main.py          # FastAPI app, CORS config (localhost:5173, vercel, bestieinslot.com)
-  routes/          # One router per feature; both follow identical 6-endpoint patterns
-  models/          # Pydantic request models
-  constants/       # Game rules: sequences, pools, awakenings, TIMER_SECONDS (30s)
-  utils/
-    supabase.py    # get_room / save_room (upsert) against two tables
-    ws.py          # ConnectionManager: per-room WebSocket lists, broadcast
-    map_draft.py   # Timer logic for map draft
-    striker_draft.py # Timer logic + generate_random_awakenings
-```
+Express route functions → managers → Supabase repository, with pure supporting utilities.
+`backend/app/server.ts` constructs the application dependencies; `main.ts` loads the
+backend environment and starts the server. Read `backend/AGENTS.md` for layer boundaries.
 
-Each draft type has 6 endpoints:
-
-- `POST /rooms` — create room, persist initial state
-- `GET /rooms/{id}` — fetch current state
-- `POST /rooms/{id}/ready` — mark a team ready; starts timer when both sides are ready
-- `POST /rooms/{id}/pending` — preview a hovered selection (broadcast only, no step advance)
-- `POST /rooms/{id}/action` — validate and apply a ban/pick, advance step, reset/spawn timer
-- `WS /ws/rooms/{id}` — stream state to clients; on connect, sends current state and re-spawns timer if a step is in progress
-
-All state is stored in Supabase (`map_drafts` / `striker_drafts` tables). The WebSocket `ConnectionManager` is a plain in-memory dict — it does not persist across server restarts.
-
-### Turn Timer
-
-`TIMER_SECONDS = 30.0` in `backend/app/constants/common.py`. When both teams are ready, the backend spawns an async timer per room. On timeout, it auto-advances the step (treating it as a no-ban on ban steps, or picking randomly on pick steps). `stepStartedAt` (epoch float) is stored in room state so reconnecting clients can compute remaining time client-side.
-
-### Awakening System (Striker Draft)
-
-Each room has two awakenings (one per team), either randomly generated or custom. `AWAKENING_CONFLICTS` in `backend/app/constants/common.py` is a dict mapping each awakening to a list of incompatible ones. Random generation picks two non-conflicting awakenings from `CURRENT_AWAKENING_POOL`.
-
-### Adding a New Draft Type
-
-1. Add constants (sequence, pool) in `backend/app/constants/`
-2. Add Pydantic models in `backend/app/models/`
-3. Create a new router in `backend/app/routes/` following the 6-endpoint pattern; register it in `routes/routes.py`
-4. Create a new feature module in `frontend/src/features/` mirroring the `map-drafter` or `striker-draft` structure
-5. Add routes in `frontend/src/app/router.tsx`
-
-## Testing
-
-Do not create test files.
+Room mutations, timer advancement, readiness, and linking use locks keyed by draft type
+and room ID. Timers and WebSockets are process-local: deploy one backend instance.
+Every outgoing room payload must use the shared client-state filter to hide private data.
+Existing API paths, WebSocket payloads, and saved Supabase JSON remain compatible.
 
 ## Environment
 
-**Backend** (`backend/.env`):
-
-- `SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
-
-**Frontend** (`frontend/.env`):
-
-- `VITE_API_BASE_URL` — backend base URL; defaults to `http://127.0.0.1:8000` if unset
-
-CORS allowed origins are hardcoded in `backend/app/main.py`.
+Backend `backend/.env`: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, optional `PORT`.
+Keep service-role credentials exclusively in the backend.
+Frontend `frontend/.env`: optional `VITE_API_BASE_URL`.
+See README for development and Render/Vercel deployment commands.
