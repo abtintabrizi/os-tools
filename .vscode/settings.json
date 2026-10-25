@@ -5,11 +5,10 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "js/ts.preferences.importModuleSpecifier": "non-relative",
-  "[python]": {
-    "editor.defaultFormatter": "ms-python.black-formatter",
-    "editor.formatOnSave": true
-  },
-  "python.analysis.extraPaths": ["backend"],
   "eslint.useFlatConfig": true,
-  "eslint.workingDirectories": ["frontend"]
+  "eslint.workingDirectories": [
+    "tools_frontend",
+    "tools_backend",
+    "tools_shared"
+  ]
 }

@@ -1,0 +1,29 @@
+{
+  "name": "@os-tools/shared",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    "./constants/*": {
+      "types": "./dist/constants/*.d.ts",
+      "default": "./dist/constants/*.js"
+    },
+    "./types/*": {
+      "types": "./dist/types/*.d.ts",
+      "default": "./dist/types/*.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch --preserveWatchOutput",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --max-warnings 0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "eslint": "^10.1.0",
+    "@eslint/js": "^10.0.1",
+    "typescript-eslint": "^8.58.0",
+    "prettier": "^3.8.1"
+  }
+}

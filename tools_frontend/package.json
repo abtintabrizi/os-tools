@@ -1,0 +1,39 @@
+{
+  "name": "@os-tools/frontend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "eslint src --max-warnings 0",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.43.0",
+    "@tailwindcss/vite": "^4.2.2",
+    "classnames": "^2.5.1",
+    "lucide-react": "^1.7.0",
+    "motion": "^12.38.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^7.13.2",
+    "tailwindcss": "^4.2.2",
+    "@os-tools/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@vitejs/plugin-react": "^4.2.0",
+    "eslint": "^10.1.0",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "globals": "^17.4.0",
+    "prettier": "^3.8.1",
+    "typescript": "^5.2.0",
+    "typescript-eslint": "^8.58.0",
+    "vite": "^5.0.0",
+    "vite-plugin-eslint": "^1.8.1"
+  }
+}

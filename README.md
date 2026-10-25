@@ -5,14 +5,39 @@ and tactics boards. Live at [drafter.bestieinslot.com](https://drafter.bestieins
 
 ## Stack and layout
 
-- `frontend/`: React, TypeScript, Vite, Tailwind; hosted on Vercel.
-- `backend/`: Express 5, TypeScript, native WebSockets through `ws`; intended for Render.
+- `tools_frontend/`: React, TypeScript, Vite, Tailwind; hosted on Vercel.
+- `tools_backend/`: Express 5, TypeScript, native WebSockets through `ws`; intended for Render.
 - Supabase: unchanged `map_drafts` and `striker_drafts` tables, each storing `room_id` and `state`.
+- `tools_shared/`: common game constants, API/state types, and replay types.
+- `tools_scripts/`: workspace development launcher.
 - pnpm workspaces and Turborepo: one install and lockfile for the TypeScript apps.
   Turbo runs development servers, builds, and checks.
 
-Types and constants remain local to each application during this initial port.
-Shared contracts, oRPC, Zod, and a test suite are deferred.
+Common game rules and types live in `tools_shared/src/constants/` and `tools_shared/src/types/`,
+exported by the private `@os-tools/shared` workspace package. UI assets and presentation
+types stay in the frontend; CORS, repository interfaces, and runtime resources stay in the backend.
+oRPC, Zod schemas, and a test suite are deferred.
+
+## Shared package builds
+
+Both apps depend on `@os-tools/shared` using `workspace:*`; pnpm links the local package.
+For example:
+
+```ts
+import { TIMER_SECONDS } from "@os-tools/shared/constants/timing";
+import type { MapDraftState } from "@os-tools/shared/types/mapDraft";
+```
+
+TypeScript compiles shared source to JavaScript and declaration files in `tools_shared/dist/`.
+Production Node imports the JavaScript; TypeScript reads the declarations. Generated files
+are ignored by Git. Run `pnpm dev`, `pnpm build`, or `pnpm typecheck` after a fresh install
+to create them. An editor opened before that first build may report unresolved package imports.
+
+Turbo's `^build` dependency builds shared before consumer builds, type checks, and dev startup.
+During `pnpm dev`, a shared TypeScript watcher rebuilds changes, Vite updates the frontend,
+and tsx watches shared JavaScript to restart the backend. No manual rebuild is needed while
+that command runs. Types disappear at runtime; constants are real JavaScript values.
+Separate deployed apps still need rebuilding/redeploying to receive new shared code.
 
 ## Backend request stack
 
@@ -58,17 +83,17 @@ pnpm install --frozen-lockfile
 The root `packageManager` field pins pnpm. On Windows, use `corepack.cmd pnpm` if a pnpm
 shim is unavailable; use `.cmd` wrappers when PowerShell execution policy requires them.
 
-Copy `backend/.env.default` to `backend/.env`, and fill in `SUPABASE_URL` and
+Copy `tools_backend/.env.default` to `tools_backend/.env`, and fill in `SUPABASE_URL` and
 `SUPABASE_SERVICE_ROLE_KEY`. Environment variables supplied by the host override the local file.
 Keep the service-role key server-side.
 
-The frontend optionally reads `frontend/.env` with `VITE_API_BASE_URL`; its default is
+The frontend optionally reads `tools_frontend/.env` with `VITE_API_BASE_URL`; its default is
 `http://localhost:8000`. Use the same URL when configuring local development explicitly.
 
 ```sh
 pnpm dev                                  # frontend :5173 + Node backend :8000
-pnpm --filter @os-tools/backend dev        # Node backend only
-pnpm --filter @os-tools/frontend dev       # frontend only
+pnpm exec turbo run dev --filter=@os-tools/backend...   # backend + shared watcher
+pnpm exec turbo run dev --filter=@os-tools/frontend...  # frontend + shared watcher
 pnpm build                                # both production builds
 pnpm lint                                 # both ESLint checks, no warnings
 pnpm typecheck                            # both TypeScript checks
@@ -140,7 +165,7 @@ HTTP access logs include method, path, status, and duration, without request bod
 
 Do not create test files. Format changed frontend TypeScript with
 `pnpm --filter @os-tools/frontend exec prettier --write <files>`, run ESLint, then the
-frontend production build. For Node, run its `format`, `lint`, `typecheck`, and `build`
+frontend production build through Turbo. For Node, run its `format`, `lint`, `typecheck`, and `build`
 scripts. Temporary smoke checks can import `createApplication(store)` from `app/server.ts` to use an isolated
 store and ephemeral port. Production uses Supabase exclusively.
 
@@ -170,21 +195,22 @@ Configure the existing service with:
 
 Retain `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`; Render supplies `PORT`.
 Build filters must include root package/workspace/lock/Turbo/Node-version files as well as
-`backend/**`. Existing CORS allowlists and Vercel preview-origin matching are preserved.
+`tools_backend/**` and `tools_shared/**`. Existing CORS allowlists and Vercel preview-origin matching are preserved.
 
 Plan cutover between drafts so Python and Node do not run timers against the same rooms
 while Render replaces the process. Check health, room creation, a two-client draft, and
 WebSocket reconnect before declaring the cutover complete. Existing rooms need no conversion.
 
 Rollback: deploy the previous Python revision, restore Render's Python runtime and root
-`backend`, use `pip install -r requirements.txt` for build and
+`tools_backend`, use `pip install -r requirements.txt` for build and
 `uvicorn app.main:app --host 0.0.0.0 --port $PORT` for start. Stop Node before Python serves
 rooms. The Python source is available in Git history.
 
 ### Vercel frontend
 
-Keep root directory `frontend`, framework Vite, and output directory `dist`. Configure
-installation as `corepack pnpm install --frozen-lockfile` and build as `corepack pnpm build`.
+Keep root directory `tools_frontend`, framework Vite, and output directory `dist`. Configure
+installation as `corepack pnpm install --frozen-lockfile` and build as
+`cd .. && corepack pnpm exec turbo run build --filter=@os-tools/frontend`.
 Allow access to files outside the root directory so Vercel sees the root workspace and lockfile.
 Use Node 24 and retain `VITE_API_BASE_URL`. Keep the existing SPA rewrite in `vercel.json`.
 The committed pnpm lockfile replaces both npm lockfiles; do not use `npm install` on deployment.

@@ -1,0 +1,16 @@
+import js from "@eslint/js";
+import globals from "globals";
+import reactHooks from "eslint-plugin-react-hooks";
+import tseslint from "typescript-eslint";
+
+export default tseslint.config(js.configs.recommended, ...tseslint.configs.recommended, {
+  files: ["**/*.{ts,tsx}"],
+  languageOptions: { parserOptions: { tsconfigRootDir: import.meta.dirname }, globals: globals.browser },
+  plugins: {
+    "react-hooks": reactHooks,
+  },
+  rules: {
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn",
+  },
+});

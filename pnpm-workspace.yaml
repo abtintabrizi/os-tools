@@ -1,6 +1,7 @@
 packages:
-  - frontend
-  - backend
+  - tools_frontend
+  - tools_backend
+  - tools_shared
 
 # Keep the outer script alive during Ctrl+C; cmd.exe can return the prompt early.
 shellEmulator: true
