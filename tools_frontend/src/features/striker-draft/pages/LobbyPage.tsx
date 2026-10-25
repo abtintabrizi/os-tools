@@ -1,47 +1,33 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { CURRENT_AWAKENING_POOL, type Team as Side, Team } from "@os-tools/shared";
 import classNames from "classnames";
-import type { Side } from "@/features/common/types";
-import {
-  ALL_AWAKENINGS,
-  CURRENT_AWAKENING_POOL,
-  Team,
-} from "@/features/common/constants/constants";
-import { useStrikerDraftContext } from "@/features/striker-draft/context/StrikerDraftContext";
-import {
-  BackButton,
-  HomeButton,
-} from "@/features/common/components/NavButtons";
-import LoadingScreen from "@/features/common/components/LoadingScreen";
-import LobbyLink from "@/features/common/components/LobbyLink";
-import LobbyReplayLink from "@/features/common/components/LobbyReplayLink";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+import LoadingScreen from "../../common/components/LoadingScreen";
+import LobbyLink from "../../common/components/LobbyLink";
+import LobbyReplayLink from "../../common/components/LobbyReplayLink";
+import { BackButton, HomeButton } from "../../common/components/NavButtons";
+import { AWAKENING_ICONS } from "../../common/constants/constants";
+import { useStrikerDraftContext } from "../context/StrikerDraftContext";
 
 export default function LobbyPage() {
-  const { lobbyState, state, loading, handleSidePick } =
-    useStrikerDraftContext();
+  const { lobbyState, state, loading, handleSidePick } = useStrikerDraftContext();
   const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
 
-  const room =
-    state?.roomId === lobbyState?.roomId ? state : (lobbyState ?? state);
+  const room = state?.roomId === lobbyState?.roomId ? state : (lobbyState ?? state);
 
   useEffect(() => {
-    if (!loading && !room) navigate("/striker-draft", { replace: true });
+    if (!loading && !room) {
+      navigate("/striker-draft", { replace: true });
+    }
   }, [loading, room, navigate]);
 
-  if (loading || !room)
+  if (loading || !room) {
     return <LoadingScreen message="Connecting to draft..." />;
+  }
 
-  const {
-    roomId,
-    blueName,
-    redName,
-    bannedStarts,
-    map,
-    awakenings,
-    awakeningMode,
-    done,
-  } = room;
+  const { roomId, blueName, redName, bannedStarts, map, awakenings, awakeningMode, done } = room;
   const isRandom = awakeningMode === "random";
 
   function buildUrl(side: Side): string {
@@ -67,20 +53,17 @@ export default function LobbyPage() {
   const replayUrl = replayLink.toString();
   const replayAvailable = Boolean(room.done && room.replayEvents?.length);
 
-  const baseBtn =
-    "px-2.5 py-2.5 rounded-lg font-head text-sm font-bold transition-all duration-150";
+  const baseBtn = "px-2.5 py-2.5 rounded-lg font-head text-sm font-bold transition-all duration-150";
 
   return (
     <div className="min-h-screen py-6 flex justify-center items-center">
       <div className="grid grid-cols-3 gap-5 p-5">
         {isRandom && bannedStarts && bannedStarts.length > 0 && (
           <div className="self-start flex flex-col gap-4 bg-tools-carbon border border-white/7 rounded-2xl p-6 justify-center items-center">
-            <div className="text-sm font-mono tracking-widest uppercase w-full">
-              Starting Awakenings — Banned
-            </div>
+            <div className="text-sm font-mono tracking-widest uppercase w-full">Starting Awakenings — Banned</div>
             <div className="grid grid-cols-6 gap-1">
               {CURRENT_AWAKENING_POOL.map((a) => {
-                const icon = ALL_AWAKENINGS.find((b) => b.name === a)?.icon;
+                const icon = AWAKENING_ICONS[a];
                 const isBanned = bannedStarts.includes(a);
                 return (
                   <div
@@ -90,14 +73,8 @@ export default function LobbyPage() {
                       { "opacity-30 grayscale": isBanned },
                     )}
                   >
-                    <img
-                      src={icon}
-                      alt={a}
-                      className="w-12 h-12 object-contain shrink-0"
-                    />
-                    <span className="text-xs text-center leading-tight line-clamp-2">
-                      {a}
-                    </span>
+                    <img src={icon} alt={a} className="w-12 h-12 object-contain shrink-0" />
+                    <span className="text-xs text-center leading-tight line-clamp-2">{a}</span>
                   </div>
                 );
               })}
@@ -120,8 +97,7 @@ export default function LobbyPage() {
                 // Room {roomId} · Striker Draft · Share links below
               </p>
               <p className="font-mono text-xs tracking-wider uppercase text-white/50">
-                // {map} ·{" "}
-                {isRandom ? "Random Awakenings" : `${awakenings.join(" / ")}`}
+                // {map} · {isRandom ? "Random Awakenings" : `${awakenings.join(" / ")}`}
               </p>
             </div>
             <button
@@ -163,11 +139,7 @@ export default function LobbyPage() {
               tone="neutral"
               onEnter={() => handleSidePick(Team.Spectator)}
             />
-            <LobbyReplayLink
-              url={replayUrl}
-              available={replayAvailable}
-              completed={room.done}
-            />
+            <LobbyReplayLink url={replayUrl} available={replayAvailable} completed={room.done} />
           </div>
         </div>
       </div>

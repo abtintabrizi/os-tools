@@ -1,42 +1,43 @@
-import type { CommonState, DraftAction, PlayingSide, Team } from "./common.js";
-
-export type Sequence = `${import("../constants/sequence.js").Sequence}`;
+import type { Awakening } from "../constants/awakenings.js";
+import type { DraftAction, Sequence, Team } from "../constants/game.js";
+import type { GameMap } from "../constants/maps.js";
+import type { CommonState, PlayingSide } from "./common.js";
 
 export interface MapDraftAction {
-  map: string;
+  map: GameMap;
   team: PlayingSide | null;
   step?: number | null;
   action: DraftAction;
 }
 
 export interface MapDraftState extends CommonState {
-  maps: string[];
+  maps: GameMap[];
   bestOf: Sequence;
   actions: MapDraftAction[];
   strikerLobbies: Record<string, { roomId: string; firstPick: string }> | null;
-  bannedAwakenings: string[] | null;
+  bannedAwakenings: Awakening[] | null;
 }
 
 export interface CreateMapDraftRoomRequest {
-  bestOf: string;
+  bestOf: Sequence;
   blueName: string;
   redName: string;
-  maps: string[];
+  maps: GameMap[];
 }
 
 export interface MapDraftActionRequest {
-  map: string;
+  map: GameMap;
   step: number;
 }
 
 export interface MapDraftPendingRequest {
   side: Team;
-  map: string | null;
+  map: GameMap | null;
 }
 
 export interface SetStrikerRoomRequest {
-  map: string;
+  map: GameMap;
   roomId: string;
   firstPick: string;
-  bannedAwakenings: string[];
+  bannedAwakenings: Awakening[];
 }

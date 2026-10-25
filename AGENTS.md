@@ -8,6 +8,11 @@ At the start of every task, read this file and all applicable directory-level `A
 files before editing code. For Node backend work, always read `tools_backend/AGENTS.md`,
 including its style conventions. Re-read guidance when it changes during a task.
 
+- Always use explicit braced blocks for control flow (`if`, `else`, loops, and similar
+  statements), even for one statement. Put statements on their own lines.
+- Frontend arrow functions and callbacks may use concise expression bodies, including
+  JSX event handlers and array callbacks. Backend and shared function bodies must use
+  explicit braced blocks; follow their directory-level guidance.
 - Use blank lines to separate logical sections; do not pack unrelated operations together.
 - Separate top-level declarations and class methods with one blank line.
 - Within functions, group related declarations and operations, and separate validation,
@@ -40,9 +45,14 @@ the repository root using `pnpm exec turbo run build --filter=@os-tools/frontend
 The build includes TypeScript and Vite validation; lint alone does not check types.
 Backend changes require formatting, lint, typecheck, and build as described in its guide.
 Shared package work requires reading `tools_shared/AGENTS.md`. Cross-app constants/types belong
-in its `src/constants/` and `src/types/`; keep assets, UI types, CORS, storage interfaces, and timers local.
+in its `src/constants/` and `src/types/`; keep assets, UI types, CORS, backend-only types, and timers local.
+Import shared definitions directly from `@os-tools/shared`; do not add app-local forwarding
+modules or re-export shared definitions through local asset/type files. Keep local modules only
+for definitions or behavior owned by that app.
 Use Turbo for consumer checks/builds so shared declarations are built first. `pnpm dev` watches shared
 changes; do not depend on stale `dist/` files or import shared source via relative paths.
+The root `tsconfig.json` lists all workspace projects for editor discovery. Keep it in sync
+when adding packages so cross-project reference searches work with only a shared file open.
 Report any blocked validation. Use `pnpm.cmd` or `corepack.cmd pnpm` if PowerShell blocks wrappers.
 Do not create test files; use temporary command-line smoke checks.
 
@@ -87,8 +97,8 @@ Each feature follows the same internal pattern:
 - `pages/` — SetupPage → LobbyPage → DraftPage (three-step flow)
 - `context/` — single React Context + Provider that owns all state for the feature; consumed by pages and components via `useXxxDraftContext()`
 - `hooks/useXxxDraftApi` — all HTTP and WebSocket calls; returns state derived from the WebSocket stream
-- `constants.ts` — sequence (ban/pick order), pool (available items)
-- `types/` — re-exports of shared state types plus local presentation types
+- `constants.ts` — frontend defaults and presentation configuration; game rules live in shared
+- `types/` — local presentation types; import common state types directly from shared
 
 The router (`src/app/router.tsx`) nests the three pages under each feature path (`/map-draft`, `/striker-draft`).
 
@@ -96,7 +106,7 @@ Room identity and side assignment live in URL params (`?room=XXXXX&side=blue`). 
 
 ### Backend
 
-Express route functions → managers → Supabase repository, with pure supporting utilities.
+Express route functions → managers (including RoomManager for Supabase access), with pure supporting utilities.
 `tools_backend/app/server.ts` constructs the application dependencies; `main.ts` loads the
 backend environment and starts the server. Read `tools_backend/AGENTS.md` for layer boundaries.
 
@@ -111,3 +121,10 @@ Backend `tools_backend/.env`: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, optio
 Keep service-role credentials exclusively in the backend.
 Frontend `tools_frontend/.env`: optional `VITE_API_BASE_URL`.
 See README for development and Render/Vercel deployment commands.
+
+Import order is enforced by `simple-import-sort/imports` in each TypeScript package.
+Keep package imports together and relative imports together. Use relative imports for frontend
+source files; do not add path aliases. Workspace packages such as `@os-tools/shared` remain
+package imports. Side-effect imports retain their own group and order.
+Use the package's `pnpm exec eslint <files> --fix` to fix sorting, then format with Prettier.
+VS Code applies ESLint fixes on explicit saves when the ESLint extension is enabled.

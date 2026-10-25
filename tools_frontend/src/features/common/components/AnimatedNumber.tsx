@@ -1,5 +1,5 @@
-import { useRef, useLayoutEffect } from "react";
 import { AnimatePresence, motion } from "motion/react";
+import { useLayoutEffect, useRef } from "react";
 
 interface AnimatedNumberProps {
   value: number;
@@ -14,8 +14,7 @@ const digitVariants = {
 
 export function AnimatedNumber({ value, className }: AnimatedNumberProps) {
   const prevRef = useRef(value);
-  const shouldAnimate =
-    prevRef.current !== value && Math.abs(prevRef.current - value) === 1;
+  const shouldAnimate = prevRef.current !== value && Math.abs(prevRef.current - value) === 1;
 
   useLayoutEffect(() => {
     prevRef.current = value;
@@ -26,10 +25,7 @@ export function AnimatedNumber({ value, className }: AnimatedNumberProps) {
   return (
     <span className={`inline-flex ${className ?? ""}`}>
       {str.split("").map((digit, i) => (
-        <span
-          key={str.length - 1 - i}
-          className="relative overflow-hidden inline-flex leading-none"
-        >
+        <span key={str.length - 1 - i} className="relative overflow-hidden inline-flex leading-none">
           <AnimatePresence mode="popLayout" initial={false} custom={shouldAnimate}>
             <motion.span
               key={digit}

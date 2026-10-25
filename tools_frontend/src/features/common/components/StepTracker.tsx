@@ -1,5 +1,4 @@
-import { SequenceStep } from "@/features/common/types";
-import { DraftAction } from "@/features/common/constants/constants";
+import { DraftAction, type SequenceStep } from "@os-tools/shared";
 
 export function StepTracker({
   step,

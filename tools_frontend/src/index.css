@@ -57,11 +57,7 @@ body,
 #root {
   min-height: 100vh;
   background-color: var(--color-tools-void);
-  background-image: radial-gradient(
-    ellipse 120% 100% at 50% 50%,
-    #1a1a2e 0%,
-    var(--color-tools-void) 70%
-  );
+  background-image: radial-gradient(ellipse 120% 100% at 50% 50%, #1a1a2e 0%, var(--color-tools-void) 70%);
   color: white;
   font-family: var(--font-head);
 }

@@ -1,21 +1,15 @@
-import { useEffect, useState } from "react";
-import Spinner from "@/features/common/components/Spinner";
-import { HomeButton } from "@/features/common/components/NavButtons";
-import {
-  ALL_AWAKENINGS,
-  ALL_MAPS,
-  AWAKENING_CONFLICTS,
-  Awakening,
-  CURRENT_AWAKENING_POOL,
-  DEFAULT_BANNED_AWAKENINGS,
-} from "@/features/common/constants/constants";
-import AwakeningPicker from "@/features/striker-draft/components/AwakeningPicker";
-import { useStrikerDraftContext } from "@/features/striker-draft/context/StrikerDraftContext";
-import { useToast } from "@/features/common/components/Toast";
+import { Awakening, AWAKENING_CONFLICTS, AwakeningMode, CURRENT_AWAKENING_POOL, GameMap } from "@os-tools/shared";
 import classNames from "classnames";
+import { useEffect, useState } from "react";
 
-const ALL_MAP_NAMES = new Set<string>(ALL_MAPS.map((m) => m.name));
-const ALL_AWAKENING_NAMES = new Set<string>(ALL_AWAKENINGS.map((a) => a.name));
+import { HomeButton } from "../../common/components/NavButtons";
+import Spinner from "../../common/components/Spinner";
+import { useToast } from "../../common/components/Toast";
+import { AWAKENING_ICONS, DEFAULT_BANNED_AWAKENINGS } from "../../common/constants/constants";
+import AwakeningPicker from "../components/AwakeningPicker";
+import { useStrikerDraftContext } from "../context/StrikerDraftContext";
+
+const ALL_AWAKENING_NAMES = new Set<string>(Object.values(Awakening));
 
 function getInitialParams() {
   return new URLSearchParams(window.location.search);
@@ -31,24 +25,24 @@ export default function SetupPage() {
     return getInitialParams().get("red") ?? "";
   });
   const [loading, setLoading] = useState(false);
-  const [map, setMap] = useState(() => {
+  const [map, setMap] = useState<GameMap | "">(() => {
     const urlMap = getInitialParams().get("map") ?? "";
 
-    return ALL_MAP_NAMES.has(urlMap) ? urlMap : "";
+    return Object.values(GameMap).find((name) => name === urlMap) ?? "";
   });
   const [awakening, setAwakening] = useState(() => {
     const urlMode = getInitialParams().get("awakeningMode");
 
-    return urlMode === "custom" ? "custom" : "random";
+    return urlMode === AwakeningMode.Custom ? AwakeningMode.Custom : AwakeningMode.Random;
   });
-  const [customAwakenings, setCustomAwakenings] = useState(() => {
+  const [customAwakenings, setCustomAwakenings] = useState<{ first: Awakening | ""; second: Awakening | "" }>(() => {
     const params = getInitialParams();
     const first = params.get("awk1") ?? "";
     const second = params.get("awk2") ?? "";
 
     return {
-      first: ALL_AWAKENING_NAMES.has(first) ? first : "",
-      second: ALL_AWAKENING_NAMES.has(second) ? second : "",
+      first: Object.values(Awakening).find((name) => name === first) ?? "",
+      second: Object.values(Awakening).find((name) => name === second) ?? "",
     };
   });
   const [bannedAwakenings, setBannedAwakenings] = useState<Awakening[]>(() => {
@@ -68,7 +62,9 @@ export default function SetupPage() {
     }
     try {
       const stored = localStorage.getItem("bannedAwakenings");
-      if (stored) return JSON.parse(stored) as Awakening[];
+      if (stored) {
+        return JSON.parse(stored) as Awakening[];
+      }
     } catch {
       // ignore parse errors, fall back to default
     }
@@ -93,13 +89,23 @@ export default function SetupPage() {
 
   function handleCopyConfigLink() {
     const paramObj: Record<string, string> = {};
-    if (blueName.trim()) paramObj.blue = blueName.trim();
-    if (redName.trim()) paramObj.red = redName.trim();
-    if (map) paramObj.map = map;
+    if (blueName.trim()) {
+      paramObj.blue = blueName.trim();
+    }
+    if (redName.trim()) {
+      paramObj.red = redName.trim();
+    }
+    if (map) {
+      paramObj.map = map;
+    }
     paramObj.awakeningMode = awakening;
-    if (awakening === "custom") {
-      if (customAwakenings.first) paramObj.awk1 = customAwakenings.first;
-      if (customAwakenings.second) paramObj.awk2 = customAwakenings.second;
+    if (awakening === AwakeningMode.Custom) {
+      if (customAwakenings.first) {
+        paramObj.awk1 = customAwakenings.first;
+      }
+      if (customAwakenings.second) {
+        paramObj.awk2 = customAwakenings.second;
+      }
     } else {
       paramObj.banned = JSON.stringify(bannedAwakenings);
     }
@@ -113,7 +119,7 @@ export default function SetupPage() {
     });
   }
 
-  const handleAwakeningChange = (key: "first" | "second", value: string) => {
+  const handleAwakeningChange = (key: "first" | "second", value: Awakening) => {
     setCustomAwakenings((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -135,6 +141,10 @@ export default function SetupPage() {
   };
 
   async function handleSubmit() {
+    if (!map || (awakening === AwakeningMode.Custom && (!customAwakenings.first || !customAwakenings.second))) {
+      return;
+    }
+
     setLoading(true);
     try {
       await handleLaunch({
@@ -142,8 +152,11 @@ export default function SetupPage() {
         redName,
         map,
         awakeningMode: awakening,
-        customAwakenings: awakening === "custom" ? [customAwakenings.first, customAwakenings.second] : undefined,
-        bannedStarts: awakening === "random" ? bannedAwakenings : undefined,
+        customAwakenings:
+          awakening === AwakeningMode.Custom
+            ? [customAwakenings.first, customAwakenings.second].filter((value): value is Awakening => value !== "")
+            : [],
+        bannedStarts: awakening === AwakeningMode.Random ? bannedAwakenings : [],
       });
     } catch (e) {
       toast({
@@ -157,13 +170,13 @@ export default function SetupPage() {
   }
 
   const isDisabled =
-    loading || !map || (awakening === "custom" && (!customAwakenings.first || !customAwakenings.second));
+    loading || !map || (awakening === AwakeningMode.Custom && (!customAwakenings.first || !customAwakenings.second));
 
   return (
     <div className="h-screen flex justify-center items-center">
       <div className="grid grid-cols-3 gap-5 p-5">
         {/* Banned awakenings area */}
-        {awakening === "random" && (
+        {awakening === AwakeningMode.Random && (
           <div className="w-full max-w-160 flex flex-col gap-4 bg-tools-carbon border border-white/7 rounded-2xl p-6 justify-center items-center">
             <div className="flex justify-between items-center w-full h-6">
               <div className="text-sm font-mono tracking-widest uppercase">Starting Awakenings - Click to Toggle</div>
@@ -181,7 +194,7 @@ export default function SetupPage() {
 
             <div className="grid grid-cols-6 gap-1">
               {CURRENT_AWAKENING_POOL.map((a) => {
-                const icon = ALL_AWAKENINGS.find((b) => b.name === a)?.icon;
+                const icon = AWAKENING_ICONS[a];
                 const isBanned = bannedAwakenings.includes(a);
 
                 return (
@@ -259,15 +272,19 @@ export default function SetupPage() {
               <div className="text-sm font-mono tracking-widest uppercase">Map</div>
               <select
                 value={map}
-                onChange={(e) => setMap(e.target.value)}
+                onChange={(e) => setMap(e.target.value as GameMap | "")}
                 className="border border-white/7 bg-tools-graphite p-3 font-bold rounded-lg cursor-pointer transition-colors duration-200 focus:border-white/15"
               >
                 <option value="">Select a map</option>
-                {ALL_MAPS.map((m) => (
-                  <option key={m.name} value={m.name}>
-                    {m.name}
-                  </option>
-                ))}
+                {Object.values(GameMap)
+                  .sort((a, b) => {
+                    return a.localeCompare(b);
+                  })
+                  .map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
               </select>
             </div>
 
@@ -276,32 +293,33 @@ export default function SetupPage() {
               <div className="flex flex-row gap-3 w-full">
                 <button
                   className={`w-full border rounded-lg p-2 font-mono font-semibold transition-colors duration-200 uppercase ${
-                    awakening === "random" ? "border-tools-gold/40 bg-tools-gold/6" : "bg-tools-graphite border-white/7"
+                    awakening === AwakeningMode.Random
+                      ? "border-tools-gold/40 bg-tools-gold/6"
+                      : "bg-tools-graphite border-white/7"
                   }`}
-                  onClick={() => setAwakening("random")}
+                  onClick={() => setAwakening(AwakeningMode.Random)}
                 >
                   Random
                 </button>
                 <button
                   className={`w-full border rounded-lg p-2 font-mono font-semibold transition-colors duration-200 uppercase ${
-                    awakening === "custom" ? "border-tools-gold/40 bg-tools-gold/6" : "bg-tools-graphite border-white/7"
+                    awakening === AwakeningMode.Custom
+                      ? "border-tools-gold/40 bg-tools-gold/6"
+                      : "bg-tools-graphite border-white/7"
                   }`}
-                  onClick={() => setAwakening("custom")}
+                  onClick={() => setAwakening(AwakeningMode.Custom)}
                 >
                   Custom
                 </button>
               </div>
-              {awakening === "custom" && (
+              {awakening === AwakeningMode.Custom && (
                 <div className="flex gap-3">
                   <AwakeningPicker
                     value={customAwakenings.first}
                     onChange={(v) => handleAwakeningChange("first", v)}
                     exclude={
                       customAwakenings.second
-                        ? [
-                            customAwakenings.second,
-                            ...(AWAKENING_CONFLICTS[customAwakenings.second as Awakening] ?? []),
-                          ]
+                        ? [customAwakenings.second, ...(AWAKENING_CONFLICTS[customAwakenings.second] ?? [])]
                         : []
                     }
                   />
@@ -310,7 +328,7 @@ export default function SetupPage() {
                     onChange={(v) => handleAwakeningChange("second", v)}
                     exclude={
                       customAwakenings.first
-                        ? [customAwakenings.first, ...(AWAKENING_CONFLICTS[customAwakenings.first as Awakening] ?? [])]
+                        ? [customAwakenings.first, ...(AWAKENING_CONFLICTS[customAwakenings.first] ?? [])]
                         : []
                     }
                   />

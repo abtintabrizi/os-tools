@@ -1,5 +1,6 @@
-import { CORE_CROP } from "../constants";
 import "./MapLoading.css";
+
+import { CORE_CROP } from "../constants";
 
 export default function MapLoading() {
   return (

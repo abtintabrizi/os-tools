@@ -1,10 +1,10 @@
-import { TIMER_SECONDS } from "../constants/common.js";
-import { roomKey } from "../utils/roomHelper.js";
-import type { DraftType } from "../models/common.js";
-import type { RoomState } from "../models/room.js";
-import { Logger } from "./logger.js";
+import { type DraftType, TIMER_SECONDS } from "@os-tools/shared";
 
-const logger = new Logger("managers.timerManager");
+import { roomKey } from "../utils/roomUtil.js";
+import { LoggerManager } from "./loggerManager.js";
+import type { RoomStateByType } from "./roomManager.js";
+
+const logger = new LoggerManager("managers.timerManager");
 
 export interface RoomTimer {
   handle: NodeJS.Timeout;
@@ -21,20 +21,27 @@ export class TimerManager {
 
   public constructor(private readonly onTimeout: TimeoutHandler) {}
 
-  public has = (type: DraftType, roomId: string): boolean => this.timers.has(roomKey(type, roomId));
-
-  public isCurrent = (type: DraftType, roomId: string, timer: RoomTimer): boolean =>
-    this.timers.get(roomKey(type, roomId)) === timer;
-
-  public remove = (type: DraftType, roomId: string, timer: RoomTimer): void => {
-    if (this.isCurrent(type, roomId, timer)) this.timers.delete(roomKey(type, roomId));
+  public has = (type: DraftType, roomId: string): boolean => {
+    return this.timers.has(roomKey(type, roomId));
   };
 
-  public schedule = (type: DraftType, state: RoomState): void => {
+  public isCurrent = (type: DraftType, roomId: string, timer: RoomTimer): boolean => {
+    return this.timers.get(roomKey(type, roomId)) === timer;
+  };
+
+  public remove = (type: DraftType, roomId: string, timer: RoomTimer): void => {
+    if (this.isCurrent(type, roomId, timer)) {
+      this.timers.delete(roomKey(type, roomId));
+    }
+  };
+
+  public schedule = <T extends DraftType>(type: T, state: NoInfer<RoomStateByType[T]>): void => {
     const key = roomKey(type, state.roomId);
     this.cancel(type, state.roomId, "rescheduled");
 
-    if (this.stopped || state.done || !state.readyBlue || !state.readyRed || state.stepStartedAt == null) return;
+    if (this.stopped || state.done || !state.readyBlue || !state.readyRed || state.stepStartedAt == null) {
+      return;
+    }
 
     const delay = Math.max(0, (state.stepStartedAt + TIMER_SECONDS - Date.now() / 1000) * 1000);
     const timer: RoomTimer = {
@@ -64,7 +71,9 @@ export class TimerManager {
     const key = roomKey(type, roomId);
     const timer = this.timers.get(key);
 
-    if (!timer) return;
+    if (!timer) {
+      return;
+    }
 
     clearTimeout(timer.handle);
     this.timers.delete(key);
@@ -75,6 +84,8 @@ export class TimerManager {
   public stop = (): void => {
     this.stopped = true;
 
-    for (const timer of this.timers.values()) this.cancel(timer.type, timer.roomId, "shutdown");
+    for (const timer of this.timers.values()) {
+      this.cancel(timer.type, timer.roomId, "shutdown");
+    }
   };
 }

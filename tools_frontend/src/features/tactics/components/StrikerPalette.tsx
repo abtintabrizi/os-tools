@@ -1,5 +1,7 @@
+import { Striker, Team } from "@os-tools/shared";
 import { useEffect, useRef, useState } from "react";
-import { ALL_STRIKERS, Team } from "@/features/common/constants/constants";
+
+import { STRIKER_METADATA } from "../../common/constants/constants";
 import { CORE_CROP, DRAG_TYPE, TEAM_COLORS } from "../constants";
 import type { PlayingTeam } from "../types";
 
@@ -19,7 +21,9 @@ export default function StrikerPalette({
   useEffect(() => {
     const element = container.current;
     const toggleElement = toggle.current;
-    if (!element || !toggleElement) return;
+    if (!element || !toggleElement) {
+      return;
+    }
 
     const observer = new ResizeObserver(() => {
       // Icons are 64px wide, with an 8px gap between them.
@@ -53,22 +57,26 @@ export default function StrikerPalette({
         <image href="/other/Core.png" width={1920} height={1080} onError={onImageError} />
       </svg>
     </div>,
-    ...ALL_STRIKERS.map((striker) => (
-      <img
-        key={striker.name}
-        src={striker.icon}
-        alt={striker.name}
-        title={`Drag ${striker.name} onto the map (${team} team)`}
-        draggable
-        onError={onImageError}
-        onDragStart={(event) => {
-          event.dataTransfer.setData(DRAG_TYPE, striker.name);
-          event.dataTransfer.effectAllowed = "copy";
-        }}
-        className="h-16 w-16 cursor-grab rounded-full border-2 bg-tools-graphite object-cover transition-transform hover:scale-110"
-        style={{ borderColor: TEAM_COLORS[team] }}
-      />
-    )),
+    ...Object.values(Striker)
+      .sort((a, b) => {
+        return a.localeCompare(b);
+      })
+      .map((name) => (
+        <img
+          key={name}
+          src={STRIKER_METADATA[name].icon}
+          alt={name}
+          title={`Drag ${name} onto the map (${team} team)`}
+          draggable
+          onError={onImageError}
+          onDragStart={(event) => {
+            event.dataTransfer.setData(DRAG_TYPE, name);
+            event.dataTransfer.effectAllowed = "copy";
+          }}
+          className="h-16 w-16 cursor-grab rounded-full border-2 bg-tools-graphite object-cover transition-transform hover:scale-110"
+          style={{ borderColor: TEAM_COLORS[team] }}
+        />
+      )),
   ];
   const rowCount = Math.ceil(icons.length / capacity);
   const baseSize = Math.floor(icons.length / rowCount);

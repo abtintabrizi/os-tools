@@ -1,13 +1,12 @@
+import type { DraftType } from "@os-tools/shared";
 import { WebSocket } from "ws";
 
-import type { DraftType } from "../models/common.js";
-import type { RoomState } from "../models/room.js";
-import { stateForClient } from "../utils/replay.js";
+import { stateForClient } from "../utils/replayUtil.js";
+import { roomKey } from "../utils/roomUtil.js";
+import { LoggerManager } from "./loggerManager.js";
+import type { RoomStateByType } from "./roomManager.js";
 
-import { roomKey } from "../utils/roomHelper.js";
-import { Logger } from "./logger.js";
-
-const logger = new Logger("managers.connectionManager");
+const logger = new LoggerManager("managers.connectionManager");
 
 export class ConnectionManager {
   private readonly connections = new Map<string, Map<WebSocket, string>>();
@@ -21,12 +20,18 @@ export class ConnectionManager {
     room.set(ws, side);
     this.connections.set(key, room);
     this.responsive.add(ws);
-    ws.on("pong", () => this.responsive.add(ws));
-    ws.on("close", () => this.disconnect(key, ws));
+    ws.on("pong", () => {
+      return this.responsive.add(ws);
+    });
+    ws.on("close", () => {
+      return this.disconnect(key, ws);
+    });
     ws.on("error", () => {
       this.disconnect(key, ws);
       // Preserve protocol close frames (for example 1009 for an oversized message).
-      if (ws.readyState !== WebSocket.CLOSING && ws.readyState !== WebSocket.CLOSED) ws.terminate();
+      if (ws.readyState !== WebSocket.CLOSING && ws.readyState !== WebSocket.CLOSED) {
+        ws.terminate();
+      }
     });
 
     // Match Uvicorn's default 20-second ping interval and 20-second pong timeout.
@@ -69,7 +74,9 @@ export class ConnectionManager {
     const room = this.connections.get(key);
 
     room?.delete(ws);
-    if (room?.size === 0) this.connections.delete(key);
+    if (room?.size === 0) {
+      this.connections.delete(key);
+    }
 
     if (this.connections.size === 0 && this.heartbeat) {
       clearInterval(this.heartbeat);
@@ -77,7 +84,12 @@ export class ConnectionManager {
     }
   };
 
-  public send = (type: DraftType, state: RoomState, ws: WebSocket, side: string): void => {
+  public send = <T extends DraftType>(
+    type: T,
+    state: NoInfer<RoomStateByType[T]>,
+    ws: WebSocket,
+    side: string,
+  ): void => {
     const key = roomKey(type, state.roomId);
 
     if (ws.readyState !== WebSocket.OPEN) {
@@ -96,15 +108,23 @@ export class ConnectionManager {
     });
   };
 
-  public broadcast = (type: DraftType, state: RoomState): void => {
-    for (const [ws, side] of this.connections.get(roomKey(type, state.roomId)) ?? []) this.send(type, state, ws, side);
+  public broadcast = <T extends DraftType>(type: T, state: NoInfer<RoomStateByType[T]>): void => {
+    for (const [ws, side] of this.connections.get(roomKey(type, state.roomId)) ?? []) {
+      this.send(type, state, ws, side);
+    }
   };
 
   public close = (): void => {
-    if (this.heartbeat) clearInterval(this.heartbeat);
+    if (this.heartbeat) {
+      clearInterval(this.heartbeat);
+    }
     this.heartbeat = null;
 
-    for (const room of this.connections.values()) for (const ws of room.keys()) ws.terminate();
+    for (const room of this.connections.values()) {
+      for (const ws of room.keys()) {
+        ws.terminate();
+      }
+    }
 
     this.connections.clear();
   };

@@ -3,8 +3,11 @@ packages:
   - tools_backend
   - tools_shared
 
-# Keep the outer script alive during Ctrl+C; cmd.exe can return the prompt early.
-shellEmulator: true
-
 onlyBuiltDependencies:
   - esbuild
+
+patchedDependencies:
+  vite-plugin-eslint@1.8.1: patches/vite-plugin-eslint@1.8.1.patch
+
+# Keep the outer script alive during Ctrl+C; cmd.exe can return the prompt early.
+shellEmulator: true

@@ -1,31 +1,30 @@
-import { useState, useEffect } from "react";
+import { type Team as Side, Team } from "@os-tools/shared";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import type { Side } from "@/features/common/types";
-import { Team } from "@/features/common/constants/constants";
-import { useMapDraftContext } from "@/features/map-drafter/context/MapDraftContext";
-import {
-  BackButton,
-  HomeButton,
-} from "@/features/common/components/NavButtons";
-import LoadingScreen from "@/features/common/components/LoadingScreen";
-import LobbyLink from "@/features/common/components/LobbyLink";
-import LobbyReplayLink from "@/features/common/components/LobbyReplayLink";
-import { SEQUENCE_LABELS } from "@/features/map-drafter/constants";
+
+import LoadingScreen from "../../common/components/LoadingScreen";
+import LobbyLink from "../../common/components/LobbyLink";
+import LobbyReplayLink from "../../common/components/LobbyReplayLink";
+import { BackButton, HomeButton } from "../../common/components/NavButtons";
+import { SEQUENCE_LABELS } from "../constants";
+import { useMapDraftContext } from "../context/MapDraftContext";
 
 export default function LobbyPage() {
   const { lobbyState, state, loading, handleSidePick } = useMapDraftContext();
   const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
 
-  const room =
-    state?.roomId === lobbyState?.roomId ? state : (lobbyState ?? state);
+  const room = state?.roomId === lobbyState?.roomId ? state : (lobbyState ?? state);
 
   useEffect(() => {
-    if (!loading && !room) navigate("/map-draft", { replace: true });
+    if (!loading && !room) {
+      navigate("/map-draft", { replace: true });
+    }
   }, [loading, room, navigate]);
 
-  if (loading || !room)
+  if (loading || !room) {
     return <LoadingScreen message="Connecting to draft..." />;
+  }
 
   const { roomId, bestOf, blueName, redName, done } = room;
 
@@ -52,8 +51,7 @@ export default function LobbyPage() {
   const replayUrl = replayLink.toString();
   const replayAvailable = Boolean(room.done && room.replayEvents?.length);
 
-  const baseBtn =
-    "px-2.5 py-2.5 rounded-lg font-head text-sm font-bold transition-all duration-150";
+  const baseBtn = "px-2.5 py-2.5 rounded-lg font-head text-sm font-bold transition-all duration-150";
 
   return (
     <div className="min-h-screen py-6 flex items-center justify-center">
@@ -68,8 +66,7 @@ export default function LobbyPage() {
 
         <div className="flex items-center justify-between">
           <p className="font-mono text-xs tracking-wider uppercase">
-            // Room {roomId} · Map Draft · {SEQUENCE_LABELS[bestOf]} · Share
-            links below
+            // Room {roomId} · Map Draft · {SEQUENCE_LABELS[bestOf]} · Share links below
           </p>
           <button
             className={`${baseBtn} border border-tools-gold/40 text-tools-gold bg-tools-gold/6 hover:bg-tools-gold/14`}
@@ -110,11 +107,7 @@ export default function LobbyPage() {
             tone="neutral"
             onEnter={() => handleSidePick(Team.Spectator)}
           />
-          <LobbyReplayLink
-            url={replayUrl}
-            available={replayAvailable}
-            completed={room.done}
-          />
+          <LobbyReplayLink url={replayUrl} available={replayAvailable} completed={room.done} />
         </div>
       </div>
     </div>

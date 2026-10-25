@@ -1,10 +1,16 @@
+import {
+  DraftAction,
+  type GameMap,
+  type MapDraftAction,
+  type MapDraftState,
+  SEQUENCE_MAPPING,
+  Team,
+} from "@os-tools/shared";
 import { AnimatePresence, motion } from "motion/react";
 import { useRef } from "react";
 
-import { ALL_MAPS, DraftAction, Team } from "@/features/common/constants/constants";
-import { AnimatedNumber } from "@/features/common/components/AnimatedNumber";
-import type { MapDraftAction, MapDraftState } from "@/features/map-drafter/types";
-import { SEQUENCE_MAP } from "@map-drafter/constants.ts";
+import { AnimatedNumber } from "../../common/components/AnimatedNumber";
+import { MAP_METADATA } from "../../common/constants/constants";
 
 interface SequenceStep {
   team: string;
@@ -22,7 +28,7 @@ interface MapSidebarCardProps {
 }
 
 export function MapSidebarCard({ step: s, cardIndex, isBlue, timeLeft, state }: MapSidebarCardProps) {
-  const sequence = SEQUENCE_MAP[state.bestOf];
+  const sequence = SEQUENCE_MAPPING[state.bestOf];
   const teamSteps = sequence
     .map((step, globalIdx) => ({ ...step, globalIdx }))
     .filter((step) => step.team === (isBlue ? Team.Blue : Team.Red));
@@ -38,8 +44,8 @@ export function MapSidebarCard({ step: s, cardIndex, isBlue, timeLeft, state }: 
   const isActive = s.globalIdx === currentStep && !done;
   const status: "filled" | "active" | "pending" = filled ? "filled" : isActive ? "active" : "pending";
 
-  const mapEntry = filled?.map ? ALL_MAPS.find((m) => m.name === filled.map) : null;
-  const pendingEntry = status === "active" && pendingMap ? ALL_MAPS.find((m) => m.name === pendingMap) : null;
+  const mapEntry = filled?.map ? MAP_METADATA[filled.map] : null;
+  const pendingEntry = status === "active" && pendingMap ? MAP_METADATA[pendingMap as GameMap] : null;
 
   const nth = teamSteps.slice(0, cardIndex).filter((t) => t.action === s.action).length + 1;
   const label = isBan ? `Ban ${nth}` : `Pick ${s.gameNum ?? nth}`;
@@ -70,7 +76,7 @@ export function MapSidebarCard({ step: s, cardIndex, isBlue, timeLeft, state }: 
       <AnimatePresence initial={false}>
         {mapEntry?.blurredImage && (
           <motion.div
-            key={mapEntry.name}
+            key={filled?.map}
             className="absolute inset-0"
             initial={{ scale: 1.08 }}
             animate={{ scale: 1 }}
@@ -102,9 +108,9 @@ export function MapSidebarCard({ step: s, cardIndex, isBlue, timeLeft, state }: 
       <AnimatePresence>
         {pendingEntry?.blurredImage && (
           <motion.img
-            key={pendingEntry.name}
+            key={pendingMap ?? ""}
             src={pendingEntry.blurredImage}
-            alt={pendingEntry.name}
+            alt={pendingMap ?? ""}
             className="absolute inset-0 w-full h-full object-cover blur-[2px] brightness-50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

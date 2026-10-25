@@ -12,11 +12,7 @@ interface SpinnerProps {
   secondary?: string;
 }
 
-export default function Spinner({
-  size = "md",
-  primary = "#888888",
-  secondary = "#555555",
-}: SpinnerProps) {
+export default function Spinner({ size = "md", primary = "#888888", secondary = "#555555" }: SpinnerProps) {
   return (
     <span
       className={`inline-block rounded-full animate-spin ${sizeClasses[size]}`}

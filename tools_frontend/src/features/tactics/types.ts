@@ -1,6 +1,6 @@
-import { Team } from "@/features/common/constants/constants";
+import { Team } from "@os-tools/shared";
 
-export type PlayingTeam = Exclude<Team, "spectator">;
+export type PlayingTeam = Exclude<Team, Team.Spectator>;
 
 export type Tool = "move" | "arrow" | "freehand" | "delete";
 

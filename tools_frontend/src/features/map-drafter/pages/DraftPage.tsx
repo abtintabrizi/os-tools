@@ -1,20 +1,21 @@
-import { useState, useEffect, useRef } from "react";
+import { DraftAction, type GameMap, SEQUENCE_MAPPING, Team, TIMER_SECONDS } from "@os-tools/shared";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { SEQUENCE_MAP } from "@map-drafter/constants.ts";
-import { ALL_MAPS, TIMER_SECONDS, Team, DraftAction } from "@/features/common/constants/constants";
-import { deriveMapStatuses } from "@/features/map-drafter/utils";
-import LoadingScreen from "@/features/common/components/LoadingScreen";
-import ErrorScreen from "@/features/map-drafter/components/ErrorScreen";
-import { useMapDraftContext } from "@/features/map-drafter/context/MapDraftContext";
-import { StepTracker } from "@/features/common/components/StepTracker";
-import DonePanel from "@/features/map-drafter/components/DonePanel";
-import { MapSidebarCard } from "@/features/map-drafter/components/MapSidebarCard";
-import { AnimatedNumber } from "@/features/common/components/AnimatedNumber";
-import { SpectatorBar } from "@/features/map-drafter/components/SpectatorBar";
-import { BackButton, HomeButton } from "@/features/common/components/NavButtons";
-import { useDraftReplay } from "@/features/common/hooks/useDraftReplay";
-import { ReplayControls } from "@/features/common/components/ReplayControls";
-import { ReplayTimeline } from "@/features/common/components/ReplayTimeline";
+
+import { AnimatedNumber } from "../../common/components/AnimatedNumber";
+import LoadingScreen from "../../common/components/LoadingScreen";
+import { BackButton, HomeButton } from "../../common/components/NavButtons";
+import { ReplayControls } from "../../common/components/ReplayControls";
+import { ReplayTimeline } from "../../common/components/ReplayTimeline";
+import { StepTracker } from "../../common/components/StepTracker";
+import { MAP_METADATA } from "../../common/constants/constants";
+import { useDraftReplay } from "../../common/hooks/useDraftReplay";
+import DonePanel from "../components/DonePanel";
+import ErrorScreen from "../components/ErrorScreen";
+import { MapSidebarCard } from "../components/MapSidebarCard";
+import { SpectatorBar } from "../components/SpectatorBar";
+import { useMapDraftContext } from "../context/MapDraftContext";
+import { deriveMapStatuses } from "../utils";
 
 export default function DraftPage() {
   const { state: completedState, side, loading, handleAction, handlePending, handleReady } = useMapDraftContext();
@@ -83,7 +84,9 @@ export default function DraftPage() {
   }, [state?.stepStartedAt, state?.done, state?.readyBlue, state?.readyRed]);
 
   useEffect(() => {
-    if (!state?.stepStartedAt || !state.readyBlue || !state.readyRed) return;
+    if (!state?.stepStartedAt || !state.readyBlue || !state.readyRed) {
+      return;
+    }
 
     function tick() {
       const stepStartedAt = stepStartedAtRef.current;
@@ -114,12 +117,16 @@ export default function DraftPage() {
     };
   }, [countdownLeft]);
 
-  if (loading) return <LoadingScreen message="Connecting to draft..." />;
-  if (!state) return <ErrorScreen message="Room not found. Check your link." />;
+  if (loading) {
+    return <LoadingScreen message="Connecting to draft..." />;
+  }
+  if (!state) {
+    return <ErrorScreen message="Room not found. Check your link." />;
+  }
 
   const bothReady = state.readyBlue && state.readyRed;
   const { step, done, maps, actions, blueName, redName } = state;
-  const sequence = SEQUENCE_MAP[state.bestOf];
+  const sequence = SEQUENCE_MAPPING[state.bestOf];
   const currentSeqStep = !done && step < sequence.length ? sequence[step] : null;
   const currentTeam = currentSeqStep ? (currentSeqStep.team === Team.Blue ? blueName : redName) : null;
   const isMyTurn = currentSeqStep !== null && currentSeqStep.team === side;
@@ -140,14 +147,19 @@ export default function DraftPage() {
   const blueSeqSteps = sequence.map((s, globalIdx) => ({ ...s, globalIdx })).filter((s) => s.team === Team.Blue);
   const redSeqSteps = sequence.map((s, globalIdx) => ({ ...s, globalIdx })).filter((s) => s.team === Team.Red);
 
-  function handleMapClick(map: string) {
-    if (!isMyTurn || mapStatuses[map] !== "available") return;
+  function handleMapClick(map: GameMap) {
+    if (!isMyTurn || mapStatuses[map] !== "available") {
+      return;
+    }
     handlePending(map);
   }
 
   async function handleConfirm() {
-    if (!pending) return;
-    await handleAction(pending);
+    const selected = state?.maps.find((map) => map === pending);
+    if (!selected) {
+      return;
+    }
+    await handleAction(selected);
   }
 
   function watchReplay() {
@@ -158,8 +170,12 @@ export default function DraftPage() {
   }
 
   function sideLabel() {
-    if (side === Team.Blue) return blueName;
-    if (side === Team.Red) return redName;
+    if (side === Team.Blue) {
+      return blueName;
+    }
+    if (side === Team.Red) {
+      return redName;
+    }
 
     return "Spectating";
   }
@@ -186,7 +202,7 @@ export default function DraftPage() {
         </div>
 
         <div className="flex items-center justify-center">
-          <StepTracker step={step} sequence={SEQUENCE_MAP[state.bestOf]} done={done} />
+          <StepTracker step={step} sequence={SEQUENCE_MAPPING[state.bestOf]} done={done} />
         </div>
 
         <div className="flex justify-end items-center gap-3">
@@ -346,7 +362,7 @@ export default function DraftPage() {
                     const clickable = status === "available" && isMyTurn;
                     const isPick = status.startsWith("picked-");
                     const gameNum = isPick ? status.replace("picked-g", "") : null;
-                    const image = ALL_MAPS.find((m) => m.name === map)?.blurredImage;
+                    const image = MAP_METADATA[map]?.blurredImage;
                     const pickAction = isPick
                       ? actions.find((a) => a.map === map && a.action === DraftAction.Pick)
                       : null;

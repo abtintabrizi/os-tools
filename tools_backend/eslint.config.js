@@ -1,3 +1,4 @@
+import simpleImportSort from "eslint-plugin-simple-import-sort";
 import js from "@eslint/js";
 import globals from "globals";
 import tseslint from "typescript-eslint";
@@ -8,8 +9,15 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   {
     files: ["app/**/*.ts"],
+    plugins: { "simple-import-sort": simpleImportSort },
     languageOptions: { parserOptions: { tsconfigRootDir: import.meta.dirname }, globals: globals.node },
     rules: {
+      "simple-import-sort/imports": [
+        "error",
+        { groups: [["^\\u0000"], ["^node:", "^@?\\w"], ["^@/", "^@map-drafter/", "^\\."]] },
+      ],
+      curly: ["error", "all"],
+      "arrow-body-style": ["error", "always"],
       "@typescript-eslint/explicit-member-accessibility": ["error", { accessibility: "explicit" }],
     },
   },
@@ -21,8 +29,13 @@ export default tseslint.config(
         {
           patterns: [
             {
-              group: ["node:*", "@supabase/*", "express", "ws", "../managers/*", "../repositories/*"],
-              message: "Utilities must be pure; keep runtime effects in managers and database access in repositories.",
+              group: ["../managers/*"],
+              allowTypeImports: true,
+              message: "Utilities may import manager types only; runtime effects belong in managers.",
+            },
+            {
+              group: ["node:*", "@supabase/*", "express", "ws"],
+              message: "Utilities must be pure; keep runtime effects in managers and database access in RoomManager.",
             },
           ],
         },

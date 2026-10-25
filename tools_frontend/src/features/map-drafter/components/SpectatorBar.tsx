@@ -1,13 +1,19 @@
-import { useRef } from "react";
+import {
+  BO3_FORMATS,
+  DraftAction,
+  type GameMap,
+  type MapDraftAction,
+  type MapDraftState,
+  SEQUENCE_MAPPING,
+  type SequenceStep,
+  Team,
+} from "@os-tools/shared";
 import { AnimatePresence, motion } from "motion/react";
-import { AnimatedNumber } from "@/features/common/components/AnimatedNumber";
+import { useRef } from "react";
 
-import { ALL_MAPS, DraftAction, Team } from "@/features/common/constants/constants";
-import type { MapDraftAction, MapDraftState } from "@/features/map-drafter/types";
-import { BO3_FORMATS, SEQUENCE_MAP } from "@map-drafter/constants.ts";
-import { deriveMapStatuses } from "@/features/map-drafter/utils";
-
-import type { SequenceStep } from "@os-tools/shared/types/common";
+import { AnimatedNumber } from "../../common/components/AnimatedNumber";
+import { MAP_METADATA } from "../../common/constants/constants";
+import { deriveMapStatuses } from "../utils";
 
 interface SpectatorCardProps {
   completedAction: MapDraftAction | undefined;
@@ -31,8 +37,8 @@ function SpectatorCard({
   timeLeft,
 }: SpectatorCardProps) {
   const wasFilledOnMount = useRef(!!completedAction);
-  const mapEntry = completedAction ? ALL_MAPS.find((m) => m.name === completedAction.map) : null;
-  const pendingEntry = pendingMap ? ALL_MAPS.find((m) => m.name === pendingMap) : null;
+  const mapEntry = completedAction ? MAP_METADATA[completedAction.map] : null;
+  const pendingEntry = pendingMap ? MAP_METADATA[pendingMap as GameMap] : null;
 
   return (
     <div className="flex flex-col items-center gap-1 w-20">
@@ -48,7 +54,7 @@ function SpectatorCard({
         <AnimatePresence initial={false}>
           {mapEntry?.icon && (
             <motion.div
-              key={mapEntry.name}
+              key={completedAction?.map}
               className="absolute inset-0"
               initial={{ scale: 1.08 }}
               animate={{ scale: 1 }}
@@ -78,9 +84,9 @@ function SpectatorCard({
         <AnimatePresence>
           {!completedAction && pendingEntry?.icon && (
             <motion.img
-              key={`pending-${pendingEntry.name}`}
+              key={`pending-${pendingMap ?? ""}`}
               src={pendingEntry.icon}
-              alt={pendingEntry.name}
+              alt={pendingMap ?? ""}
               className="absolute inset-0 w-full h-full object-cover blur-[1px] brightness-60"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -143,7 +149,7 @@ function SpectatorCard({
         )}
       </div>
       <span className="font-mono text-xs text-white/40 text-center leading-tight w-20 line-clamp-2 min-h-7.5">
-        {completedAction?.map ?? pendingEntry?.name ?? (isBan ? "Ban" : `G${pickNumber}`)}
+        {completedAction?.map ?? (pendingEntry ? pendingMap : null) ?? (isBan ? "Ban" : `G${pickNumber}`)}
       </span>
     </div>
   );
@@ -151,7 +157,7 @@ function SpectatorCard({
 
 function DeciderCard({ mapName }: { mapName: string | undefined }) {
   const wasFilledOnMount = useRef(!!mapName);
-  const mapEntry = mapName ? ALL_MAPS.find((m) => m.name === mapName) : null;
+  const mapEntry = mapName ? MAP_METADATA[mapName as GameMap] : null;
 
   return (
     <div className="flex flex-col items-center gap-1 w-20">
@@ -163,7 +169,7 @@ function DeciderCard({ mapName }: { mapName: string | undefined }) {
         <AnimatePresence initial={false}>
           {mapEntry?.icon && (
             <motion.div
-              key={mapEntry.name}
+              key={mapName ?? ""}
               className="absolute inset-0"
               initial={{ scale: 1.08 }}
               animate={{ scale: 1 }}
@@ -221,7 +227,7 @@ interface SpectatorBarProps {
 
 export function SpectatorBar({ timeLeft, countdownLeft, state }: SpectatorBarProps) {
   const { step, done, actions, blueName, redName, readyBlue, readyRed } = state;
-  const sequence: readonly SequenceStep[] = SEQUENCE_MAP[state.bestOf];
+  const sequence: readonly SequenceStep[] = SEQUENCE_MAPPING[state.bestOf];
   const bothReady = readyBlue && readyRed;
   const mapStatuses = deriveMapStatuses(state, sequence);
 

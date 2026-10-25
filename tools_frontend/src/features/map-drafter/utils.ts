@@ -1,6 +1,6 @@
-import { MapDraftState, MapStatus } from "@/features/map-drafter/types";
-import { DraftAction } from "@/features/common/constants/constants";
-import { SequenceStep } from "@/features/common/types";
+import { DraftAction, type MapDraftState, type SequenceStep } from "@os-tools/shared";
+
+import { MapStatus } from "./types";
 
 export function deriveMapStatuses(state: MapDraftState, sequence: readonly SequenceStep[]): Record<string, MapStatus> {
   const statuses: Record<string, MapStatus> = {};

@@ -1,6 +1,6 @@
-import { BOARD_HEIGHT, BOARD_WIDTH, CORE_SIZE, CORE_CROP, PIECE_SIZE, TEAM_COLORS } from "./constants";
+import { BOARD_HEIGHT, BOARD_WIDTH, CORE_CROP, CORE_SIZE, PIECE_SIZE, TEAM_COLORS } from "../constants";
+import type { BoardState, Point } from "../types";
 import { arrowHead } from "./geometry";
-import type { BoardState, Point } from "./types";
 import { loadImage } from "./images";
 
 export async function exportImage(board: BoardState, map: { name: string; image: string }) {
@@ -11,7 +11,9 @@ export async function exportImage(board: BoardState, map: { name: string; image:
   canvas.width = BOARD_WIDTH;
   canvas.height = BOARD_HEIGHT;
   const context = canvas.getContext("2d");
-  if (!context) throw new Error("Image export is unavailable in this browser.");
+  if (!context) {
+    throw new Error("Image export is unavailable in this browser.");
+  }
 
   context.fillStyle = "#111118";
   context.fillRect(0, 0, BOARD_WIDTH, BOARD_HEIGHT);
@@ -35,7 +37,9 @@ export async function exportImage(board: BoardState, map: { name: string; image:
     context.strokeStyle = drawing.color;
     context.lineWidth = drawing.width;
     stroke(drawing.points);
-    if (drawing.kind === "arrow") stroke(arrowHead(drawing));
+    if (drawing.kind === "arrow") {
+      stroke(arrowHead(drawing));
+    }
   }
 
   for (const piece of board.pieces) {

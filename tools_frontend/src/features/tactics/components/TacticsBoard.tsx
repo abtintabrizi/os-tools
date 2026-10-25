@@ -1,11 +1,13 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { type Striker } from "@os-tools/shared";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import { ALL_STRIKERS } from "@/features/common/constants/constants";
-import { BOARD_WIDTH, BOARD_HEIGHT, CORE_SIZE, CORE_CROP, DRAG_TYPE, PIECE_SIZE, TEAM_COLORS } from "../constants";
-import { arrowHead, clampPoint, pointString } from "../geometry";
-import type { BoardState, Drawing, PlayingTeam, Point, Tool } from "../types";
+import { useEffect, useId, useRef, useState } from "react";
+
+import { STRIKER_METADATA } from "../../common/constants/constants";
+import { BOARD_HEIGHT, BOARD_WIDTH, CORE_CROP, CORE_SIZE, DRAG_TYPE, PIECE_SIZE, TEAM_COLORS } from "../constants";
 import { useMapImage } from "../hooks/useMapImage";
 import { initialBoard } from "../hooks/useTacticsBoard";
+import type { BoardState, Drawing, PlayingTeam, Point, Tool } from "../types";
+import { arrowHead, clampPoint, pointString } from "../util/geometry";
 import MapLoading from "./MapLoading";
 
 type Gesture = {
@@ -54,7 +56,9 @@ export default function TacticsBoard({
 
   useEffect(() => {
     const listener = (event: KeyboardEvent) => {
-      if (event.key === "Escape") cancel();
+      if (event.key === "Escape") {
+        cancel();
+      }
     };
 
     window.addEventListener("keydown", listener);
@@ -68,7 +72,9 @@ export default function TacticsBoard({
 
   const point = (clientX: number, clientY: number) => {
     const matrix = svg.current?.getScreenCTM();
-    if (!matrix) return { x: 0, y: 0 };
+    if (!matrix) {
+      return { x: 0, y: 0 };
+    }
     const result = new DOMPoint(clientX, clientY).matrixTransform(matrix.inverse());
 
     return { x: result.x, y: result.y };
@@ -86,19 +92,25 @@ export default function TacticsBoard({
   };
 
   const start = (event: ReactPointerEvent<SVGSVGElement>) => {
-    if (event.button !== 0 || gesture.current) return;
+    if (event.button !== 0 || gesture.current) {
+      return;
+    }
 
     const target = (event.target as Element).closest("[data-object]");
     const id = target?.getAttribute("data-object");
 
     if (tool === "delete") {
-      if (id) removeObject(id);
+      if (id) {
+        removeObject(id);
+      }
 
       return;
     }
 
     const position = clampPoint(point(event.clientX, event.clientY));
-    if (tool === "move" && !id) return;
+    if (tool === "move" && !id) {
+      return;
+    }
 
     const drawing: Drawing | undefined =
       tool === "arrow" || tool === "freehand"
@@ -124,7 +136,9 @@ export default function TacticsBoard({
 
   const move = (event: ReactPointerEvent<SVGSVGElement>) => {
     const current = gesture.current;
-    if (!current || current.pointerId !== event.pointerId) return;
+    if (!current || current.pointerId !== event.pointerId) {
+      return;
+    }
 
     const rawPosition = point(event.clientX, event.clientY);
     const position = current.drawing ? clampPoint(rawPosition) : rawPosition;
@@ -168,7 +182,9 @@ export default function TacticsBoard({
 
   const finish = (event: ReactPointerEvent<SVGSVGElement>) => {
     const current = gesture.current;
-    if (!current || current.pointerId !== event.pointerId) return;
+    if (!current || current.pointerId !== event.pointerId) {
+      return;
+    }
 
     const end = point(event.clientX, event.clientY);
     const isPiece = !current.drawing && current.original.pieces.some((piece) => piece.id === current.id);
@@ -194,7 +210,9 @@ export default function TacticsBoard({
       }
     }
     cancel();
-    if (svg.current?.hasPointerCapture(event.pointerId)) svg.current.releasePointerCapture(event.pointerId);
+    if (svg.current?.hasPointerCapture(event.pointerId)) {
+      svg.current.releasePointerCapture(event.pointerId);
+    }
   };
 
   const displayed = preview ?? board;
@@ -222,7 +240,9 @@ export default function TacticsBoard({
         onLostPointerCapture={cancel}
         onContextMenu={(event) => {
           const id = (event.target as Element).closest("[data-object]")?.getAttribute("data-object");
-          if (!id) return;
+          if (!id) {
+            return;
+          }
 
           event.preventDefault();
           removeObject(id);
@@ -248,8 +268,11 @@ export default function TacticsBoard({
             return;
           }
 
-          const striker = ALL_STRIKERS.find((s) => s.name === value);
-          if (!striker) return;
+          if (!Object.prototype.hasOwnProperty.call(STRIKER_METADATA, value)) {
+            return;
+          }
+
+          const striker = STRIKER_METADATA[value as Striker];
           cancel();
           commit({
             ...board,
@@ -257,7 +280,7 @@ export default function TacticsBoard({
               ...board.pieces,
               {
                 id: crypto.randomUUID(),
-                name: striker.name,
+                name: value,
                 icon: striker.icon,
                 team,
                 position: clampPoint(point(event.clientX, event.clientY), PIECE_SIZE / 2 + 2),

@@ -1,6 +1,6 @@
-import SetupPage from "@/features/striker-draft/pages/SetupPage";
-import LobbyPage from "@/features/striker-draft/pages/LobbyPage";
-import DraftPage from "@/features/striker-draft/pages/DraftPage";
+import DraftPage from "./DraftPage";
+import LobbyPage from "./LobbyPage";
+import SetupPage from "./SetupPage";
 
 export default {
   SetupPage,

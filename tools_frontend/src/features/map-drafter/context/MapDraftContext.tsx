@@ -1,18 +1,15 @@
 import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  type ReactNode,
-} from "react";
+  type Awakening,
+  type CreateMapDraftRoomRequest,
+  type GameMap,
+  type MapDraftState,
+  type Team as Side,
+  Team,
+} from "@os-tools/shared";
+import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import type { MapDraftState } from "@map-drafter/types";
-import type { Side } from "@/features/common/types";
-import { Team } from "@/features/common/constants/constants";
-import {
-  useMapDraftApi,
-  type CreateRoomConfig,
-} from "@map-drafter/hooks/useMapDraftApi";
+
+import { useMapDraftApi } from "../hooks/useMapDraftApi";
 
 interface MapDraftContextValue {
   state: MapDraftState | null;
@@ -21,17 +18,17 @@ interface MapDraftContextValue {
   error: string | null;
   side: Side;
   roomId: string | null;
-  handleLaunch: (config: CreateRoomConfig) => Promise<void>;
+  handleLaunch: (config: CreateMapDraftRoomRequest) => Promise<void>;
   handleSidePick: (side: Side) => void;
-  handleAction: (map: string) => Promise<void>;
-  handlePending: (map: string | null) => Promise<void>;
+  handleAction: (map: GameMap) => Promise<void>;
+  handlePending: (map: GameMap | null) => Promise<void>;
   handleReady: () => Promise<void>;
   handleReset: () => void;
   handleSetStrikerRoom: (
-    map: string,
+    map: GameMap,
     roomId: string,
     firstPick: string,
-    bannedAwakenings: string[],
+    bannedAwakenings: Awakening[],
   ) => Promise<void>;
 }
 
@@ -39,8 +36,9 @@ const MapDraftContext = createContext<MapDraftContextValue | null>(null);
 
 export function useMapDraftContext(): MapDraftContextValue {
   const ctx = useContext(MapDraftContext);
-  if (!ctx)
+  if (!ctx) {
     throw new Error("useMapDraftContext must be used inside MapDraftProvider");
+  }
   return ctx;
 }
 
@@ -60,30 +58,33 @@ export function MapDraftProvider({ children }: { children: ReactNode }) {
   const [side, setSide] = useState<Side>(replay ? Team.Spectator : (urlSide ?? Team.Spectator));
   const [roomId, setRoomId] = useState<string | null>(urlRoom);
   const [lobbyState, setLobbyState] = useState<MapDraftState | null>(null);
-  const [localPending, setLocalPending] = useState<string | null>(null);
+  const [localPending, setLocalPending] = useState<GameMap | null>(null);
 
   useEffect(() => {
-    if (!replay) return;
+    if (!replay) {
+      return;
+    }
     const url = new URL(window.location.href);
-    if (!url.searchParams.has("side")) return;
+    if (!url.searchParams.has("side")) {
+      return;
+    }
     url.searchParams.delete("side");
     window.history.replaceState({}, "", url.toString());
   }, [replay]);
 
-  const {
-    state,
-    loading,
-    error,
-    create,
-    applyAction,
-    setPending,
-    ready,
-    setStrikerRoom,
-  } = useMapDraftApi(roomId, side, !replay);
+  const { state, loading, error, create, applyAction, setPending, ready, setStrikerRoom } = useMapDraftApi(
+    roomId,
+    side,
+    !replay,
+  );
 
   useEffect(() => {
-    if (!replay || loading || !state) return;
-    if (state.done && state.replayEvents?.length) return;
+    if (!replay || loading || !state) {
+      return;
+    }
+    if (state.done && state.replayEvents?.length) {
+      return;
+    }
     const url = new URL(window.location.href);
     url.searchParams.delete("replay");
     url.searchParams.delete("side");
@@ -97,11 +98,7 @@ export function MapDraftProvider({ children }: { children: ReactNode }) {
   const clientState = state
     ? {
         ...state,
-        ...(side === Team.Blue
-          ? { pendingBlue: localPending }
-          : side === Team.Red
-            ? { pendingRed: localPending }
-            : {}),
+        ...(side === Team.Blue ? { pendingBlue: localPending } : side === Team.Red ? { pendingRed: localPending } : {}),
       }
     : null;
 
@@ -109,14 +106,16 @@ export function MapDraftProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const pathname = window.location.pathname;
     const isBasePath = pathname === "/map-draft" || pathname === "/map-draft/";
-    if (!isBasePath) return;
+    if (!isBasePath) {
+      return;
+    }
     const search = window.location.search;
     if (urlRoom && (urlSide || replay)) {
       navigate(`/map-draft/draft${search}`, { replace: true });
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function handleLaunch(config: CreateRoomConfig) {
+  async function handleLaunch(config: CreateMapDraftRoomRequest) {
     const newState = await create(config);
     setLobbyState(newState);
     setRoomId(newState.roomId);
@@ -132,13 +131,17 @@ export function MapDraftProvider({ children }: { children: ReactNode }) {
     navigate(`/map-draft/draft${url.search}`);
   }
 
-  async function handleAction(map: string) {
-    if (replay) return;
+  async function handleAction(map: GameMap) {
+    if (replay) {
+      return;
+    }
     await applyAction(map);
   }
 
-  async function handlePending(map: string | null) {
-    if (replay) return;
+  async function handlePending(map: GameMap | null) {
+    if (replay) {
+      return;
+    }
     if (side === Team.Blue || side === Team.Red) {
       setLocalPending(map);
       await setPending(side, map);
@@ -146,18 +149,15 @@ export function MapDraftProvider({ children }: { children: ReactNode }) {
   }
 
   async function handleReady() {
-    if (replay) return;
+    if (replay) {
+      return;
+    }
     if (side === Team.Blue || side === Team.Red) {
       await ready(side);
     }
   }
 
-  async function handleSetStrikerRoom(
-    map: string,
-    roomId: string,
-    firstPick: string,
-    bannedAwakenings: string[],
-  ) {
+  async function handleSetStrikerRoom(map: GameMap, roomId: string, firstPick: string, bannedAwakenings: Awakening[]) {
     await setStrikerRoom(map, roomId, firstPick, bannedAwakenings);
   }
 

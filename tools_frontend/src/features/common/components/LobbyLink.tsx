@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
 import { ArrowRight } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 interface LobbyLinkProps {
   title: string;
@@ -21,10 +21,8 @@ const titleColors = {
 const buttonColors = {
   blue: "border-tools-blue/35 text-tools-blue bg-tools-blue/6 aria-[disabled=false]:hover:bg-tools-blue/14",
   red: "border-tools-red/35 text-tools-red bg-tools-red/6 aria-[disabled=false]:hover:bg-tools-red/14",
-  neutral:
-    "border-white/7 aria-[disabled=false]:hover:border-white/15 aria-[disabled=false]:hover:bg-white/5",
-  replay:
-    "border-white/7 aria-[disabled=false]:hover:border-white/15 aria-[disabled=false]:hover:bg-white/5",
+  neutral: "border-white/7 aria-[disabled=false]:hover:border-white/15 aria-[disabled=false]:hover:bg-white/5",
+  replay: "border-white/7 aria-[disabled=false]:hover:border-white/15 aria-[disabled=false]:hover:bg-white/5",
 };
 
 export default function LobbyLink({
@@ -41,21 +39,23 @@ export default function LobbyLink({
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const displayUrl = url.replace(/^https?:\/\//, "");
   const queryStart = displayUrl.indexOf("?");
-  const urlPrefix =
-    queryStart === -1 ? displayUrl : displayUrl.slice(0, queryStart);
-  const queryParts =
-    queryStart === -1 ? [] : displayUrl.slice(queryStart + 1).split("&");
+  const urlPrefix = queryStart === -1 ? displayUrl : displayUrl.slice(0, queryStart);
+  const queryParts = queryStart === -1 ? [] : displayUrl.slice(queryStart + 1).split("&");
 
   useEffect(
     () => () => {
-      if (timeoutRef.current !== null) clearTimeout(timeoutRef.current);
+      if (timeoutRef.current !== null) {
+        clearTimeout(timeoutRef.current);
+      }
     },
     [],
   );
 
   async function copy() {
     await navigator.clipboard.writeText(url);
-    if (timeoutRef.current !== null) clearTimeout(timeoutRef.current);
+    if (timeoutRef.current !== null) {
+      clearTimeout(timeoutRef.current);
+    }
     setCopied(true);
     timeoutRef.current = setTimeout(() => setCopied(false), 2000);
   }
@@ -82,31 +82,14 @@ export default function LobbyLink({
             {urlPrefix}
             {queryParts.map((part, index) => {
               const equalsIndex = part.indexOf("=");
-              const name =
-                equalsIndex === -1 ? part : part.slice(0, equalsIndex);
-              const value =
-                equalsIndex === -1 ? null : part.slice(equalsIndex + 1);
-              const pairColors = [
-                "text-tools-gold",
-                "text-violet-300",
-                "text-emerald-300",
-              ];
-              const colorIndex =
-                name === "room"
-                  ? 0
-                  : name === "side"
-                    ? 1
-                    : name === "replay"
-                      ? 2
-                      : index;
-              const pairColor = available
-                ? pairColors[colorIndex % pairColors.length]
-                : "text-white/40";
+              const name = equalsIndex === -1 ? part : part.slice(0, equalsIndex);
+              const value = equalsIndex === -1 ? null : part.slice(equalsIndex + 1);
+              const pairColors = ["text-tools-gold", "text-violet-300", "text-emerald-300"];
+              const colorIndex = name === "room" ? 0 : name === "side" ? 1 : name === "replay" ? 2 : index;
+              const pairColor = available ? pairColors[colorIndex % pairColors.length] : "text-white/40";
               return (
                 <span key={index}>
-                  <span className="text-white/30">
-                    {index === 0 ? "?" : "&"}
-                  </span>
+                  <span className="text-white/30">{index === 0 ? "?" : "&"}</span>
                   <span className={pairColor}>{name}</span>
                   {value !== null && (
                     <>
@@ -136,14 +119,9 @@ export default function LobbyLink({
               event.preventDefault();
               return;
             }
-            if (
-              event.ctrlKey ||
-              event.metaKey ||
-              event.shiftKey ||
-              event.altKey ||
-              event.button !== 0
-            )
+            if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0) {
               return;
+            }
             event.preventDefault();
             onEnter();
           }}

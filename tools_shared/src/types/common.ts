@@ -1,11 +1,6 @@
-export type Team = (typeof import("../constants/common.js").Team)[keyof typeof import("../constants/common.js").Team];
+import type { DraftAction, ReplayEventType, Team } from "../constants/game.js";
 
-export type PlayingSide = Exclude<Team, "spectator">;
-
-export type DraftAction =
-  (typeof import("../constants/common.js").DraftAction)[keyof typeof import("../constants/common.js").DraftAction];
-
-export type DraftType = "map-draft" | "striker-draft";
+export type PlayingSide = Exclude<Team, Team.Spectator>;
 
 export interface SequenceStep {
   team: PlayingSide;
@@ -14,8 +9,8 @@ export interface SequenceStep {
 }
 
 export type ReplayEvent =
-  | { type: "pending"; atMs: number; side: PlayingSide; value: string | null }
-  | { type: "action"; atMs: number; side: PlayingSide; step: number; value: string | null };
+  | { type: ReplayEventType.Pending; atMs: number; side: PlayingSide; value: string | null }
+  | { type: ReplayEventType.Action; atMs: number; side: PlayingSide; step: number; value: string | null };
 
 export interface CommonState {
   roomId: string;

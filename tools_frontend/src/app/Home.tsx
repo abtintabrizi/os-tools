@@ -1,6 +1,7 @@
-import { Map, PersonStanding, PencilRuler } from "lucide-react";
+import { Map, PencilRuler, PersonStanding } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import Changelog from "@/features/common/components/Changelog";
+
+import Changelog from "../features/common/components/Changelog";
 
 const btnBase =
   "flex flex-col items-center gap-5 justify-center w-full bg-tools-graphite hover:bg-white/10 border border-white/7 rounded-lg px-2 py-20 font-head text-2xl font-semibold text-white transition-colors duration-200";

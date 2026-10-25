@@ -4,11 +4,14 @@
   "[typescriptreact]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "js/ts.preferences.importModuleSpecifier": "non-relative",
+  "js/ts.preferences.importModuleSpecifier": "relative",
   "eslint.useFlatConfig": true,
   "eslint.workingDirectories": [
     "tools_frontend",
     "tools_backend",
     "tools_shared"
-  ]
+  ],
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  }
 }

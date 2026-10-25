@@ -1,15 +1,18 @@
-import { ALL_MAPS, type MapDefinition } from "@/features/common/constants/constants";
+import { MAP_METADATA } from "../common/constants/constants";
 
-function tacticsMaps(map: MapDefinition, parentName?: string): { name: string; image: string }[] {
-  const name = parentName ? `${parentName} — ${map.name}` : map.name;
-  if (map.variants?.length) {
-    return map.variants.flatMap((variant) => tacticsMaps(variant, name));
-  }
+export const TACTICS_MAPS = Object.entries(MAP_METADATA)
+  .flatMap(([name, metadata]) => {
+    if (metadata.variants?.length) {
+      return metadata.variants.flatMap((variant) => {
+        return variant.image ? [{ name: `${name} — ${variant.name}`, image: variant.image }] : [];
+      });
+    }
 
-  return map.image ? [{ name, image: map.image }] : [];
-}
-
-export const TACTICS_MAPS = ALL_MAPS.flatMap((map) => tacticsMaps(map)).sort((a, b) => a.name.localeCompare(b.name));
+    return metadata.image ? [{ name, image: metadata.image }] : [];
+  })
+  .sort((a, b) => {
+    return a.name.localeCompare(b.name);
+  });
 
 export const BOARD_WIDTH = 1200;
 export const BOARD_HEIGHT = 640;

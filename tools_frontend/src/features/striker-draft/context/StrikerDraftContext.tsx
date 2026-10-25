@@ -1,18 +1,14 @@
 import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  type ReactNode,
-} from "react";
+  type CreateStrikerDraftRoomRequest as CreateStrikerRoomConfig,
+  type Striker,
+  type StrikerDraftState,
+  type Team as Side,
+  Team,
+} from "@os-tools/shared";
+import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import type { StrikerDraftState } from "@/features/striker-draft/types";
-import type { Side } from "@/features/common/types";
-import { Team } from "@/features/common/constants/constants";
-import {
-  useStrikerDraftApi,
-  type CreateStrikerRoomConfig,
-} from "@/features/striker-draft/hooks/useStrikerDraftApi";
+
+import { useStrikerDraftApi } from "../hooks/useStrikerDraftApi";
 
 interface StrikerDraftContextValue {
   state: StrikerDraftState | null;
@@ -23,22 +19,19 @@ interface StrikerDraftContextValue {
   roomId: string | null;
   handleLaunch: (config: CreateStrikerRoomConfig) => Promise<void>;
   handleSidePick: (side: Side) => void;
-  handleAction: (striker: string | null) => Promise<void>;
-  handlePending: (striker: string | null) => Promise<void>;
+  handleAction: (striker: Striker | null) => Promise<void>;
+  handlePending: (striker: Striker | null) => Promise<void>;
   handleReady: () => Promise<void>;
   handleReset: () => void;
 }
 
-const StrikerDraftContext = createContext<StrikerDraftContextValue | null>(
-  null,
-);
+const StrikerDraftContext = createContext<StrikerDraftContextValue | null>(null);
 
 export function useStrikerDraftContext(): StrikerDraftContextValue {
   const ctx = useContext(StrikerDraftContext);
-  if (!ctx)
-    throw new Error(
-      "useStrikerDraftContext must be used inside StrikerDraftProvider",
-    );
+  if (!ctx) {
+    throw new Error("useStrikerDraftContext must be used inside StrikerDraftProvider");
+  }
   return ctx;
 }
 
@@ -58,22 +51,29 @@ export function StrikerDraftProvider({ children }: { children: ReactNode }) {
   const [side, setSide] = useState<Side>(replay ? Team.Spectator : (urlSide ?? Team.Spectator));
   const [roomId, setRoomId] = useState<string | null>(urlRoom);
   const [lobbyState, setLobbyState] = useState<StrikerDraftState | null>(null);
-  const [localPending, setLocalPending] = useState<string | null>(null);
+  const [localPending, setLocalPending] = useState<Striker | null>(null);
 
   useEffect(() => {
-    if (!replay) return;
+    if (!replay) {
+      return;
+    }
     const url = new URL(window.location.href);
-    if (!url.searchParams.has("side")) return;
+    if (!url.searchParams.has("side")) {
+      return;
+    }
     url.searchParams.delete("side");
     window.history.replaceState({}, "", url.toString());
   }, [replay]);
 
-  const { state, loading, error, create, applyAction, setPending, ready } =
-    useStrikerDraftApi(roomId, side, !replay);
+  const { state, loading, error, create, applyAction, setPending, ready } = useStrikerDraftApi(roomId, side, !replay);
 
   useEffect(() => {
-    if (!replay || loading || !state) return;
-    if (state.done && state.replayEvents?.length) return;
+    if (!replay || loading || !state) {
+      return;
+    }
+    if (state.done && state.replayEvents?.length) {
+      return;
+    }
     const url = new URL(window.location.href);
     url.searchParams.delete("replay");
     url.searchParams.delete("side");
@@ -87,19 +87,16 @@ export function StrikerDraftProvider({ children }: { children: ReactNode }) {
   const clientState = state
     ? {
         ...state,
-        ...(side === Team.Blue
-          ? { pendingBlue: localPending }
-          : side === Team.Red
-            ? { pendingRed: localPending }
-            : {}),
+        ...(side === Team.Blue ? { pendingBlue: localPending } : side === Team.Red ? { pendingRed: localPending } : {}),
       }
     : null;
 
   useEffect(() => {
     const pathname = window.location.pathname;
-    const isBasePath =
-      pathname === "/striker-draft" || pathname === "/striker-draft/";
-    if (!isBasePath) return;
+    const isBasePath = pathname === "/striker-draft" || pathname === "/striker-draft/";
+    if (!isBasePath) {
+      return;
+    }
     const search = window.location.search;
     if (urlRoom && (urlSide || replay)) {
       navigate(`/striker-draft/draft${search}`, { replace: true });
@@ -122,13 +119,17 @@ export function StrikerDraftProvider({ children }: { children: ReactNode }) {
     navigate(`/striker-draft/draft${url.search}`);
   }
 
-  async function handleAction(striker: string | null) {
-    if (replay) return;
+  async function handleAction(striker: Striker | null) {
+    if (replay) {
+      return;
+    }
     await applyAction(striker);
   }
 
-  async function handlePending(striker: string | null) {
-    if (replay) return;
+  async function handlePending(striker: Striker | null) {
+    if (replay) {
+      return;
+    }
     if (side === Team.Blue || side === Team.Red) {
       setLocalPending(striker);
       await setPending(side, striker);
@@ -136,7 +137,9 @@ export function StrikerDraftProvider({ children }: { children: ReactNode }) {
   }
 
   async function handleReady() {
-    if (replay) return;
+    if (replay) {
+      return;
+    }
     if (side === Team.Blue || side === Team.Red) {
       await ready(side);
     }

@@ -24,18 +24,11 @@ export function ReplayControls({
 
   return (
     <div className="px-5 py-2 flex items-center justify-center gap-2 shrink-0">
-      <span className="font-mono text-xs tracking-widest uppercase text-tools-gold mr-2">
-        Replay
-      </span>
+      <span className="font-mono text-xs tracking-widest uppercase text-tools-gold mr-2">Replay</span>
       <button type="button" onClick={onRestart} className={buttonClass}>
         <RotateCcw size={14} /> Restart
       </button>
-      <button
-        type="button"
-        onClick={onPreviousAction}
-        disabled={!hasPreviousAction}
-        className={buttonClass}
-      >
+      <button type="button" onClick={onPreviousAction} disabled={!hasPreviousAction} className={buttonClass}>
         <SkipBack size={14} /> Previous
       </button>
       <button
@@ -46,12 +39,7 @@ export function ReplayControls({
         {playing ? <Pause size={14} /> : <Play size={14} />}
         {playing ? "Pause" : "Play"}
       </button>
-      <button
-        type="button"
-        onClick={onNextAction}
-        disabled={!hasNextAction}
-        className={buttonClass}
-      >
+      <button type="button" onClick={onNextAction} disabled={!hasNextAction} className={buttonClass}>
         <SkipForward size={14} /> Next
       </button>
     </div>

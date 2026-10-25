@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
+
+import { BOARD_HEIGHT, BOARD_WIDTH } from "../constants";
 import type { BoardState } from "../types";
-import { BOARD_WIDTH, BOARD_HEIGHT } from "../constants";
 
 export function initialBoard(): BoardState {
   return {

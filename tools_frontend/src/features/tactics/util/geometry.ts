@@ -1,5 +1,5 @@
-import type { Drawing, Point } from "./types";
-import { BOARD_HEIGHT, BOARD_WIDTH } from "./constants";
+import { BOARD_HEIGHT, BOARD_WIDTH } from "../constants";
+import type { Drawing, Point } from "../types";
 
 export function clampPoint(point: Point, radius = 0): Point {
   return {

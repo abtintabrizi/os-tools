@@ -1,42 +1,106 @@
 import { randomInt } from "node:crypto";
+import {
+  COUNTDOWN_SECONDS,
+  DraftAction,
+  DraftType,
+  type MapDraftState,
+  type PlayingSide,
+  ReplayEventType,
+  SEQUENCE_MAPPING,
+  STRIKER_POOL,
+  STRIKER_SEQUENCE,
+  type StrikerDraftState,
+  Team,
+} from "@os-tools/shared";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import createError from "http-errors";
 
-import { COUNTDOWN_SECONDS } from "../constants/common.js";
-import { SEQUENCE_MAPPING } from "../constants/mapDraft.js";
-import { STRIKER_POOL, STRIKER_SEQUENCE } from "../constants/strikerDraft.js";
-import type { DraftType, PlayingSide, Team } from "../models/common.js";
-import type { RoomState, RoomStore } from "../models/room.js";
-import { RequestError } from "../utils/requestError.js";
-import { RoomLockManager } from "./roomLockManager.js";
-import { roomKey } from "../utils/roomHelper.js";
-import { applyMapAction } from "../utils/mapDraft.js";
-import { appendReplayEvent, stateForClient } from "../utils/replay.js";
-import { applyStrikerAction } from "../utils/strikerDraft.js";
+import { applyMapAction } from "../utils/mapDraftUtil.js";
+import { appendReplayEvent, stateForClient } from "../utils/replayUtil.js";
+import { roomKey } from "../utils/roomUtil.js";
+import { applyStrikerAction } from "../utils/strikerDraftUtil.js";
 import type { ConnectionManager } from "./connectionManager.js";
-import type { TimerManager, RoomTimer } from "./timerManager.js";
-import { Logger } from "./logger.js";
+import { LoggerManager } from "./loggerManager.js";
+import { RoomLockManager } from "./roomLockManager.js";
+import type { RoomTimer, TimerManager } from "./timerManager.js";
 
-const logger = new Logger("managers.roomManager");
+export interface RoomStateByType {
+  [DraftType.MapDraft]: MapDraftState;
+  [DraftType.StrikerDraft]: StrikerDraftState;
+}
+
+export type RoomState = RoomStateByType[keyof RoomStateByType];
+
+const logger = new LoggerManager("managers.roomManager");
+
+const TABLES: Record<DraftType, string> = {
+  [DraftType.MapDraft]: "map_drafts",
+  [DraftType.StrikerDraft]: "striker_drafts",
+};
 
 export class RoomManager {
   private readonly locks = new RoomLockManager();
   private stopped = false;
+  private readonly client: SupabaseClient;
 
   public constructor(
-    private readonly repository: RoomStore,
     private readonly timerManager: TimerManager,
     private readonly connections: ConnectionManager,
-  ) {}
+    client?: SupabaseClient,
+  ) {
+    if (client) {
+      this.client = client;
 
-  public create = async (type: DraftType, build: (roomId: string) => RoomState): Promise<RoomState> => {
+      return;
+    }
+
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!url || !key) {
+      throw new Error("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required");
+    }
+
+    this.client = createClient(url, key, {
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    });
+  }
+
+  private loadRoom = async <T extends DraftType>(type: T, roomId: string): Promise<RoomStateByType[T] | null> => {
+    const { data, error } = await this.client.from(TABLES[type]).select("state").eq("room_id", roomId).maybeSingle();
+
+    if (error) {
+      throw new Error(`Failed to load ${type} room: ${error.message}`);
+    }
+
+    return (data?.state as RoomStateByType[T] | null) ?? null;
+  };
+
+  private saveRoom = async (type: DraftType, state: RoomState): Promise<void> => {
+    const { error } = await this.client
+      .from(TABLES[type])
+      .upsert({ room_id: state.roomId, state }, { onConflict: "room_id" });
+
+    if (error) {
+      throw new Error(`Failed to save ${type} room: ${error.message}`);
+    }
+  };
+
+  public create = async <T extends DraftType>(
+    type: T,
+    build: (roomId: string) => NoInfer<RoomStateByType[T]>,
+  ): Promise<RoomStateByType[T]> => {
     // Serialize ID allocation within this process rather than overwriting an existing room.
     return this.locks.run(`${type}:create`, async () => {
       let id = this.generateRoomId();
 
-      while (await this.repository.get(type, id)) id = this.generateRoomId();
+      while (await this.loadRoom(type, id)) {
+        id = this.generateRoomId();
+      }
 
       const state = build(id);
 
-      await this.repository.save(type, state);
+      await this.saveRoom(type, state);
 
       logger.info("Room created", {
         draftType: type,
@@ -52,52 +116,67 @@ export class RoomManager {
     });
   };
 
-  private nowSeconds = (): number => Date.now() / 1000;
+  private nowSeconds = (): number => {
+    return Date.now() / 1000;
+  };
 
-  private timing = (state: RoomState, now = this.nowSeconds()) => ({
-    stepStartedAt: state.stepStartedAt ?? null,
-    elapsedSeconds: state.stepStartedAt == null ? null : Math.round((now - state.stepStartedAt) * 1000) / 1000,
-  });
+  private timing = (state: RoomState, now = this.nowSeconds()) => {
+    return {
+      stepStartedAt: state.stepStartedAt ?? null,
+      elapsedSeconds: state.stepStartedAt == null ? null : Math.round((now - state.stepStartedAt) * 1000) / 1000,
+    };
+  };
 
   private generateRoomId = (): string => {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
-    return Array.from({ length: 6 }, () => chars[randomInt(chars.length)]).join("");
+    return Array.from({ length: 6 }, () => {
+      return chars[randomInt(chars.length)];
+    }).join("");
   };
 
   private choose = <T>(pool: readonly T[]): T => {
-    if (!pool.length) throw new Error("Cannot choose from an empty pool");
+    if (!pool.length) {
+      throw new Error("Cannot choose from an empty pool");
+    }
 
     return pool[randomInt(pool.length)]!;
   };
 
-  private requireRoom = async (type: DraftType, roomId: string): Promise<RoomState> => {
-    const state = await this.repository.get(type, roomId);
+  private requireRoom = async <T extends DraftType>(type: T, roomId: string): Promise<RoomStateByType[T]> => {
+    const state = await this.loadRoom(type, roomId);
 
-    if (!state) throw new RequestError(404, "Room not found");
+    if (!state) {
+      throw createError.NotFound("Room not found");
+    }
 
     return state;
   };
 
-  public get = async (type: DraftType, roomId: string): Promise<RoomState> => {
+  public get = async <T extends DraftType>(type: T, roomId: string): Promise<RoomStateByType[T]> => {
     return stateForClient(await this.requireRoom(type, roomId));
   };
 
   private playingSide = (side: Team): PlayingSide => {
-    if (side !== "blue" && side !== "red") throw new RequestError(400, "Invalid side");
+    if (side !== Team.Blue && side !== Team.Red) {
+      throw createError.BadRequest("Invalid side");
+    }
 
     return side;
   };
 
-  public ready = async (type: DraftType, roomId: string, side: Team): Promise<RoomState> => {
+  public ready = async <T extends DraftType>(type: T, roomId: string, side: Team): Promise<RoomStateByType[T]> => {
     return this.locks.run(roomKey(type, roomId), async () => {
       const state = await this.requireRoom(type, roomId);
 
       this.playingSide(side);
       const bothReady = state.readyBlue && state.readyRed;
 
-      if (side === "blue") state.readyBlue = true;
-      else state.readyRed = true;
+      if (side === Team.Blue) {
+        state.readyBlue = true;
+      } else {
+        state.readyRed = true;
+      }
 
       if (!bothReady && state.readyBlue && state.readyRed) {
         const now = this.nowSeconds();
@@ -107,10 +186,12 @@ export class RoomManager {
         state.stepStartedAt = now + COUNTDOWN_SECONDS;
       }
 
-      await this.repository.save(type, state);
+      await this.saveRoom(type, state);
       logger.info("Ready", { draftType: type, roomId, side, readyBlue: state.readyBlue, readyRed: state.readyRed });
 
-      if (!bothReady && state.readyBlue && state.readyRed) this.timerManager.schedule(type, state);
+      if (!bothReady && state.readyBlue && state.readyRed) {
+        this.timerManager.schedule(type, state);
+      }
 
       this.connections.broadcast(type, state);
 
@@ -118,7 +199,12 @@ export class RoomManager {
     });
   };
 
-  public pending = async (type: DraftType, roomId: string, side: Team, value: string | null): Promise<RoomState> => {
+  public pending = async <T extends DraftType>(
+    type: T,
+    roomId: string,
+    side: Team,
+    value: string | null,
+  ): Promise<RoomStateByType[T]> => {
     const player = this.playingSide(side);
 
     return this.locks.run(roomKey(type, roomId), async () => {
@@ -126,12 +212,19 @@ export class RoomManager {
 
       const timing = this.timing(state);
 
-      if (player === "blue") state.pendingBlue = value;
-      else state.pendingRed = value;
+      if (player === Team.Blue) {
+        state.pendingBlue = value;
+      } else {
+        state.pendingRed = value;
+      }
 
-      state.replayEvents = appendReplayEvent(state, { type: "pending", side: player, value }, this.nowSeconds());
+      state.replayEvents = appendReplayEvent(
+        state,
+        { type: ReplayEventType.Pending, side: player, value },
+        this.nowSeconds(),
+      );
 
-      await this.repository.save(type, state);
+      await this.saveRoom(type, state);
 
       logger.info("Pending", { draftType: type, roomId, side: player, step: state.step, value, ...timing });
 
@@ -140,14 +233,22 @@ export class RoomManager {
     });
   };
 
-  public action = async (type: DraftType, roomId: string, step: number, value: string | null): Promise<RoomState> => {
+  public action = async <T extends DraftType>(
+    type: T,
+    roomId: string,
+    step: number,
+    value: string | null,
+  ): Promise<RoomStateByType[T]> => {
     return this.locks.run(roomKey(type, roomId), async () => {
       const state = await this.requireRoom(type, roomId);
 
-      if (!state.readyBlue || !state.readyRed)
-        throw new RequestError(400, "Both teams must be ready before the draft can start");
+      if (!state.readyBlue || !state.readyRed) {
+        throw createError.BadRequest("Both teams must be ready before the draft can start");
+      }
 
-      if (state.done) throw new RequestError(400, "Draft is already complete");
+      if (state.done) {
+        throw createError.BadRequest("Draft is already complete");
+      }
 
       const timing = this.timing(state);
 
@@ -161,7 +262,7 @@ export class RoomManager {
           ...timing,
         });
 
-        throw new RequestError(409, `Step mismatch: expected ${state.step}, got ${step}`);
+        throw createError.Conflict(`Step mismatch: expected ${state.step}, got ${step}`);
       }
 
       const sequence = "maps" in state ? SEQUENCE_MAPPING[state.bestOf] : STRIKER_SEQUENCE;
@@ -169,7 +270,7 @@ export class RoomManager {
 
       const side = this.advance(state, value);
 
-      await this.repository.save(type, state);
+      await this.saveRoom(type, state);
       this.timerManager.schedule(type, state);
 
       this.connections.broadcast(type, state);
@@ -187,7 +288,7 @@ export class RoomManager {
 
     Object.assign(state, result.state);
 
-    state.replayEvents = appendReplayEvent(state, { type: "action", side, step, value }, now);
+    state.replayEvents = appendReplayEvent(state, { type: ReplayEventType.Action, side, step, value }, now);
     state.pendingBlue = null;
     state.pendingRed = null;
     state.stepStartedAt = state.done ? null : this.nowSeconds();
@@ -195,13 +296,17 @@ export class RoomManager {
     return side;
   };
 
-  public update = async (type: DraftType, roomId: string, update: (state: RoomState) => void): Promise<RoomState> => {
+  public update = async <T extends DraftType>(
+    type: T,
+    roomId: string,
+    update: (state: NoInfer<RoomStateByType[T]>) => void,
+  ): Promise<RoomStateByType[T]> => {
     return this.locks.run(roomKey(type, roomId), async () => {
       const state = await this.requireRoom(type, roomId);
 
       update(state);
 
-      await this.repository.save(type, state);
+      await this.saveRoom(type, state);
 
       this.connections.broadcast(type, state);
 
@@ -209,21 +314,27 @@ export class RoomManager {
     });
   };
 
-  public reconnect = async (
-    type: DraftType,
+  public reconnect = async <T extends DraftType>(
+    type: T,
     roomId: string,
-    onState: (state: RoomState | null) => void,
+    onState: (state: NoInfer<RoomStateByType[T]> | null) => void,
   ): Promise<boolean> => {
     return this.locks.run(roomKey(type, roomId), async () => {
-      if (this.stopped) return false;
+      if (this.stopped) {
+        return false;
+      }
 
-      const state = await this.repository.get(type, roomId);
+      const state = await this.loadRoom(type, roomId);
 
-      if (this.stopped) return false;
+      if (this.stopped) {
+        return false;
+      }
 
       onState(state);
 
-      if (state && !this.timerManager.has(type, roomId)) this.timerManager.schedule(type, state);
+      if (state && !this.timerManager.has(type, roomId)) {
+        this.timerManager.schedule(type, state);
+      }
 
       return true;
     });
@@ -240,7 +351,7 @@ export class RoomManager {
         return;
       }
 
-      const state = await this.repository.get(type, roomId);
+      const state = await this.loadRoom(type, roomId);
 
       if (this.stopped || !this.timerManager.isCurrent(type, roomId, timer)) {
         this.logSkippedAdvance(type, roomId, timer, this.stopped ? "shutdown" : "superseded", state);
@@ -270,12 +381,16 @@ export class RoomManager {
         return;
       }
 
-      const pending = entry.team === "blue" ? state.pendingBlue : state.pendingRed;
+      const pending = entry.team === Team.Blue ? state.pendingBlue : state.pendingRed;
       const timing = this.timing(state, fireTime);
       let chosen: string | null;
 
       if ("maps" in state) {
-        const available = state.maps.filter((map) => !state.actions.some((a) => a.map === map));
+        const available = state.maps.filter((map) => {
+          return !state.actions.some((a) => {
+            return a.map === map;
+          });
+        });
 
         if (!available.length) {
           this.logSkippedAdvance(type, roomId, timer, "empty_pool", state);
@@ -283,25 +398,48 @@ export class RoomManager {
           return;
         }
 
-        chosen = pending && available.includes(pending) ? pending : this.choose(available);
+        chosen =
+          pending &&
+          available.some((candidate) => {
+            return candidate === pending;
+          })
+            ? pending
+            : this.choose(available);
       } else {
-        const available = STRIKER_POOL.filter((striker) => !state.actions.some((a) => a.striker === striker));
+        const available = STRIKER_POOL.filter((striker) => {
+          return !state.actions.some((a) => {
+            return a.striker === striker;
+          });
+        });
 
-        if (entry.action === "ban") chosen = pending && available.includes(pending) ? pending : null;
-        else {
+        if (entry.action === DraftAction.Ban) {
+          chosen =
+            pending &&
+            available.some((candidate) => {
+              return candidate === pending;
+            })
+              ? pending
+              : null;
+        } else {
           if (!available.length) {
             this.logSkippedAdvance(type, roomId, timer, "empty_pool", state);
 
             return;
           }
 
-          chosen = pending && available.includes(pending) ? pending : this.choose(available);
+          chosen =
+            pending &&
+            available.some((candidate) => {
+              return candidate === pending;
+            })
+              ? pending
+              : this.choose(available);
         }
       }
 
       this.advance(state, chosen, fireTime);
 
-      await this.repository.save(type, state);
+      await this.saveRoom(type, state);
       this.timerManager.schedule(type, state);
 
       this.connections.broadcast(type, state);

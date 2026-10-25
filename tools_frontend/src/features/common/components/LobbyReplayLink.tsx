@@ -1,4 +1,4 @@
-import LobbyLink from "@/features/common/components/LobbyLink";
+import LobbyLink from "./LobbyLink";
 
 interface LobbyReplayLinkProps {
   url: string;
@@ -6,11 +6,7 @@ interface LobbyReplayLinkProps {
   completed: boolean;
 }
 
-export default function LobbyReplayLink({
-  url,
-  available,
-  completed,
-}: LobbyReplayLinkProps) {
+export default function LobbyReplayLink({ url, available, completed }: LobbyReplayLinkProps) {
   return (
     <>
       <div className="h-px bg-tools-gold my-3" />

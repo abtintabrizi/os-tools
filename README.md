@@ -9,13 +9,13 @@ and tactics boards. Live at [drafter.bestieinslot.com](https://drafter.bestieins
 - `tools_backend/`: Express 5, TypeScript, native WebSockets through `ws`; intended for Render.
 - Supabase: unchanged `map_drafts` and `striker_drafts` tables, each storing `room_id` and `state`.
 - `tools_shared/`: common game constants, API/state types, and replay types.
-- `tools_scripts/`: workspace development launcher.
+- `dev.mjs`: workspace development launcher.
 - pnpm workspaces and Turborepo: one install and lockfile for the TypeScript apps.
   Turbo runs development servers, builds, and checks.
 
 Common game rules and types live in `tools_shared/src/constants/` and `tools_shared/src/types/`,
 exported by the private `@os-tools/shared` workspace package. UI assets and presentation
-types stay in the frontend; CORS, repository interfaces, and runtime resources stay in the backend.
+types stay in the frontend; CORS, backend-only types, and runtime resources stay in the backend.
 oRPC, Zod schemas, and a test suite are deferred.
 
 ## Shared package builds
@@ -24,8 +24,7 @@ Both apps depend on `@os-tools/shared` using `workspace:*`; pnpm links the local
 For example:
 
 ```ts
-import { TIMER_SECONDS } from "@os-tools/shared/constants/timing";
-import type { MapDraftState } from "@os-tools/shared/types/mapDraft";
+import { TIMER_SECONDS, type MapDraftState } from "@os-tools/shared";
 ```
 
 TypeScript compiles shared source to JavaScript and declaration files in `tools_shared/dist/`.
@@ -45,21 +44,21 @@ Separate deployed apps still need rebuilding/redeploying to receive new shared c
 registers Express route functions, and handles HTTP errors, WebSockets, and shutdown.
 
 ```text
-HTTP route → Manager → Supabase repository
+HTTP route → Manager → Supabase
                 ↓
           Utility functions
                 ↓
      Timer / connection managers
 ```
 
-- `routes/`: parse and validate HTTP input, call managers, and send responses.
+- `routes/`: read typed HTTP input, call managers, and send responses.
 - `managers/`: draft workflows, shared locked room operations, timers, and socket registries.
-- `repositories/`: Supabase queries behind the `RoomStore` interface.
-- `utils/`: pure draft calculations, replay, state filtering, validation, and error types.
-- `models/`, `constants/`: types and game data.
+- `RoomManager` also owns Supabase client initialization and private room load/save methods.
+- `utils/`: pure draft calculations, replay, and state filtering.
+- Shared game types and constants: `tools_shared/src/`; manager-specific types stay beside their manager.
 
 Utilities do not mutate their inputs or read clocks, choose random values, or perform I/O.
-Managers own those effects and the room-lock queues; repositories own database access.
+Managers own those effects and the room-lock queues; RoomManager owns database access.
 Class methods and constructors declare their visibility explicitly.
 
 Managers receive ordinary constructor dependencies. There are no controller/router classes,
@@ -118,18 +117,18 @@ Horizontal scaling requires additional coordination.
 The backend retains the original API URLs and saved room JSON. No database migration
 or frontend API change is required. Each draft type (`map-draft`, `striker-draft`) exposes:
 
-| Method | Path | Purpose |
-| --- | --- | --- |
-| POST | `/{type}/rooms` | Create room |
-| GET | `/{type}/rooms/{id}` | Read room |
-| POST | `/{type}/rooms/{id}/ready` | Mark side ready |
-| POST | `/{type}/rooms/{id}/pending` | Save private preview |
-| POST | `/{type}/rooms/{id}/action` | Submit ban/pick with expected step |
-| WS | `/{type}/ws/rooms/{id}?side=blue` | Stream side-filtered state |
+| Method | Path                              | Purpose                            |
+| ------ | --------------------------------- | ---------------------------------- |
+| POST   | `/{type}/rooms`                   | Create room                        |
+| GET    | `/{type}/rooms/{id}`              | Read room                          |
+| POST   | `/{type}/rooms/{id}/ready`        | Mark side ready                    |
+| POST   | `/{type}/rooms/{id}/pending`      | Save private preview               |
+| POST   | `/{type}/rooms/{id}/action`       | Submit ban/pick with expected step |
+| WS     | `/{type}/ws/rooms/{id}?side=blue` | Stream side-filtered state         |
 
 `POST /map-draft/rooms/{id}/striker-room` links a striker lobby.
 `GET /` returns `{ "message": "Backend running" }`.
-Errors retain `{ detail }`; malformed requests return 422, missing rooms 404, and stale
+Errors retain `{ detail }`; malformed JSON returns 400, missing rooms 404, and stale
 steps 409. Unknown map draft formats now return 400 instead of failing later in a timer.
 
 Both-ready starts a five-second countdown followed by 30-second turns. Pending selections
@@ -139,8 +138,10 @@ while replay offsets remain milliseconds. Reconnect recovers timers from persist
 Rooms predating replay fields remain readable. A restart resumes a room's timer when a
 client reconnects, matching Python's behavior.
 
-HTTP compatibility includes case-sensitive paths, 405/Allow responses, trailing-slash
-307 redirects, and the same CORS preflight behavior. WebSockets retain Uvicorn's 20-second
+HTTP routing uses Express defaults for capitalization and trailing slashes
+(no redirect). The cors package handles preflight responses with the existing origin allowlist.
+Send JSON objects/arrays with `Content-Type: application/json`. Unsupported methods
+fall through to 404, GET routes support HEAD, and OPTIONS is handled automatically. WebSockets retain Uvicorn's 20-second
 ping/pong heartbeat and 16 MiB message limit. Replay rounding matches Python, and timeout
 events use the original timer fire time even when storage access takes time.
 
@@ -150,24 +151,28 @@ persist and return the caller's preview without broadcasting, matching Python.
 
 Deliberate differences: all room writes are serialized, map/striker runtime registries are
 separate, lobby-link payloads are filtered, and generated IDs are checked for collisions.
-Invalid map formats are rejected immediately; nullable awakening bans are treated as an
-empty ban list. Validation preserves 422/detail responses but uses simpler error messages.
+Invalid map formats are rejected immediately. Striker creation requires `bannedStarts` and
+`customAwakenings` as arrays; use `[]` when unused. Request-shape validation is deferred to Zod/oRPC. Custom
+mode requires exactly two custom awakenings. Deploy frontend and backend together for this
+request change. Shared TypeScript types provide compile-time checks only; managers retain
+business-rule checks, without runtime request-shape validation or Pydantic coercion.
 FastAPI's automatic OpenAPI/Swagger/ReDoc pages are not replicated. Node limits JSON request
 bodies to 1 MiB; oversized requests return 413 rather than a server error.
 
 ## Validation
 
-Backend logs are JSON lines on stdout/stderr, with UTC timestamps, severity, module names,
+Application logs are JSON lines on stdout/stderr, with UTC timestamps, severity, module names,
 and selected context fields. Room creation, readiness, previews, manual/automatic actions,
 timer starts/cancellations/skips, and stale-step warnings retain the Python diagnostics.
 Timing fields are `stepStartedAt` and `elapsedSeconds`; timer starts include `delaySeconds`.
-HTTP access logs include method, path, status, and duration, without request bodies or headers.
+Morgan emits plain-text HTTP access logs with method, path, status, response size, and duration,
+without query strings, request bodies, or headers. Connection cleanup runs only during shutdown.
 
 Do not create test files. Format changed frontend TypeScript with
 `pnpm --filter @os-tools/frontend exec prettier --write <files>`, run ESLint, then the
 frontend production build through Turbo. For Node, run its `format`, `lint`, `typecheck`, and `build`
-scripts. Temporary smoke checks can import `createApplication(store)` from `app/server.ts` to use an isolated
-store and ephemeral port. Production uses Supabase exclusively.
+scripts. Temporary smoke checks can import `createApplication(client)` from `app/server.ts` to supply a client with a local mocked transport
+and an ephemeral port. Production uses Supabase exclusively.
 
 Smoke scenarios: all map formats, custom/random awakenings, both sides and spectators,
 simultaneous readiness, invalid requests, duplicate actions, stale steps, timer/action races,
@@ -183,15 +188,15 @@ Keep existing environment values and the existing backend service URL during cut
 
 Configure the existing service with:
 
-| Setting | Value |
-| --- | --- |
-| Runtime | Node |
-| Root directory | Repository root (blank) |
-| Node version | 24, via `.node-version` |
-| Build command | `corepack pnpm install --frozen-lockfile && corepack pnpm exec turbo run build --filter=@os-tools/backend` |
-| Start command | `corepack pnpm --filter @os-tools/backend start` |
-| Health check | `/` |
-| Instance count | 1 |
+| Setting        | Value                                                                                                      |
+| -------------- | ---------------------------------------------------------------------------------------------------------- |
+| Runtime        | Node                                                                                                       |
+| Root directory | Repository root (blank)                                                                                    |
+| Node version   | 24, via `.node-version`                                                                                    |
+| Build command  | `corepack pnpm install --frozen-lockfile && corepack pnpm exec turbo run build --filter=@os-tools/backend` |
+| Start command  | `corepack pnpm --filter @os-tools/backend start`                                                           |
+| Health check   | `/`                                                                                                        |
+| Instance count | 1                                                                                                          |
 
 Retain `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`; Render supplies `PORT`.
 Build filters must include root package/workspace/lock/Turbo/Node-version files as well as

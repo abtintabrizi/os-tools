@@ -1,10 +1,18 @@
+import {
+  DraftAction,
+  type Striker,
+  STRIKER_SEQUENCE,
+  type StrikerDraftAction,
+  type StrikerDraftState,
+  Team,
+} from "@os-tools/shared";
 import { AnimatePresence, motion } from "motion/react";
 import { useRef } from "react";
-import { ALL_STRIKERS, DraftAction, StrikerDirection, Team } from "@/features/common/constants/constants";
-import { AnimatedNumber } from "@/features/common/components/AnimatedNumber";
-import type { StrikerDraftAction, StrikerDraftState, IndexedStep } from "@/features/striker-draft/types";
-import { useStrikerColor } from "@/features/striker-draft/hooks/useStrikerColor";
-import { STRIKER_SEQUENCE } from "@/features/striker-draft/constants";
+
+import { AnimatedNumber } from "../../common/components/AnimatedNumber";
+import { STRIKER_METADATA, StrikerDirection } from "../../common/constants/constants";
+import { useStrikerColor } from "../hooks/useStrikerColor";
+import type { IndexedStep } from "../types";
 
 interface SidebarCardProps {
   step: IndexedStep;
@@ -31,9 +39,8 @@ export function SidebarCard({ step: s, cardIndex, isBlue, timeLeft, state }: Sid
   const isActive = s.globalIdx === currentStep && !done;
   const status: "filled" | "active" | "pending" = filled ? "filled" : isActive ? "active" : "pending";
   const isNoBan = filled ? filled.striker === null : false;
-  const strikerEntry = filled && filled.striker ? ALL_STRIKERS.find((str) => str.name === filled.striker) : null;
-  const pendingEntry =
-    status === "active" && pendingStriker ? ALL_STRIKERS.find((str) => str.name === pendingStriker) : null;
+  const strikerEntry = filled && filled.striker ? STRIKER_METADATA[filled.striker] : null;
+  const pendingEntry = status === "active" && pendingStriker ? STRIKER_METADATA[pendingStriker as Striker] : null;
   const splashColor = useStrikerColor(strikerEntry?.splash);
 
   const shouldFlip = strikerEntry
@@ -84,7 +91,7 @@ export function SidebarCard({ step: s, cardIndex, isBlue, timeLeft, state }: Sid
         <AnimatePresence initial={false}>
           {strikerEntry && (
             <motion.div
-              key={strikerEntry.name}
+              key={filled?.striker ?? ""}
               className="absolute inset-0"
               initial={{ scale: 1.08 }}
               animate={{ scale: 1 }}
@@ -117,9 +124,9 @@ export function SidebarCard({ step: s, cardIndex, isBlue, timeLeft, state }: Sid
       <AnimatePresence>
         {pendingEntry && (
           <motion.img
-            key={pendingEntry.name}
+            key={pendingStriker ?? ""}
             src={pendingEntry.splash}
-            alt={pendingEntry.name}
+            alt={pendingStriker ?? ""}
             className={`absolute inset-0 w-full h-full object-cover object-top blur-[2px] brightness-50 ${pendingShouldFlip ? "scale-x-[-1]" : ""}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

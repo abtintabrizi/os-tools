@@ -1,10 +1,11 @@
 import { createBrowserRouter } from "react-router-dom";
-import Home from "@/routes/Home";
-import MapDraft from "@/routes/MapDraft";
-import StrikerDraft from "@/routes/StrikerDraft";
-import MapDraftPages from "@/features/map-drafter/pages";
-import StrikerDraftPages from "@/features/striker-draft/pages";
-import TacticsPage from "@/features/tactics/pages/TacticsPage";
+
+import MapDraftPages from "../features/map-drafter/pages";
+import StrikerDraftPages from "../features/striker-draft/pages";
+import TacticsPage from "../features/tactics/pages/TacticsPage";
+import Home from "./Home";
+import MapDraft from "./MapDraft";
+import StrikerDraft from "./StrikerDraft";
 
 export const router = createBrowserRouter([
   { path: "/tactics", element: <TacticsPage /> },

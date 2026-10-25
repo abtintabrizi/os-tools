@@ -1,22 +1,10 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useRef,
-  useState,
-} from "react";
+import { createContext, useCallback, useContext, useRef, useState } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type ToastVariant = "success" | "error" | "info" | "warning";
 
-export type ToastPosition =
-  | "top-left"
-  | "top-center"
-  | "top-right"
-  | "bottom-left"
-  | "bottom-center"
-  | "bottom-right";
+export type ToastPosition = "top-left" | "top-center" | "top-right" | "bottom-left" | "bottom-center" | "bottom-right";
 
 interface ToastItem {
   id: number;
@@ -113,9 +101,7 @@ function Toast({
       `}
     >
       {/* Colored left accent bar */}
-      <div
-        className={`w-1 rounded-l-xl shrink-0 ${variantAccent[variant]} opacity-80`}
-      />
+      <div className={`w-1 rounded-l-xl shrink-0 ${variantAccent[variant]} opacity-80`} />
 
       <div className="flex items-center gap-4 px-5 py-4 w-full">
         {/* Icon */}
@@ -124,9 +110,7 @@ function Toast({
         </span>
 
         {/* Message */}
-        <span className="flex-1 font-mono text-sm tracking-wide leading-snug">
-          {message}
-        </span>
+        <span className="flex-1 font-mono text-sm tracking-wide leading-snug">{message}</span>
 
         {/* Close */}
         <button
@@ -148,32 +132,20 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
   const dismiss = useCallback((id: number) => {
     // Fade out first, then remove
-    setToasts((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, visible: false } : t)),
-    );
+    setToasts((prev) => prev.map((t) => (t.id === id ? { ...t, visible: false } : t)));
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, FADE_DURATION);
   }, []);
 
   const toast = useCallback(
-    ({
-      message,
-      variant = "info",
-      position = "bottom-right",
-      duration = 4000,
-    }: ToastOptions) => {
+    ({ message, variant = "info", position = "bottom-right", duration = 4000 }: ToastOptions) => {
       const id = nextId.current++;
       // Insert as invisible, flip visible on next frame to trigger transition
-      setToasts((prev) => [
-        ...prev,
-        { id, message, variant, position, visible: false },
-      ]);
+      setToasts((prev) => [...prev, { id, message, variant, position, visible: false }]);
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          setToasts((prev) =>
-            prev.map((t) => (t.id === id ? { ...t, visible: true } : t)),
-          );
+          setToasts((prev) => prev.map((t) => (t.id === id ? { ...t, visible: true } : t)));
         });
       });
       if (duration > 0) {
@@ -192,26 +164,24 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={{ toast }}>
       {children}
-      {(Object.entries(byPosition) as [ToastPosition, ToastItem[]][]).map(
-        ([position, items]) => (
-          <div
-            key={position}
-            className={`fixed z-200 flex flex-col gap-3 pointer-events-none ${positionContainerStyles[position]}`}
-          >
-            {items.map((t) => (
-              <div key={t.id} className="pointer-events-auto">
-                <Toast
-                  message={t.message}
-                  variant={t.variant}
-                  position={t.position}
-                  visible={t.visible}
-                  onClose={() => dismiss(t.id)}
-                />
-              </div>
-            ))}
-          </div>
-        ),
-      )}
+      {(Object.entries(byPosition) as [ToastPosition, ToastItem[]][]).map(([position, items]) => (
+        <div
+          key={position}
+          className={`fixed z-200 flex flex-col gap-3 pointer-events-none ${positionContainerStyles[position]}`}
+        >
+          {items.map((t) => (
+            <div key={t.id} className="pointer-events-auto">
+              <Toast
+                message={t.message}
+                variant={t.variant}
+                position={t.position}
+                visible={t.visible}
+                onClose={() => dismiss(t.id)}
+              />
+            </div>
+          ))}
+        </div>
+      ))}
     </ToastContext.Provider>
   );
 }
@@ -220,6 +190,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
 export function useToast() {
   const ctx = useContext(ToastContext);
-  if (!ctx) throw new Error("useToast must be used within a ToastProvider");
+  if (!ctx) {
+    throw new Error("useToast must be used within a ToastProvider");
+  }
   return ctx;
 }

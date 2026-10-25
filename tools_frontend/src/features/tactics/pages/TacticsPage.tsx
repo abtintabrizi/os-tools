@@ -1,14 +1,15 @@
+import { GameMap, Team } from "@os-tools/shared";
 import { useCallback, useEffect, useState } from "react";
-import { GameMap, Team } from "@/features/common/constants/constants";
-import { HomeButton } from "@/features/common/components/NavButtons";
-import { useToast } from "@/features/common/components/Toast";
+
+import { HomeButton } from "../../common/components/NavButtons";
+import { useToast } from "../../common/components/Toast";
+import StrikerPalette from "../components/StrikerPalette";
 import TacticsBoard from "../components/TacticsBoard";
 import TacticsToolbar from "../components/TacticsToolbar";
-import StrikerPalette from "../components/StrikerPalette";
 import { DRAW_COLORS, TACTICS_MAPS } from "../constants";
 import { initialBoard, useTacticsBoard } from "../hooks/useTacticsBoard";
-import { exportImage } from "../exportImage";
 import type { PlayingTeam, Tool } from "../types";
+import { exportImage } from "../util/exportImage";
 
 export default function TacticsPage() {
   const { board, commit, undo, redo, canUndo, canRedo } = useTacticsBoard();
@@ -35,13 +36,18 @@ export default function TacticsPage() {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
-      if (target.closest("input, textarea, [contenteditable]:not([contenteditable=false])")) return;
+      if (target.closest("input, textarea, [contenteditable]:not([contenteditable=false])")) {
+        return;
+      }
       const key = event.key.toLowerCase();
       if ((event.ctrlKey || event.metaKey) && (key === "z" || (event.ctrlKey && key === "y"))) {
         event.preventDefault();
         setCancelVersion((value) => value + 1);
-        if (key === "y" || event.shiftKey) redo();
-        else undo();
+        if (key === "y" || event.shiftKey) {
+          redo();
+        } else {
+          undo();
+        }
       }
     };
 

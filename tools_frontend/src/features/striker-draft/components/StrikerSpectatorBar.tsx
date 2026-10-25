@@ -1,10 +1,16 @@
-import { useRef } from "react";
+import {
+  DraftAction,
+  type Striker,
+  STRIKER_SEQUENCE,
+  type StrikerDraftAction,
+  type StrikerDraftState,
+  Team,
+} from "@os-tools/shared";
 import { AnimatePresence, motion } from "motion/react";
-import { AnimatedNumber } from "@/features/common/components/AnimatedNumber";
+import { useRef } from "react";
 
-import { ALL_STRIKERS, ALL_MAPS, ALL_AWAKENINGS, DraftAction, Team } from "@/features/common/constants/constants";
-import type { StrikerDraftAction, StrikerDraftState } from "@/features/striker-draft/types";
-import { STRIKER_SEQUENCE } from "@/features/striker-draft/constants";
+import { AnimatedNumber } from "../../common/components/AnimatedNumber";
+import { AWAKENING_ICONS, MAP_METADATA, STRIKER_METADATA } from "../../common/constants/constants";
 
 interface StrikerCardProps {
   completedAction: StrikerDraftAction | undefined;
@@ -26,8 +32,8 @@ function StrikerCard({
   timeLeft,
 }: StrikerCardProps) {
   const wasFilledOnMount = useRef(!!completedAction);
-  const strikerEntry = completedAction?.striker ? ALL_STRIKERS.find((s) => s.name === completedAction.striker) : null;
-  const pendingEntry = pendingStriker ? ALL_STRIKERS.find((s) => s.name === pendingStriker) : null;
+  const strikerEntry = completedAction?.striker ? STRIKER_METADATA[completedAction.striker] : null;
+  const pendingEntry = pendingStriker ? STRIKER_METADATA[pendingStriker as Striker] : null;
   const isNoBan = !!completedAction && !completedAction.striker;
 
   return (
@@ -44,7 +50,7 @@ function StrikerCard({
         <AnimatePresence initial={false}>
           {strikerEntry && (
             <motion.div
-              key={strikerEntry.name}
+              key={completedAction?.striker ?? ""}
               className="absolute inset-0"
               initial={{ scale: 1.08 }}
               animate={{ scale: 1 }}
@@ -74,9 +80,9 @@ function StrikerCard({
         <AnimatePresence>
           {!completedAction && pendingEntry && (
             <motion.img
-              key={`pending-${pendingEntry.name}`}
+              key={`pending-${pendingStriker ?? ""}`}
               src={pendingEntry.icon}
-              alt={pendingEntry.name}
+              alt={pendingStriker ?? ""}
               className="absolute inset-0 w-full h-full object-cover blur-[1px] brightness-60"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -142,7 +148,7 @@ function StrikerCard({
         {completedAction
           ? (completedAction.striker ?? "No Ban")
           : pendingEntry
-            ? pendingEntry.name
+            ? (pendingStriker ?? "")
             : isBan
               ? "Ban"
               : "Pick"}
@@ -161,7 +167,7 @@ export function StrikerSpectatorBar({ timeLeft, countdownLeft, state }: StrikerS
   const { step, done, actions, blueName, redName, readyBlue, readyRed, map, awakenings } = state;
   const bothReady = readyBlue && readyRed;
 
-  const mapEntry = ALL_MAPS.find((m) => m.name === map);
+  const mapEntry = MAP_METADATA[map];
 
   const blueBadgeClass = "bg-tools-blue-dim text-tools-blue";
   const redBadgeClass = "bg-tools-red-dim text-tools-red";
@@ -179,11 +185,11 @@ export function StrikerSpectatorBar({ timeLeft, countdownLeft, state }: StrikerS
         )}
         {mapEntry && awakenings.length > 0 && <div className="w-px h-12 bg-white/10" />}
         {awakenings.map((aw) => {
-          const awEntry = ALL_AWAKENINGS.find((a) => a.name === aw);
+          const awakeningIcon = AWAKENING_ICONS[aw];
 
-          return awEntry ? (
+          return awakeningIcon ? (
             <div key={aw} className="w-20 flex flex-col items-center gap-1">
-              <img src={awEntry.icon} alt={aw} className="w-16 h-16 object-contain" />
+              <img src={awakeningIcon} alt={aw} className="w-16 h-16 object-contain" />
               <span className="font-mono text-[10px] text-white/50 text-center w-full line-clamp-2 leading-tight">
                 {aw}
               </span>

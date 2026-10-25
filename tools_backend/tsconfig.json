@@ -14,5 +14,6 @@
     "skipLibCheck": true,
     "sourceMap": true
   },
-  "include": ["app/**/*.ts"]
+  "include": ["app/**/*.ts"],
+  "references": [{ "path": "../tools_shared" }]
 }

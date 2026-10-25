@@ -11,20 +11,21 @@ instructions still apply.
 - `components/TacticsBoard.tsx` renders the SVG board and handles drawing, movement, deletion, and palette drops.
   Unfinished gestures use preview state and refs; only completed gestures commit to history.
 - `components/TacticsToolbar.tsx` contains drawing controls and history/reset/export actions.
-- `components/StrikerPalette.tsx` reuses `ALL_STRIKERS` and the shared blue/red team values.
-- `geometry.ts` supplies shared geometry; `exportImage.ts` renders PNGs using an offscreen canvas.
-- `images.ts` caches decoded images for map rendering and export. `hooks/useMapImage.ts` keeps the previous map
+- `components/StrikerPalette.tsx` reuses `STRIKER_METADATA` and the shared blue/red team values.
+- `util/geometry.ts` supplies shared geometry; `util/exportImage.ts` renders PNGs using an offscreen canvas.
+- `util/images.ts` caches decoded images for map rendering and export. `hooks/useMapImage.ts` keeps the previous map
   visible until the selected image is decoded and preloads other maps sequentially in the background.
 
 ## Maps and assets
 
 - Define maps in `../common/constants/constants.ts`, not in a separate tactics asset registry.
-- `MapDefinition` is recursive: only `name` is required; `image`, `blurredImage`, `icon`, and `variants` are optional.
+- `MAP_METADATA` maps each shared `GameMap` to frontend image metadata. `MapVariant` has a name and optional
+  image/icon/blurred-image fields; `MapMetadata` adds a non-recursive list of variants and takes its name from the key.
 - `image` is the normal, non-blurred image (`/maps/<name>.png`). `blurredImage` uses
   `/maps/<name>_Blurred.png`; icons use `/maps/<name>_Icon.png`.
-- Clarion's five variants are nested under its parent in `ALL_MAPS`. They have images but no icons or blurred images.
+- Clarion's five variants are nested under its parent in `MAP_METADATA`. They have images but no icons or blurred images.
   Keep them out of the top-level draft map list. The parent also has its own normal image.
-- `constants.ts` recursively derives `TACTICS_MAPS`: expand nonempty variants instead of offering their parent;
+- `constants.ts` derives `TACTICS_MAPS`: expand the single level of nonempty variants instead of offering their parent;
   otherwise include entries with an `image`. Empty/missing variants are safe, and entries without images are skipped.
   Currently this produces 14 options. Names include their parent path and are sorted alphabetically.
 - Tactics defaults to Ahten City and falls back to the first available map. The configured tactics map list is expected

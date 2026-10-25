@@ -1,35 +1,39 @@
-import type { CommonState, DraftAction, PlayingSide, Team } from "./common.js";
+import type { Awakening } from "../constants/awakenings.js";
+import type { AwakeningMode, DraftAction, Team } from "../constants/game.js";
+import type { GameMap } from "../constants/maps.js";
+import type { Striker } from "../constants/strikers.js";
+import type { CommonState, PlayingSide } from "./common.js";
 
 export interface StrikerDraftAction {
-  striker: string | null;
+  striker: Striker | null;
   team: PlayingSide;
   step: number;
   action: DraftAction;
 }
 
 export interface StrikerDraftState extends CommonState {
-  map: string;
-  awakenings: string[];
+  map: GameMap;
+  awakenings: Awakening[];
   actions: StrikerDraftAction[];
-  bannedStarts: string[] | null;
-  awakeningMode: string;
+  bannedStarts: Awakening[];
+  awakeningMode: AwakeningMode;
 }
 
 export interface CreateStrikerDraftRoomRequest {
   blueName: string;
   redName: string;
-  map: string;
-  awakeningMode: string;
-  bannedStarts?: string[] | null;
-  customAwakenings?: string[] | null;
+  map: GameMap;
+  awakeningMode: AwakeningMode;
+  bannedStarts: Awakening[];
+  customAwakenings: Awakening[];
 }
 
 export interface StrikerDraftActionRequest {
-  striker: string | null;
+  striker: Striker | null;
   step: number;
 }
 
 export interface StrikerDraftPendingRequest {
   side: Team;
-  striker: string | null;
+  striker: Striker | null;
 }

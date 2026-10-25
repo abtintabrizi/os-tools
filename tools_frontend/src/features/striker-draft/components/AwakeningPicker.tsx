@@ -1,33 +1,29 @@
+import { type Awakening, CURRENT_AWAKENING_POOL } from "@os-tools/shared";
 import { useEffect, useRef, useState } from "react";
-import {
-  ALL_AWAKENINGS,
-  CURRENT_AWAKENING_POOL,
-} from "@/features/common/constants/constants";
+
+import { AWAKENING_ICONS } from "../../common/constants/constants";
 
 interface Props {
-  value: string;
-  onChange: (value: string) => void;
-  exclude?: string[];
+  value: Awakening | "";
+  onChange: (value: Awakening) => void;
+  exclude?: Awakening[];
   placeholder?: string;
 }
 
-export default function AwakeningPicker({
-  value,
-  onChange,
-  exclude = [],
-  placeholder = "Select an awakening",
-}: Props) {
+export default function AwakeningPicker({ value, onChange, exclude = [], placeholder = "Select an awakening" }: Props) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const ref = useRef<HTMLDivElement>(null);
 
-  const poolItems = ALL_AWAKENINGS.filter(
-    (a) => CURRENT_AWAKENING_POOL.includes(a.name) && !exclude.includes(a.name),
-  );
-  const filtered = poolItems.filter((a) =>
-    a.name.toLowerCase().includes(search.toLowerCase()),
-  );
-  const selected = ALL_AWAKENINGS.find((a) => a.name === value);
+  const poolItems = CURRENT_AWAKENING_POOL.filter((awakening) => {
+    return !exclude.includes(awakening);
+  }).sort((a, b) => {
+    return a.localeCompare(b);
+  });
+  const filtered = poolItems.filter((awakening) => {
+    return awakening.toLowerCase().includes(search.toLowerCase());
+  });
+  const selectedIcon = AWAKENING_ICONS[value as Awakening];
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -47,19 +43,13 @@ export default function AwakeningPicker({
         className="w-full flex items-center gap-2.5 border border-white/7 bg-tools-graphite p-3 font-bold rounded-lg cursor-pointer transition-colors duration-200 hover:border-white/15"
         onClick={() => setOpen((o) => !o)}
       >
-        {selected ? (
+        {selectedIcon ? (
           <>
-            <img
-              src={selected.icon}
-              alt={selected.name}
-              className="w-6 h-6 object-contain shrink-0"
-            />
-            <span className="truncate flex-1 text-left">{selected.name}</span>
+            <img src={selectedIcon} alt={value} className="w-6 h-6 object-contain shrink-0" />
+            <span className="truncate flex-1 text-left">{value}</span>
           </>
         ) : (
-          <span className="text-white/40 font-normal flex-1 text-left">
-            {placeholder}
-          </span>
+          <span className="text-white/40 font-normal flex-1 text-left">{placeholder}</span>
         )}
         <svg
           className={`w-4 h-4 shrink-0 text-white/40 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
@@ -68,11 +58,7 @@ export default function AwakeningPicker({
           stroke="currentColor"
           strokeWidth={2.5}
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M19 9l-7 7-7-7"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
         </svg>
       </button>
 
@@ -91,34 +77,26 @@ export default function AwakeningPicker({
           <div className="grid grid-cols-4 gap-1 p-2 max-h-72 overflow-y-auto">
             {filtered.map((a) => (
               <button
-                key={a.name}
+                key={a}
                 type="button"
-                title={a.name}
+                title={a}
                 className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors duration-150 cursor-pointer ${
-                  value === a.name
+                  value === a
                     ? "bg-tools-gold/10 border border-tools-gold/40"
                     : "hover:bg-white/5 border border-transparent"
                 }`}
                 onClick={() => {
-                  onChange(a.name);
+                  onChange(a);
                   setOpen(false);
                   setSearch("");
                 }}
               >
-                <img
-                  src={a.icon}
-                  alt={a.name}
-                  className="w-10 h-10 object-contain"
-                />
-                <span className="text-xs text-center leading-tight line-clamp-2">
-                  {a.name}
-                </span>
+                <img src={AWAKENING_ICONS[a]} alt={a} className="w-10 h-10 object-contain" />
+                <span className="text-xs text-center leading-tight line-clamp-2">{a}</span>
               </button>
             ))}
             {filtered.length === 0 && (
-              <div className="col-span-4 py-6 text-center text-sm text-white/30">
-                No awakenings found
-              </div>
+              <div className="col-span-4 py-6 text-center text-sm text-white/30">No awakenings found</div>
             )}
           </div>
         </div>

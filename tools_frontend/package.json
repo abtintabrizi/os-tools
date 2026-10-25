@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@os-tools/shared": "workspace:*",
     "@supabase/supabase-js": "^2.43.0",
     "@tailwindcss/vite": "^4.2.2",
     "classnames": "^2.5.1",
@@ -19,8 +20,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.13.2",
-    "tailwindcss": "^4.2.2",
-    "@os-tools/shared": "workspace:*"
+    "tailwindcss": "^4.2.2"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -29,6 +29,7 @@
     "@vitejs/plugin-react": "^4.2.0",
     "eslint": "^10.1.0",
     "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-simple-import-sort": "^14.0.0",
     "globals": "^17.4.0",
     "prettier": "^3.8.1",
     "typescript": "^5.2.0",

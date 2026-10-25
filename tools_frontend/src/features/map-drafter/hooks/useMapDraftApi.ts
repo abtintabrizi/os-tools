@@ -1,32 +1,35 @@
+import {
+  type Awakening,
+  type CreateMapDraftRoomRequest,
+  DraftType,
+  type GameMap,
+  type MapDraftState,
+  type Team,
+} from "@os-tools/shared";
 import { useCallback } from "react";
-import { useRoomApi } from "@/features/common/hooks/useRoomApi";
-import type { MapDraftState, SequenceKey } from "@map-drafter/types";
-import type { Team } from "@/features/common/constants/constants";
 
-import type { CreateMapDraftRoomRequest } from "@os-tools/shared/types/mapDraft";
-
-export type CreateRoomConfig = Omit<CreateMapDraftRoomRequest, "bestOf"> & { bestOf: SequenceKey };
+import { useRoomApi } from "../../common/hooks/useRoomApi";
 
 export function useMapDraftApi(roomId: string | null, side?: string, live = true) {
-  const api = useRoomApi<MapDraftState>(roomId, "map-draft", side, live);
+  const api = useRoomApi<MapDraftState>(roomId, DraftType.MapDraft, side, live);
 
   const create = useCallback(
-    (config: CreateRoomConfig) => api.create(config),
+    (config: CreateMapDraftRoomRequest) => api.create(config),
     [api.create], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const applyAction = useCallback(
-    (map: string) => api.applyAction({ map, step: api.state?.step }),
+    (map: GameMap) => api.applyAction({ map, step: api.state?.step }),
     [api.applyAction, api.state?.step], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const setPending = useCallback(
-    (side: Exclude<Team, "spectator">, map: string | null) => api.setPending({ side, map }),
+    (side: Exclude<Team, Team.Spectator>, map: string | null) => api.setPending({ side, map }),
     [api.setPending], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const setStrikerRoom = useCallback(
-    (map: string, roomId: string, firstPick: string, bannedAwakenings: string[]) =>
+    (map: string, roomId: string, firstPick: string, bannedAwakenings: Awakening[]) =>
       api.post("striker-room", { map, roomId, firstPick, bannedAwakenings }),
     [api.post], // eslint-disable-line react-hooks/exhaustive-deps
   );

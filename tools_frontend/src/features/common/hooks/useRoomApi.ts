@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import type { Team } from "@/features/common/constants/constants";
+import type { DraftType, Team } from "@os-tools/shared";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 const WS_BASE = API_BASE.replace(/^http/, "ws");
@@ -13,11 +13,11 @@ export interface RoomApi<T> {
   create: (config: object) => Promise<T>;
   applyAction: (payload: Record<string, unknown>) => Promise<void>;
   setPending: (payload: Record<string, unknown>) => Promise<void>;
-  ready: (side: Exclude<Team, "spectator">) => Promise<void>;
+  ready: (side: Exclude<Team, Team.Spectator>) => Promise<void>;
   post: (subPath: string, payload: Record<string, unknown>) => Promise<void>;
 }
 
-export function useRoomApi<T>(roomId: string | null, path: string, side?: string, live = true): RoomApi<T> {
+export function useRoomApi<T>(roomId: string | null, path: DraftType, side?: string, live = true): RoomApi<T> {
   const [state, setState] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +35,9 @@ export function useRoomApi<T>(roomId: string | null, path: string, side?: string
 
     fetch(`${API_BASE}/${path}/rooms/${roomId}`)
       .then((r) => {
-        if (!r.ok) throw new Error("Room not found");
+        if (!r.ok) {
+          throw new Error("Room not found");
+        }
         return r.json();
       })
       .then((data: T) => {
@@ -52,7 +54,9 @@ export function useRoomApi<T>(roomId: string | null, path: string, side?: string
       });
 
     function connect() {
-      if (cancelled) return;
+      if (cancelled) {
+        return;
+      }
 
       const wsUrl = side
         ? `${WS_BASE}/${path}/ws/rooms/${roomId}?side=${side}`
@@ -78,7 +82,9 @@ export function useRoomApi<T>(roomId: string | null, path: string, side?: string
       };
     }
 
-    if (live) connect();
+    if (live) {
+      connect();
+    }
 
     return () => {
       cancelled = true;
@@ -107,7 +113,9 @@ export function useRoomApi<T>(roomId: string | null, path: string, side?: string
 
   const applyAction = useCallback(
     async (payload: Record<string, unknown>): Promise<void> => {
-      if (!roomId) return;
+      if (!roomId) {
+        return;
+      }
       const resp = await fetch(`${API_BASE}/${path}/rooms/${roomId}/action`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -124,7 +132,9 @@ export function useRoomApi<T>(roomId: string | null, path: string, side?: string
 
   const setPending = useCallback(
     async (payload: Record<string, unknown>): Promise<void> => {
-      if (!roomId) return;
+      if (!roomId) {
+        return;
+      }
       await fetch(`${API_BASE}/${path}/rooms/${roomId}/pending`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -136,8 +146,10 @@ export function useRoomApi<T>(roomId: string | null, path: string, side?: string
   );
 
   const ready = useCallback(
-    async (side: Exclude<Team, "spectator">): Promise<void> => {
-      if (!roomId) return;
+    async (side: Exclude<Team, Team.Spectator>): Promise<void> => {
+      if (!roomId) {
+        return;
+      }
       const resp = await fetch(`${API_BASE}/${path}/rooms/${roomId}/ready`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -154,7 +166,9 @@ export function useRoomApi<T>(roomId: string | null, path: string, side?: string
 
   const post = useCallback(
     async (subPath: string, payload: Record<string, unknown>): Promise<void> => {
-      if (!roomId) return;
+      if (!roomId) {
+        return;
+      }
       await fetch(`${API_BASE}/${path}/rooms/${roomId}/${subPath}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

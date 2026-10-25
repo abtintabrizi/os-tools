@@ -1,7 +1,9 @@
-import { router } from "@/app/router";
+import "../index.css";
+
 import { RouterProvider } from "react-router-dom";
-import { ToastProvider } from "@/features/common/components/Toast";
-import "@/index.css";
+
+import { ToastProvider } from "../features/common/components/Toast";
+import { router } from "./router";
 
 export default function App() {
   return (

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+
 import { TACTICS_MAPS } from "../constants";
-import { loadImage } from "../images";
+import { loadImage } from "../util/images";
 
 export function useMapImage(src: string, onError: () => void) {
   const [displayedMap, setDisplayedMap] = useState("");
@@ -11,7 +12,9 @@ export function useMapImage(src: string, onError: () => void) {
 
     loadImage(src).then(
       () => {
-        if (active) setDisplayedMap(src);
+        if (active) {
+          setDisplayedMap(src);
+        }
       },
       () => {
         if (active) {
@@ -27,14 +30,18 @@ export function useMapImage(src: string, onError: () => void) {
   }, [src, onError]);
 
   useEffect(() => {
-    if (!displayedMap) return;
+    if (!displayedMap) {
+      return;
+    }
     let active = true;
 
     // Fetch/decode one map at a time after the first background is ready.
     // Selected maps use the same cache and do not wait for this queue.
     const preload = async () => {
       for (const map of TACTICS_MAPS) {
-        if (!active) break;
+        if (!active) {
+          break;
+        }
 
         try {
           await loadImage(map.image);

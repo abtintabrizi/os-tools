@@ -1,6 +1,5 @@
+import { COUNTDOWN_SECONDS, type ReplayEvent, ReplayEventType, Team } from "@os-tools/shared";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Team } from "@/features/common/constants/constants";
-import type { ReplayEvent } from "@/features/common/types";
 
 type ReplayState<Action> = {
   actions: Action[];
@@ -48,8 +47,10 @@ export function useDraftReplay<Action extends { step?: number | null }, T extend
   }, [completedState, enabled]);
 
   useEffect(() => {
-    if (!completedState || !enabled || events.length === 0) return;
-    const lastActionEvent = events.filter((event) => event.type === "action").slice(-1)[0];
+    if (!completedState || !enabled || events.length === 0) {
+      return;
+    }
+    const lastActionEvent = events.filter((event) => event.type === ReplayEventType.Action).slice(-1)[0];
 
     const renderFrame = () => {
       const now = Date.now();
@@ -57,7 +58,9 @@ export function useDraftReplay<Action extends { step?: number | null }, T extend
         const advanced = Math.min(durationMs, elapsedRef.current + now - previousTickRef.current);
         elapsedRef.current = advanced;
         setElapsedMs(advanced);
-        if (advanced >= durationMs) setPlaying(false);
+        if (advanced >= durationMs) {
+          setPlaying(false);
+        }
       }
       previousTickRef.current = now;
       const elapsed = elapsedRef.current;
@@ -71,14 +74,18 @@ export function useDraftReplay<Action extends { step?: number | null }, T extend
         readyRed: true,
         pendingBlue: null,
         pendingRed: null,
-        stepStartedAt: now / 1000 + (5000 - elapsed) / 1000,
+        stepStartedAt: now / 1000 + (COUNTDOWN_SECONDS * 1000 - elapsed) / 1000,
         serverTime: now / 1000,
       } as T;
 
       for (const event of due) {
-        if (event.type === "pending") {
-          if (event.side === Team.Blue) next.pendingBlue = event.value;
-          if (event.side === Team.Red) next.pendingRed = event.value;
+        if (event.type === ReplayEventType.Pending) {
+          if (event.side === Team.Blue) {
+            next.pendingBlue = event.value;
+          }
+          if (event.side === Team.Red) {
+            next.pendingRed = event.value;
+          }
           continue;
         }
         const isLastAction = event === lastActionEvent;

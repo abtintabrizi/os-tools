@@ -4,6 +4,18 @@
   "version": "0.1.0",
   "type": "module",
   "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./types": {
+      "types": "./dist/types/index.d.ts",
+      "default": "./dist/types/index.js"
+    },
+    "./constants": {
+      "types": "./dist/constants/index.d.ts",
+      "default": "./dist/constants/index.js"
+    },
     "./constants/*": {
       "types": "./dist/constants/*.d.ts",
       "default": "./dist/constants/*.js"
@@ -14,16 +26,17 @@
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && tsc",
     "dev": "tsc --watch --preserveWatchOutput",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit --tsBuildInfoFile node_modules/.cache/typecheck.tsbuildinfo",
     "lint": "eslint src --max-warnings 0"
   },
   "devDependencies": {
-    "typescript": "^5.9.3",
-    "eslint": "^10.1.0",
     "@eslint/js": "^10.0.1",
-    "typescript-eslint": "^8.58.0",
-    "prettier": "^3.8.1"
+    "eslint": "^10.1.0",
+    "eslint-plugin-simple-import-sort": "^14.0.0",
+    "prettier": "^3.8.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.58.0"
   }
 }

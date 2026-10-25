@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 // Module-level cache — persists across renders and component remounts
 const colorCache = new Map<string, string>();
@@ -27,7 +27,9 @@ function extractVibrantColor(src: string): Promise<string> {
 
       // Weighted average biased toward saturated, mid-brightness pixels
       let totalWeight = 0;
-      let wr = 0, wg = 0, wb = 0;
+      let wr = 0,
+        wg = 0,
+        wb = 0;
 
       for (let i = 0; i < data.length; i += 4) {
         const r = data[i] / 255;
@@ -40,7 +42,9 @@ function extractVibrantColor(src: string): Promise<string> {
         const brightness = max;
 
         // Ignore near-black and near-white
-        if (brightness < 0.15 || brightness > 0.92) continue;
+        if (brightness < 0.15 || brightness > 0.92) {
+          continue;
+        }
 
         const weight = saturation * brightness;
         totalWeight += weight;

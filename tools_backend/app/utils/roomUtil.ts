@@ -1,6 +1,8 @@
-import type { DraftType } from "../models/common.js";
+import type { DraftType } from "@os-tools/shared";
 
-export const roomKey = (type: DraftType, roomId: string) => `${type}:${roomId}`;
+export const roomKey = (type: DraftType, roomId: string) => {
+  return `${type}:${roomId}`;
+};
 
 export function initialState(roomId: string, body: { blueName: string; redName: string }) {
   return {

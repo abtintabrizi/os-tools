@@ -1,6 +1,7 @@
+import { DraftAction, type GameMap, type ReplayEvent, ReplayEventType, type Striker, Team } from "@os-tools/shared";
 import { Check, X } from "lucide-react";
-import { ALL_MAPS, ALL_STRIKERS, DraftAction, Team } from "@/features/common/constants/constants";
-import type { ReplayEvent } from "@/features/common/types";
+
+import { MAP_METADATA, STRIKER_METADATA } from "../constants/constants";
 
 interface TimelineAction {
   step?: number | null;
@@ -16,18 +17,23 @@ interface ReplayTimelineProps {
 }
 
 export function ReplayTimeline({ events, actions, elapsedMs, durationMs }: ReplayTimelineProps) {
-  if (durationMs <= 0) return null;
+  if (durationMs <= 0) {
+    return null;
+  }
 
   function actionForEvent(event: ReplayEvent, eventIndex: number): TimelineAction | undefined {
-    if (event.type === "action") {
+    if (event.type === ReplayEventType.Action) {
       return actions.find((action) => action.step === event.step);
     }
     const confirmation = events
       .slice(eventIndex)
       .find(
-        (candidate) => candidate.type === "action" && candidate.side === event.side && candidate.atMs >= event.atMs,
+        (candidate) =>
+          candidate.type === ReplayEventType.Action && candidate.side === event.side && candidate.atMs >= event.atMs,
       );
-    return confirmation?.type === "action" ? actions.find((action) => action.step === confirmation.step) : undefined;
+    return confirmation?.type === ReplayEventType.Action
+      ? actions.find((action) => action.step === confirmation.step)
+      : undefined;
   }
 
   const playhead = Math.min(100, Math.max(0, (elapsedMs / durationMs) * 100));
@@ -38,15 +44,16 @@ export function ReplayTimeline({ events, actions, elapsedMs, durationMs }: Repla
         <div className="absolute left-0 right-0 top-3.5 h-px bg-white/20" />
         {events.map((event, index) => {
           const draftAction = actionForEvent(event, index);
-          if (!draftAction) return null;
+          if (!draftAction) {
+            return null;
+          }
           const isBan = draftAction.action === DraftAction.Ban;
-          const isPending = event.type === "pending";
+          const isPending = event.type === ReplayEventType.Pending;
           const left = Math.min(100, Math.max(0, (event.atMs / durationMs) * 100));
           const color = event.side === Team.Blue ? "text-tools-blue" : "text-tools-red";
           const Icon = isBan ? X : Check;
           const entry = event.value
-            ? (ALL_MAPS.find((item) => item.name === event.value) ??
-              ALL_STRIKERS.find((item) => item.name === event.value))
+            ? (MAP_METADATA[event.value as GameMap] ?? STRIKER_METADATA[event.value as Striker])
             : undefined;
           const entryIcon = entry?.icon;
           const entryName = event.value ?? "No Ban";

@@ -1,26 +1,20 @@
-import { useState, useEffect, useRef } from "react";
+import { DraftAction, Striker, STRIKER_SEQUENCE, Team, TIMER_SECONDS } from "@os-tools/shared";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  ALL_STRIKERS,
-  ALL_MAPS,
-  ALL_AWAKENINGS,
-  TIMER_SECONDS,
-  Team,
-  DraftAction,
-} from "@/features/common/constants/constants";
-import LoadingScreen from "@/features/common/components/LoadingScreen";
-import ErrorScreen from "@/features/map-drafter/components/ErrorScreen";
-import { useStrikerDraftContext } from "@/features/striker-draft/context/StrikerDraftContext";
-import { StepTracker } from "@/features/common/components/StepTracker";
-import { STRIKER_SEQUENCE } from "@/features/striker-draft/constants";
-import type { IndexedStep } from "@/features/striker-draft/types";
-import { SidebarCard } from "@/features/striker-draft/components/SidebarCard";
-import { AnimatedNumber } from "@/features/common/components/AnimatedNumber";
-import { StrikerSpectatorBar } from "@/features/striker-draft/components/StrikerSpectatorBar";
-import { BackButton, HomeButton } from "@/features/common/components/NavButtons";
-import { useDraftReplay } from "@/features/common/hooks/useDraftReplay";
-import { ReplayControls } from "@/features/common/components/ReplayControls";
-import { ReplayTimeline } from "@/features/common/components/ReplayTimeline";
+
+import { AnimatedNumber } from "../../common/components/AnimatedNumber";
+import LoadingScreen from "../../common/components/LoadingScreen";
+import { BackButton, HomeButton } from "../../common/components/NavButtons";
+import { ReplayControls } from "../../common/components/ReplayControls";
+import { ReplayTimeline } from "../../common/components/ReplayTimeline";
+import { StepTracker } from "../../common/components/StepTracker";
+import { AWAKENING_ICONS, MAP_METADATA, STRIKER_METADATA } from "../../common/constants/constants";
+import { useDraftReplay } from "../../common/hooks/useDraftReplay";
+import ErrorScreen from "../../map-drafter/components/ErrorScreen";
+import { SidebarCard } from "../components/SidebarCard";
+import { StrikerSpectatorBar } from "../components/StrikerSpectatorBar";
+import { useStrikerDraftContext } from "../context/StrikerDraftContext";
+import type { IndexedStep } from "../types";
 
 export default function DraftPage() {
   const {
@@ -98,7 +92,9 @@ export default function DraftPage() {
   }, [state?.stepStartedAt, state?.done, state?.readyBlue, state?.readyRed]);
 
   useEffect(() => {
-    if (!state?.stepStartedAt || !state.readyBlue || !state.readyRed) return;
+    if (!state?.stepStartedAt || !state.readyBlue || !state.readyRed) {
+      return;
+    }
 
     function tick() {
       const stepStartedAt = stepStartedAtRef.current;
@@ -129,8 +125,12 @@ export default function DraftPage() {
     };
   }, [countdownLeft]);
 
-  if (loading) return <LoadingScreen message="Connecting to draft..." />;
-  if (!state) return <ErrorScreen message={error ?? "Room not found. Check your link."} />;
+  if (loading) {
+    return <LoadingScreen message="Connecting to draft..." />;
+  }
+  if (!state) {
+    return <ErrorScreen message={error ?? "Room not found. Check your link."} />;
+  }
 
   const bothReady = state.readyBlue && state.readyRed;
   const { step, done, actions, blueName, redName, map, awakenings } = state;
@@ -162,16 +162,21 @@ export default function DraftPage() {
     ...s,
     globalIdx: i,
   })).filter((s) => s.team === Team.Red);
-  const mapEntry = ALL_MAPS.find((m) => m.name === map);
+  const mapEntry = MAP_METADATA[map];
 
-  function handleStrikerClick(name: string) {
-    if (!isMyTurn || bannedSet.has(name) || pickedSet.has(name)) return;
+  function handleStrikerClick(name: Striker) {
+    if (!isMyTurn || bannedSet.has(name) || pickedSet.has(name)) {
+      return;
+    }
     handlePending(name);
   }
 
   async function handleConfirm() {
-    if (!pending) return;
-    await handleAction(pending);
+    const selected = Object.values(Striker).find((striker) => striker === pending);
+    if (!selected) {
+      return;
+    }
+    await handleAction(selected);
   }
 
   function watchReplay() {
@@ -182,8 +187,12 @@ export default function DraftPage() {
   }
 
   function sideLabel() {
-    if (side === Team.Blue) return blueName;
-    if (side === Team.Red) return redName;
+    if (side === Team.Blue) {
+      return blueName;
+    }
+    if (side === Team.Red) {
+      return redName;
+    }
 
     return "Spectating";
   }
@@ -301,11 +310,11 @@ export default function DraftPage() {
                   )}
                   {mapEntry && awakenings.length > 0 && <div className="w-px self-stretch bg-white/10" />}
                   {awakenings.map((aw) => {
-                    const awEntry = ALL_AWAKENINGS.find((a) => a.name === aw);
+                    const awakeningIcon = AWAKENING_ICONS[aw];
 
-                    return awEntry ? (
+                    return awakeningIcon ? (
                       <div key={aw} className="flex flex-col items-center gap-1.5">
-                        <img src={awEntry.icon} alt={aw} className="w-16 h-16 object-contain" />
+                        <img src={awakeningIcon} alt={aw} className="w-16 h-16 object-contain" />
                         <span className="font-mono text-xs text-white/60">{aw}</span>
                       </div>
                     ) : null;
@@ -376,11 +385,11 @@ export default function DraftPage() {
                   )}
                   {mapEntry && awakenings.length > 0 && <div className="w-px self-stretch bg-white/10" />}
                   {awakenings.map((aw) => {
-                    const awEntry = ALL_AWAKENINGS.find((a) => a.name === aw);
+                    const awakeningIcon = AWAKENING_ICONS[aw];
 
-                    return awEntry ? (
+                    return awakeningIcon ? (
                       <div key={aw} className="flex flex-col items-center gap-1.5">
-                        <img src={awEntry.icon} alt={aw} className="w-16 h-16 object-contain" />
+                        <img src={awakeningIcon} alt={aw} className="w-16 h-16 object-contain" />
                         <span className="font-mono text-xs text-white/60">{aw}</span>
                       </div>
                     ) : null;
@@ -406,84 +415,85 @@ export default function DraftPage() {
                   )}
                   {mapEntry && awakenings.length > 0 && <div className="w-px self-stretch bg-white/10" />}
                   {awakenings.map((aw) => {
-                    const awEntry = ALL_AWAKENINGS.find((a) => a.name === aw);
+                    const awakeningIcon = AWAKENING_ICONS[aw];
 
-                    return awEntry ? (
+                    return awakeningIcon ? (
                       <div key={aw} className="flex flex-col items-center gap-1.5">
-                        <img src={awEntry.icon} alt={aw} className="w-16 h-16 object-contain" />
+                        <img src={awakeningIcon} alt={aw} className="w-16 h-16 object-contain" />
                         <span className="font-mono text-xs text-white/60">{aw}</span>
                       </div>
                     ) : null;
                   })}
                 </div>
                 <div className="grid grid-cols-6 gap-2 w-full max-w-xl">
-                  {ALL_STRIKERS.map((striker) => {
-                    const isBanned = bannedSet.has(striker.name);
-                    const isPicked = pickedSet.has(striker.name);
-                    const isAvailable = !isBanned && !isPicked;
-                    const isSelected = pending === striker.name;
-                    const clickable = isAvailable && isMyTurn;
-                    const pickAction = isPicked
-                      ? actions.find((a) => a.striker === striker.name && a.action === DraftAction.Pick)
-                      : null;
+                  {Object.values(Striker)
+                    .sort((a, b) => {
+                      return a.localeCompare(b);
+                    })
+                    .map((name) => {
+                      const striker = STRIKER_METADATA[name];
+                      const isBanned = bannedSet.has(name);
+                      const isPicked = pickedSet.has(name);
+                      const isAvailable = !isBanned && !isPicked;
+                      const isSelected = pending === name;
+                      const clickable = isAvailable && isMyTurn;
+                      const pickAction = isPicked
+                        ? actions.find((a) => a.striker === name && a.action === DraftAction.Pick)
+                        : null;
 
-                    const cardClass = [
-                      "relative rounded-lg overflow-hidden border-2 transition-all duration-200 aspect-square",
-                      clickable
-                        ? isSelected
-                          ? isBanning
-                            ? "cursor-pointer border-tools-red scale-[1.05]"
-                            : "cursor-pointer border-tools-green scale-[1.05]"
-                          : isBanning
-                            ? "cursor-pointer border-tools-red/30 hover:border-tools-red/60 hover:scale-[1.03] animate-[pulseBorderRed_2s_infinite]"
-                            : "cursor-pointer border-tools-green/30 hover:border-tools-green/60 hover:scale-[1.03] animate-[pulseBorderGreen_2s_infinite]"
-                        : isBanned
-                          ? "!cursor-default opacity-25 border-tools-red/10 grayscale"
-                          : isPicked
-                            ? pickAction?.team === Team.Blue
-                              ? "!cursor-default border-tools-blue/70"
-                              : "!cursor-default border-tools-red/70"
-                            : side === Team.Spectator
-                              ? "!cursor-default border-white/7"
-                              : "!cursor-default border-white/7 opacity-60",
-                    ].join(" ");
+                      const cardClass = [
+                        "relative rounded-lg overflow-hidden border-2 transition-all duration-200 aspect-square",
+                        clickable
+                          ? isSelected
+                            ? isBanning
+                              ? "cursor-pointer border-tools-red scale-[1.05]"
+                              : "cursor-pointer border-tools-green scale-[1.05]"
+                            : isBanning
+                              ? "cursor-pointer border-tools-red/30 hover:border-tools-red/60 hover:scale-[1.03] animate-[pulseBorderRed_2s_infinite]"
+                              : "cursor-pointer border-tools-green/30 hover:border-tools-green/60 hover:scale-[1.03] animate-[pulseBorderGreen_2s_infinite]"
+                          : isBanned
+                            ? "!cursor-default opacity-25 border-tools-red/10 grayscale"
+                            : isPicked
+                              ? pickAction?.team === Team.Blue
+                                ? "!cursor-default border-tools-blue/70"
+                                : "!cursor-default border-tools-red/70"
+                              : side === Team.Spectator
+                                ? "!cursor-default border-white/7"
+                                : "!cursor-default border-white/7 opacity-60",
+                      ].join(" ");
 
-                    return (
-                      <button
-                        key={striker.name}
-                        className={cardClass}
-                        onClick={() => handleStrikerClick(striker.name)}
-                        disabled={!clickable}
-                      >
-                        <img
-                          src={striker.icon}
-                          alt={striker.name}
-                          className="absolute inset-0 w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-linear-to-t from-black/70 to-transparent" />
-                        {isPicked && pickAction && (
-                          <div className="absolute top-1 right-1">
+                      return (
+                        <button
+                          key={name}
+                          className={cardClass}
+                          onClick={() => handleStrikerClick(name)}
+                          disabled={!clickable}
+                        >
+                          <img src={striker.icon} alt={name} className="absolute inset-0 w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-linear-to-t from-black/70 to-transparent" />
+                          {isPicked && pickAction && (
+                            <div className="absolute top-1 right-1">
+                              <span
+                                className={`font-mono text-xs font-bold tracking-widest uppercase px-1.5 py-0.5 rounded ${
+                                  pickAction.team === Team.Blue
+                                    ? "bg-tools-blue/70 text-white"
+                                    : "bg-tools-red/70 text-white"
+                                }`}
+                              >
+                                {pickAction.team === Team.Blue ? blueName : redName}
+                              </span>
+                            </div>
+                          )}
+                          <div className="absolute bottom-0 left-0 right-0 px-1 pb-1">
                             <span
-                              className={`font-mono text-xs font-bold tracking-widest uppercase px-1.5 py-0.5 rounded ${
-                                pickAction.team === Team.Blue
-                                  ? "bg-tools-blue/70 text-white"
-                                  : "bg-tools-red/70 text-white"
-                              }`}
+                              className={`text-xs font-semibold leading-tight block text-center ${isBanned ? "line-through text-white/40" : "text-white"}`}
                             >
-                              {pickAction.team === Team.Blue ? blueName : redName}
+                              {name}
                             </span>
                           </div>
-                        )}
-                        <div className="absolute bottom-0 left-0 right-0 px-1 pb-1">
-                          <span
-                            className={`text-xs font-semibold leading-tight block text-center ${isBanned ? "line-through text-white/40" : "text-white"}`}
-                          >
-                            {striker.name}
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
+                        </button>
+                      );
+                    })}
                 </div>
 
                 {isMyTurn && currentSeqStep && (
@@ -499,8 +509,8 @@ export default function DraftPage() {
                     <button
                       className={`py-3 px-6 border rounded-lg font-head font-semibold transition-all duration-150 min-w-52 disabled:opacity-50 disabled:cursor-default! ${
                         isBanning
-                          ? "bg-tools-red/10 border-tools-red/30 text-tools-red-light hover:bg-tools-red/20 hover:border-tools-red/50"
-                          : "bg-tools-green/10 border-tools-green/30 text-tools-green-light hover:bg-tools-green/20 hover:border-tools-green/50"
+                          ? "bg-tools-red/10 border-tools-red/30 text-tools-red-light enabled:hover:bg-tools-red/20 enabled:hover:border-tools-red/50"
+                          : "bg-tools-green/10 border-tools-green/30 text-tools-green-light enabled:hover:bg-tools-green/20 enabled:hover:border-tools-green/50"
                       }`}
                       disabled={!pending}
                       onClick={handleConfirm}
@@ -525,7 +535,7 @@ export default function DraftPage() {
                           Cancel
                         </button>
                         <button
-                          className="flex-1 py-2 border border-tools-red/30 rounded-lg font-mono text-xs tracking-widest uppercase text-tools-red-light bg-tools-red/10 hover:bg-tools-red/20 hover:border-tools-red/50 transition"
+                          className="flex-1 py-2 border border-tools-red/30 rounded-lg font-mono text-xs tracking-widest uppercase text-tools-red-light bg-tools-red/10 enabled:hover:bg-tools-red/20 enabled:hover:border-tools-red/50 transition"
                           onClick={async () => {
                             setShowNoBanModal(false);
                             await handleAction(null);

@@ -1,4 +1,4 @@
-import { DraftAction } from "@/features/common/constants/constants";
+import { DraftAction } from "@os-tools/shared";
 
 export default function ResultCard({
   value,
@@ -44,9 +44,7 @@ export default function ResultCard({
     <div className={slotClass}>
       <span className={iconClass}>{type === DraftAction.Ban ? "✕" : "✓"}</span>
       <span className={valueClass}>{value ?? "—"}</span>
-      <span className="text-xs font-mono tracking-widest uppercase opacity-50">
-        {label}
-      </span>
+      <span className="text-xs font-mono tracking-widest uppercase opacity-50">{label}</span>
     </div>
   );
 }

@@ -2,7 +2,9 @@ const imageCache = new Map<string, Promise<HTMLImageElement>>();
 
 export function loadImage(src: string): Promise<HTMLImageElement> {
   const cached = imageCache.get(src);
-  if (cached) return cached;
+  if (cached) {
+    return cached;
+  }
 
   const loading = new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image();

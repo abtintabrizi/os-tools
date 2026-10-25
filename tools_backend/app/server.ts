@@ -1,22 +1,26 @@
-import express, { type ErrorRequestHandler } from "express";
-import cors from "cors";
 import { createServer } from "node:http";
+import { type DraftType, Team } from "@os-tools/shared";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import cors from "cors";
+import express, { type ErrorRequestHandler } from "express";
+import createError from "http-errors";
+import morgan from "morgan";
 import { WebSocketServer } from "ws";
 
-import type { DraftType } from "./models/common.js";
-import type { RoomStore } from "./models/room.js";
-import { RequestError } from "./utils/requestError.js";
 import { ConnectionManager } from "./managers/connectionManager.js";
+import { LoggerManager } from "./managers/loggerManager.js";
 import { MapDraftManager } from "./managers/mapDraftManager.js";
-import { StrikerDraftManager } from "./managers/strikerDraftManager.js";
 import { RoomManager } from "./managers/roomManager.js";
+import { StrikerDraftManager } from "./managers/strikerDraftManager.js";
 import { TimerManager } from "./managers/timerManager.js";
-import { mapDraftRouter } from "./routes/mapDraft.js";
-import { strikerDraftRouter } from "./routes/strikerDraft.js";
-import { Logger } from "./managers/logger.js";
-import { methodNotAllowed } from "./routes/methodNotAllowed.js";
+import { mapDraftRouter } from "./routes/mapDraftRouter.js";
+import { strikerDraftRouter } from "./routes/strikerDraftRouter.js";
 
-const logger = new Logger("server");
+const logger = new LoggerManager("server");
+
+morgan.token<express.Request>("path", (req) => {
+  return req.originalUrl.split("?")[0];
+});
 
 const ALLOWED_ORIGINS = new Set([
   "http://localhost:5173",
@@ -27,113 +31,29 @@ const ALLOWED_ORIGINS = new Set([
 ]);
 
 const PREVIEW_ORIGIN = /^https:\/\/os-tools-[a-z0-9-]+-os-tools\.vercel\.app$/;
-const ALLOWED_METHODS = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"];
 
-const originAllowed = (origin: string) => ALLOWED_ORIGINS.has(origin) || PREVIEW_ORIGIN.test(origin);
-
-// Wire one set of dependencies per application; smoke checks can supply an isolated store.
-export function createApplication(repository: RoomStore) {
+// Wire one set of dependencies per application; smoke checks can supply a client with a local transport.
+export function createApplication(client?: SupabaseClient) {
   const connectionManager = new ConnectionManager();
-  const timerManager: TimerManager = new TimerManager((type, roomId, timer) =>
-    roomManager.autoAdvance(type, roomId, timer),
-  );
-  const roomManager: RoomManager = new RoomManager(repository, timerManager, connectionManager);
+  const timerManager: TimerManager = new TimerManager((type, roomId, timer) => {
+    return roomManager.autoAdvance(type, roomId, timer);
+  });
+  const roomManager: RoomManager = new RoomManager(timerManager, connectionManager, client);
   const mapDraftManager = new MapDraftManager(roomManager);
   const strikerDraftManager = new StrikerDraftManager(roomManager);
   const app = express();
-  let shuttingDown = false;
 
-  app.disable("x-powered-by");
-  app.enable("case sensitive routing");
-  app.use((req, res, next) => {
-    const startedAt = performance.now();
-
-    res.once("finish", () => {
-      logger.info("HTTP request", {
-        method: req.method,
-        path: req.path,
-        statusCode: res.statusCode,
-        durationMs: Math.round((performance.now() - startedAt) * 1000) / 1000,
-        remoteAddress: req.socket.remoteAddress,
-      });
-
-      // A request active when close() starts can become idle after the initial idle sweep.
-      if (shuttingDown) setImmediate(() => server.closeIdleConnections());
-    });
-
-    next();
-  });
-  app.use((req, res, next) => {
-    const origin = req.headers.origin;
-    const requestedMethod = req.headers["access-control-request-method"];
-
-    if (req.method === "OPTIONS" && origin && requestedMethod) {
-      res.vary("Origin");
-      res.setHeader("Access-Control-Allow-Credentials", "true");
-      res.setHeader("Access-Control-Allow-Methods", ALLOWED_METHODS.join(", "));
-      res.setHeader("Access-Control-Max-Age", "600");
-
-      if (originAllowed(origin)) res.setHeader("Access-Control-Allow-Origin", origin);
-      if (req.headers["access-control-request-headers"]) {
-        res.setHeader("Access-Control-Allow-Headers", req.headers["access-control-request-headers"]);
-      }
-
-      const failures = [
-        ...(!originAllowed(origin) ? ["origin"] : []),
-        ...(!ALLOWED_METHODS.includes(String(requestedMethod)) ? ["method"] : []),
-      ];
-
-      res
-        .status(failures.length ? 400 : 200)
-        .type("text/plain")
-        .send(failures.length ? `Disallowed CORS ${failures.join(", ")}` : "OK");
-
-      return;
-    }
-
-    if (origin) res.setHeader("Access-Control-Allow-Credentials", "true");
-
-    next();
-  });
+  app.use(morgan(":method :path :status :res[content-length] - :response-time ms"));
   app.use(
     cors({
-      origin: (origin, callback) => callback(null, origin !== undefined && originAllowed(origin)),
+      origin: [...ALLOWED_ORIGINS, PREVIEW_ORIGIN],
       credentials: true,
-      methods: ALLOWED_METHODS,
-      preflightContinue: true,
     }),
   );
-  app.use((req, res, next) => {
-    const path = req.path.replace(/\/+$/, "");
-    const knownPath =
-      /^\/(?:map-draft|striker-draft)\/rooms(?:\/[^/]+(?:\/(?:ready|pending|action))?)?$/.test(path) ||
-      /^\/map-draft\/rooms\/[^/]+\/striker-room$/.test(path);
-
-    if (path !== req.path && knownPath) {
-      const queryIndex = req.originalUrl.indexOf("?");
-      res.redirect(307, path + (queryIndex === -1 ? "" : req.originalUrl.slice(queryIndex)));
-
-      return;
-    }
-
-    next();
-  });
-  app.use(
-    express.json({
-      limit: "1mb",
-      strict: false,
-      type: (req) => {
-        const contentType = req.headers["content-type"]?.split(";")[0]?.trim().toLowerCase();
-
-        return !contentType || contentType === "application/json" || /^application\/.+\+json$/.test(contentType);
-      },
-    }),
-  );
-  app.head("/", methodNotAllowed("GET"));
+  app.use(express.json({ limit: "1mb" }));
   app.get("/", (_req, res) => {
     res.json({ message: "Backend running" });
   });
-  app.all("/", methodNotAllowed("GET"));
   app.use("/map-draft", mapDraftRouter(mapDraftManager, roomManager));
   app.use("/striker-draft", strikerDraftRouter(strikerDraftManager, roomManager));
   app.use((_req, res) => {
@@ -142,26 +62,16 @@ export function createApplication(repository: RoomStore) {
   const errors: ErrorRequestHandler = (error: unknown, req, res, _next) => {
     // Express identifies error middleware by its four-argument signature.
     void _next;
-    if (error instanceof RequestError) {
-      res.status(error.status).json({ detail: error.detail });
+    if (createError.isHttpError(error)) {
+      if (error.status >= 500) {
+        logger.error("Request failed", { method: req.method, path: req.path, error });
+      }
 
-      return;
-    }
+      if (error.headers) {
+        res.set(error.headers);
+      }
 
-    if (error instanceof SyntaxError && "body" in error) {
-      res.status(422).json({ detail: [{ type: "json_invalid", loc: ["body"], msg: "JSON decode error" }] });
-
-      return;
-    }
-
-    if (
-      error instanceof Error &&
-      "status" in error &&
-      typeof error.status === "number" &&
-      error.status >= 400 &&
-      error.status < 500
-    ) {
-      res.status(error.status).json({ detail: error.message });
+      res.status(error.status).json({ detail: error.expose ? error.message : "Internal Server Error" });
 
       return;
     }
@@ -199,19 +109,27 @@ export function createApplication(repository: RoomStore) {
       // Attach immediately: errors may arrive while the room connection waits for its lock.
       ws.on("error", (error) => {
         logger.error("WebSocket failed", { draftType: match[1], roomId, error });
-        if (ws.readyState !== ws.CLOSING && ws.readyState !== ws.CLOSED) ws.terminate();
+        if (ws.readyState !== ws.CLOSING && ws.readyState !== ws.CLOSED) {
+          ws.terminate();
+        }
       });
       void roomManager
         .reconnect(match[1] as DraftType, roomId, (state) => {
-          if (ws.readyState !== ws.OPEN) return;
+          if (ws.readyState !== ws.OPEN) {
+            return;
+          }
 
           const type = match[1] as DraftType;
-          connectionManager.connect(type, roomId, ws, url.searchParams.get("side") ?? "spectator");
+          connectionManager.connect(type, roomId, ws, url.searchParams.get("side") ?? Team.Spectator);
 
-          if (state) connectionManager.send(type, state, ws, url.searchParams.get("side") ?? "spectator");
+          if (state) {
+            connectionManager.send(type, state, ws, url.searchParams.get("side") ?? Team.Spectator);
+          }
         })
         .then((connected) => {
-          if (!connected) ws.terminate();
+          if (!connected) {
+            ws.terminate();
+          }
         })
         .catch((error: unknown) => {
           logger.error("WebSocket room load failed", { draftType: match[1], roomId, error });
@@ -220,21 +138,39 @@ export function createApplication(repository: RoomStore) {
     });
   });
 
-  const stop = () => {
-    shuttingDown = true;
-    roomManager.stop();
-  };
-
   async function close(): Promise<void> {
-    stop();
+    roomManager.stop();
 
-    for (const ws of wss.clients) ws.terminate();
+    for (const ws of wss.clients) {
+      ws.terminate();
+    }
 
-    await Promise.all([
-      new Promise<void>((resolve) => wss.close(() => resolve())),
-      new Promise<void>((resolve, reject) => server.close((error) => (error ? reject(error) : resolve()))),
-    ]);
+    // Reap keep-alive connections that become idle while active requests finish.
+    const idleCleanup = setInterval(() => {
+      server.closeIdleConnections();
+    }, 50);
+
+    try {
+      await Promise.all([
+        new Promise<void>((resolve) => {
+          wss.close(() => {
+            resolve();
+          });
+        }),
+        new Promise<void>((resolve, reject) => {
+          server.close((error) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve();
+            }
+          });
+        }),
+      ]);
+    } finally {
+      clearInterval(idleCleanup);
+    }
   }
 
-  return { app, server, close, stop };
+  return { app, server, close, stop: roomManager.stop };
 }

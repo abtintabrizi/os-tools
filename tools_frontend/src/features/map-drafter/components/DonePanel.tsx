@@ -1,28 +1,35 @@
-import { useState } from "react";
-import classNames from "classnames";
 import {
-  ALL_MAPS,
-  ALL_AWAKENINGS,
-  CURRENT_AWAKENING_POOL,
-  DEFAULT_BANNED_AWAKENINGS,
   Awakening,
+  AwakeningMode,
+  type CreateStrikerDraftRoomRequest,
+  CURRENT_AWAKENING_POOL,
+  DraftAction,
+  type GameMap,
+  SEQUENCE_MAPPING,
   Team,
-} from "@/features/common/constants/constants";
-import { useMapDraftContext } from "@/features/map-drafter/context/MapDraftContext";
-import { deriveMapStatuses } from "@/features/map-drafter/utils";
-import { SEQUENCE_MAP } from "@map-drafter/constants.ts";
-import { API_BASE } from "@/features/common/hooks/useRoomApi";
+} from "@os-tools/shared";
+import classNames from "classnames";
+import { useState } from "react";
+
+import { AWAKENING_ICONS, DEFAULT_BANNED_AWAKENINGS, MAP_METADATA } from "../../common/constants/constants";
+import { API_BASE } from "../../common/hooks/useRoomApi";
+import { useMapDraftContext } from "../context/MapDraftContext";
+import { deriveMapStatuses } from "../utils";
 
 async function createStrikerRoom(config: {
   blueName: string;
   redName: string;
-  map: string;
-  bannedStarts: string[];
+  map: GameMap;
+  bannedStarts: Awakening[];
 }): Promise<string> {
   const resp = await fetch(`${API_BASE}/striker-draft/rooms`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ...config, awakeningMode: "random" }),
+    body: JSON.stringify({
+      ...config,
+      awakeningMode: AwakeningMode.Random,
+      customAwakenings: [],
+    } satisfies CreateStrikerDraftRoomRequest),
   });
   if (!resp.ok) {
     const err = await resp.json();
@@ -39,15 +46,17 @@ export default function DonePanel() {
   const redName = state?.redName ?? "";
   const strikerLobbies = state?.strikerLobbies ?? null;
   const actions = state?.actions ?? [];
-  const mapStatuses = state ? deriveMapStatuses(state, SEQUENCE_MAP[state.bestOf]) : {};
+  const mapStatuses = state ? deriveMapStatuses(state, SEQUENCE_MAPPING[state.bestOf]) : {};
 
-  const lockedBans = (state?.bannedAwakenings ?? null) as Awakening[] | null;
+  const lockedBans = state?.bannedAwakenings ?? null;
   const locked = lockedBans !== null;
 
   const [bannedAwakenings, setBannedAwakenings] = useState<Awakening[]>(() => {
     try {
       const stored = localStorage.getItem("bannedAwakenings");
-      if (stored) return JSON.parse(stored) as Awakening[];
+      if (stored) {
+        return JSON.parse(stored) as Awakening[];
+      }
     } catch {
       // ignore
     }
@@ -60,7 +69,7 @@ export default function DonePanel() {
   const displayedBans = lockedBans ?? bannedAwakenings;
 
   const picks = actions
-    .filter((a) => a.action === "pick" && a.team !== null)
+    .filter((a) => a.action === DraftAction.Pick && a.team !== null)
     .map((a) => {
       const status = mapStatuses[a.map];
       const gameNum = status?.startsWith("picked-g") ? parseInt(status.replace("picked-g", ""), 10) : 0;
@@ -69,11 +78,13 @@ export default function DonePanel() {
     })
     .sort((a, b) => a.gameNum - b.gameNum);
 
-  const decider = actions.find((a) => a.action === "pick" && a.team === null);
-  const deciderImage = decider ? ALL_MAPS.find((m) => m.name === decider.map)?.blurredImage : null;
+  const decider = actions.find((a) => a.action === DraftAction.Pick && a.team === null);
+  const deciderImage = decider ? MAP_METADATA[decider.map]?.blurredImage : null;
 
   function toggleBan(a: Awakening) {
-    if (locked) return;
+    if (locked) {
+      return;
+    }
     setBannedAwakenings((prev) => {
       const next = prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a];
       localStorage.setItem("bannedAwakenings", JSON.stringify(next));
@@ -82,8 +93,10 @@ export default function DonePanel() {
     });
   }
 
-  async function handlePickFirstPick(map: string, fp: string) {
-    if (creating[map]) return;
+  async function handlePickFirstPick(map: GameMap, fp: string) {
+    if (creating[map]) {
+      return;
+    }
     setCreating((prev) => ({ ...prev, [map]: true }));
     setCreateErrors((prev) => ({ ...prev, [map]: "" }));
     try {
@@ -106,7 +119,7 @@ export default function DonePanel() {
     }
   }
 
-  function renderButton(map: string) {
+  function renderButton(map: GameMap) {
     const openBtnClass =
       "flex justify-center items-center w-full h-8 bg-tools-gold text-black rounded-xl font-head font-bold transition-opacity duration-300 text-sm";
 
@@ -193,7 +206,7 @@ export default function DonePanel() {
         </div>
         <div className="grid grid-cols-10 gap-1">
           {CURRENT_AWAKENING_POOL.map((a) => {
-            const icon = ALL_AWAKENINGS.find((b) => b.name === a)?.icon;
+            const icon = AWAKENING_ICONS[a];
             const isBanned = displayedBans.includes(a);
 
             return (
@@ -225,7 +238,7 @@ export default function DonePanel() {
           const isBlue = pick.team === Team.Blue;
           const borderClass = isBlue ? "border-tools-blue/40" : "border-tools-red/40";
           const teamClass = isBlue ? "text-tools-blue" : "text-tools-red";
-          const image = ALL_MAPS.find((m) => m.name === pick.map)?.blurredImage;
+          const image = MAP_METADATA[pick.map]?.blurredImage;
 
           return (
             <div key={pick.map} className="flex flex-col gap-2 w-[calc(33.333%-0.5rem)]">

@@ -1,12 +1,12 @@
-import { MIN_MAPS } from "@os-tools/shared/constants/mapDraft";
+import { GameMap, MIN_MAPS, Sequence, type Sequence as SequenceKey, SEQUENCE_MAPPING } from "@os-tools/shared";
 import { useEffect, useState } from "react";
-import { ALL_MAPS, CURRENT_MAP_POOL } from "@/features/common/constants/constants";
-import { useMapDraftContext } from "@/features/map-drafter/context/MapDraftContext";
-import { useToast } from "@/features/common/components/Toast";
-import Spinner from "@/features/common/components/Spinner";
-import { FORMAT_GROUPS, SEQUENCE_MAP, SEQUENCE_LABELS } from "@map-drafter/constants.ts";
-import { Sequence, SequenceKey } from "@/features/map-drafter/types";
-import { HomeButton } from "@/features/common/components/NavButtons";
+
+import { HomeButton } from "../../common/components/NavButtons";
+import Spinner from "../../common/components/Spinner";
+import { useToast } from "../../common/components/Toast";
+import { DEFAULT_MAPS } from "../../common/constants/constants";
+import { FORMAT_GROUPS, SEQUENCE_LABELS } from "../constants.ts";
+import { useMapDraftContext } from "../context/MapDraftContext";
 
 export default function SetupPage() {
   const { toast } = useToast();
@@ -24,17 +24,17 @@ export default function SetupPage() {
   const [bestOf, setBestOf] = useState<SequenceKey>(() => {
     const params = new URLSearchParams(window.location.search);
     const urlFormat = params.get("format");
-    if (urlFormat && urlFormat in SEQUENCE_MAP) {
+    if (urlFormat && urlFormat in SEQUENCE_MAPPING) {
       localStorage.setItem("mapDraftBestOf", urlFormat);
 
       return urlFormat as SequenceKey;
     }
     const stored = localStorage.getItem("mapDraftBestOf") as SequenceKey | null;
 
-    return stored && stored in SEQUENCE_MAP ? stored : Sequence.BO3;
+    return stored && stored in SEQUENCE_MAPPING ? stored : Sequence.BO3;
   });
   const [enabledMaps, setEnabledMaps] = useState<Set<string>>(() => {
-    const allMapNames: Set<string> = new Set(ALL_MAPS.map((m) => m.name));
+    const allMapNames: Set<string> = new Set(Object.values(GameMap));
     try {
       const params = new URLSearchParams(window.location.search);
       const urlPool = params.get("pool");
@@ -51,12 +51,14 @@ export default function SetupPage() {
     }
     try {
       const stored = localStorage.getItem("mapDraftEnabledMaps");
-      if (stored) return new Set(JSON.parse(stored) as string[]);
+      if (stored) {
+        return new Set(JSON.parse(stored) as string[]);
+      }
     } catch {
       // ignore parse errors, fall back to default
     }
 
-    return new Set(CURRENT_MAP_POOL);
+    return new Set(DEFAULT_MAPS);
   });
   const [loading, setLoading] = useState(false);
 
@@ -70,8 +72,11 @@ export default function SetupPage() {
   function toggleMap(map: string) {
     setEnabledMaps((prev) => {
       const next = new Set(prev);
-      if (next.has(map)) next.delete(map);
-      else next.add(map);
+      if (next.has(map)) {
+        next.delete(map);
+      } else {
+        next.add(map);
+      }
       localStorage.setItem("mapDraftEnabledMaps", JSON.stringify([...next]));
 
       return next;
@@ -84,8 +89,8 @@ export default function SetupPage() {
   }
 
   function resetEnabledMaps() {
-    setEnabledMaps(new Set(CURRENT_MAP_POOL));
-    localStorage.setItem("mapDraftEnabledMaps", JSON.stringify(CURRENT_MAP_POOL));
+    setEnabledMaps(new Set(DEFAULT_MAPS));
+    localStorage.setItem("mapDraftEnabledMaps", JSON.stringify(DEFAULT_MAPS));
   }
 
   function handleCopyConfigLink() {
@@ -93,8 +98,12 @@ export default function SetupPage() {
       pool: JSON.stringify([...enabledMaps]),
       format: bestOf,
     };
-    if (blueName.trim()) paramObj.blue = blueName.trim();
-    if (redName.trim()) paramObj.red = redName.trim();
+    if (blueName.trim()) {
+      paramObj.blue = blueName.trim();
+    }
+    if (redName.trim()) {
+      paramObj.red = redName.trim();
+    }
     const params = new URLSearchParams(paramObj);
     const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
     navigator.clipboard.writeText(url);
@@ -106,7 +115,13 @@ export default function SetupPage() {
   }
 
   async function handleSubmit() {
-    const maps = ALL_MAPS.filter((m) => enabledMaps.has(m.name)).map((m) => m.name);
+    const maps = Object.values(GameMap)
+      .filter((name) => {
+        return enabledMaps.has(name);
+      })
+      .sort((a, b) => {
+        return a.localeCompare(b);
+      });
     setLoading(true);
     try {
       await handleLaunch({
@@ -209,7 +224,7 @@ export default function SetupPage() {
           <div className="flex items-center justify-between h-6">
             <div className="text-sm font-mono tracking-widest uppercase">Map pool — click to toggle</div>
             <div className="flex items-center gap-3">
-              {(enabledMaps.size !== CURRENT_MAP_POOL.length || !CURRENT_MAP_POOL.every((m) => enabledMaps.has(m))) && (
+              {(enabledMaps.size !== DEFAULT_MAPS.length || !DEFAULT_MAPS.every((m) => enabledMaps.has(m))) && (
                 <button
                   onClick={resetEnabledMaps}
                   type="button"
@@ -226,26 +241,30 @@ export default function SetupPage() {
             </div>
           </div>
           <div className="grid grid-cols-3 gap-2">
-            {ALL_MAPS.map((map) => {
-              const on = enabledMaps.has(map.name);
+            {Object.values(GameMap)
+              .sort((a, b) => {
+                return a.localeCompare(b);
+              })
+              .map((map) => {
+                const on = enabledMaps.has(map);
 
-              return (
-                <button
-                  key={map.name}
-                  className={`border rounded-lg py-2.5 px-3.5 font-head text-sm font-medium flex items-center gap-2 transition-all duration-150 select-none text-left ${
-                    on ? "border-tools-gold/40  bg-tools-gold/6" : "bg-tools-graphite border-white/7 "
-                  }`}
-                  onClick={() => toggleMap(map.name)}
-                >
-                  <span
-                    className={`w-1.75 h-1.75 rounded-full shrink-0 transition-colors duration-150 ${
-                      on ? "bg-tools-gold" : "bg-tools-border-bright"
+                return (
+                  <button
+                    key={map}
+                    className={`border rounded-lg py-2.5 px-3.5 font-head text-sm font-medium flex items-center gap-2 transition-all duration-150 select-none text-left ${
+                      on ? "border-tools-gold/40  bg-tools-gold/6" : "bg-tools-graphite border-white/7 "
                     }`}
-                  />
-                  {map.name}
-                </button>
-              );
-            })}
+                    onClick={() => toggleMap(map)}
+                  >
+                    <span
+                      className={`w-1.75 h-1.75 rounded-full shrink-0 transition-colors duration-150 ${
+                        on ? "bg-tools-gold" : "bg-tools-border-bright"
+                      }`}
+                    />
+                    {map}
+                  </button>
+                );
+              })}
           </div>
         </div>
 
