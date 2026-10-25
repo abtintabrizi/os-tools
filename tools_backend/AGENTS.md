@@ -100,7 +100,7 @@ Include `draftType` and `roomId`; action/preview logs include `step`, `side`, an
 Capture `stepStartedAt` and `elapsedSeconds` before advancing the state, using null when
 no turn has started. Auto-advances also record the original `pending` value. Timer starts
 record `delaySeconds`; skipped advances record expected/current steps and the reason.
-Morgan supplies plain-text HTTP access logs using its tiny layout with a path-only token
+Morgan supplies plain-text HTTP access logs with labeled status, size in bytes, duration, and a path-only token
 (no query strings). Keep LoggerManager for structured application logs; do not reimplement
 request timing/logging or mix shutdown cleanup into request logging middleware.
 

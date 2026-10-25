@@ -43,7 +43,7 @@ export function createApplication(client?: SupabaseClient) {
   const strikerDraftManager = new StrikerDraftManager(roomManager);
   const app = express();
 
-  app.use(morgan(":method :path :status :res[content-length] - :response-time ms"));
+  app.use(morgan(":method :path | status=:status | size=:res[content-length] bytes | duration=:response-time ms"));
   app.use(
     cors({
       origin: [...ALLOWED_ORIGINS, PREVIEW_ORIGIN],
