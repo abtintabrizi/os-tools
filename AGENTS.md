@@ -96,7 +96,7 @@ Each feature follows the same internal pattern:
 
 - `pages/` — SetupPage → LobbyPage → DraftPage (three-step flow)
 - `context/` — single React Context + Provider that owns all state for the feature; consumed by pages and components via `useXxxDraftContext()`
-- `hooks/useXxxDraftApi` — all HTTP and WebSocket calls; returns state derived from the WebSocket stream
+- `hooks/useXxxDraftApi` — typed oRPC calls and existing WebSocket updates; the common api.ts owns the client
 - `constants.ts` — frontend defaults and presentation configuration; game rules live in shared
 - `types/` — local presentation types; import common state types directly from shared
 
@@ -106,14 +106,16 @@ Room identity and side assignment live in URL params (`?room=XXXXX&side=blue`). 
 
 ### Backend
 
-Express route functions → managers (including RoomManager for Supabase access), with pure supporting utilities.
+oRPC procedures → managers (including RoomManager for Supabase access), with pure supporting utilities.
 `tools_backend/app/server.ts` constructs the application dependencies; `main.ts` loads the
 backend environment and starts the server. Read `tools_backend/AGENTS.md` for layer boundaries.
 
 Room mutations, timer advancement, readiness, and linking use locks keyed by draft type
 and room ID. Timers and WebSockets are process-local: deploy one backend instance.
 Every outgoing room payload must use the shared client-state filter to hide private data.
-Existing API paths, WebSocket payloads, and saved Supabase JSON remain compatible.
+HTTP uses shared Zod contracts with no URL prefix (for example /mapDraft/createRoom).
+WebSocket paths/payloads and saved Supabase JSON remain compatible.
+Keep network schemas and contracts in tools_shared/src/, infer their types, and use the typed frontend client.
 
 ## Environment
 

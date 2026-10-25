@@ -1,6 +1,15 @@
-import type { DraftAction, ReplayEventType, Team } from "../constants/game.js";
+import type { z } from "zod";
 
-export type PlayingSide = Exclude<Team, Team.Spectator>;
+import type { DraftAction } from "../constants/game.js";
+import type {
+  commonStateSchema,
+  playingSideSchema,
+  readyRequestSchema,
+  replayEventSchema,
+  roomRequestSchema,
+} from "../schemas/common.js";
+
+export type PlayingSide = z.infer<typeof playingSideSchema>;
 
 export interface SequenceStep {
   team: PlayingSide;
@@ -8,26 +17,10 @@ export interface SequenceStep {
   gameNum?: number;
 }
 
-export type ReplayEvent =
-  | { type: ReplayEventType.Pending; atMs: number; side: PlayingSide; value: string | null }
-  | { type: ReplayEventType.Action; atMs: number; side: PlayingSide; step: number; value: string | null };
+export type ReplayEvent = z.infer<typeof replayEventSchema>;
 
-export interface CommonState {
-  roomId: string;
-  blueName: string;
-  redName: string;
-  step: number;
-  done: boolean;
-  readyBlue: boolean;
-  readyRed: boolean;
-  pendingBlue: string | null;
-  pendingRed: string | null;
-  stepStartedAt: number | null;
-  replayStartedAt?: number | null;
-  replayEvents?: ReplayEvent[];
-  serverTime?: number;
-}
+export type CommonState = z.infer<typeof commonStateSchema>;
 
-export interface ReadyRequest {
-  side: Team;
-}
+export type ReadyRequest = z.infer<typeof readyRequestSchema>;
+
+export type RoomRequest = z.infer<typeof roomRequestSchema>;

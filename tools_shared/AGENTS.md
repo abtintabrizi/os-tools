@@ -24,8 +24,10 @@ Read this guide and the root AGENTS.md before editing this package.
 - Preserve API JSON, nullable no-ban actions, optional decider step, optional legacy replay fields,
   epoch-second timestamps, and millisecond replay offsets. Sequence metadata uses gameNum;
   it is internal rule data, not a persisted API field.
-- Do not introduce Zod or oRPC until requested. Shared TypeScript types do not validate network input;
-  runtime request-shape validation is deferred. Managers retain business-rule checks.
+- Define network shapes in src/schemas/ with Zod and infer their exported types in src/types/.
+  Define browser-safe oRPC contracts in src/contracts/; export schemas and contracts from the root barrel.
+  Do not duplicate schemas as handwritten interfaces or use unchecked custom schemas for outputs.
+  Managers retain business-rule checks. Contract input/output validation runs on the backend.
 - After changes run shared Prettier, lint, typecheck, and build; then run both consumers' checks
   and builds through Turbo. Do not create test files; use temporary smoke commands.
 

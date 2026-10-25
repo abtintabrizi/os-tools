@@ -1,43 +1,22 @@
-import type { Awakening } from "../constants/awakenings.js";
-import type { DraftAction, Sequence, Team } from "../constants/game.js";
-import type { GameMap } from "../constants/maps.js";
-import type { CommonState, PlayingSide } from "./common.js";
+import type { z } from "zod";
 
-export interface MapDraftAction {
-  map: GameMap;
-  team: PlayingSide | null;
-  step?: number | null;
-  action: DraftAction;
-}
+import type {
+  createMapDraftRoomRequestSchema,
+  mapDraftActionRequestSchema,
+  mapDraftActionSchema,
+  mapDraftPendingRequestSchema,
+  mapDraftStateSchema,
+  setStrikerRoomRequestSchema,
+} from "../schemas/mapDraft.js";
 
-export interface MapDraftState extends CommonState {
-  maps: GameMap[];
-  bestOf: Sequence;
-  actions: MapDraftAction[];
-  strikerLobbies: Record<string, { roomId: string; firstPick: string }> | null;
-  bannedAwakenings: Awakening[] | null;
-}
+export type MapDraftAction = z.infer<typeof mapDraftActionSchema>;
 
-export interface CreateMapDraftRoomRequest {
-  bestOf: Sequence;
-  blueName: string;
-  redName: string;
-  maps: GameMap[];
-}
+export type MapDraftState = z.infer<typeof mapDraftStateSchema>;
 
-export interface MapDraftActionRequest {
-  map: GameMap;
-  step: number;
-}
+export type CreateMapDraftRoomRequest = z.infer<typeof createMapDraftRoomRequestSchema>;
 
-export interface MapDraftPendingRequest {
-  side: Team;
-  map: GameMap | null;
-}
+export type MapDraftActionRequest = z.infer<typeof mapDraftActionRequestSchema>;
 
-export interface SetStrikerRoomRequest {
-  map: GameMap;
-  roomId: string;
-  firstPick: string;
-  bannedAwakenings: Awakening[];
-}
+export type MapDraftPendingRequest = z.infer<typeof mapDraftPendingRequestSchema>;
+
+export type SetStrikerRoomRequest = z.infer<typeof setStrikerRoomRequestSchema>;

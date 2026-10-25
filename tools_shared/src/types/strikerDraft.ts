@@ -1,39 +1,19 @@
-import type { Awakening } from "../constants/awakenings.js";
-import type { AwakeningMode, DraftAction, Team } from "../constants/game.js";
-import type { GameMap } from "../constants/maps.js";
-import type { Striker } from "../constants/strikers.js";
-import type { CommonState, PlayingSide } from "./common.js";
+import type { z } from "zod";
 
-export interface StrikerDraftAction {
-  striker: Striker | null;
-  team: PlayingSide;
-  step: number;
-  action: DraftAction;
-}
+import type {
+  createStrikerDraftRoomRequestSchema,
+  strikerDraftActionRequestSchema,
+  strikerDraftActionSchema,
+  strikerDraftPendingRequestSchema,
+  strikerDraftStateSchema,
+} from "../schemas/strikerDraft.js";
 
-export interface StrikerDraftState extends CommonState {
-  map: GameMap;
-  awakenings: Awakening[];
-  actions: StrikerDraftAction[];
-  bannedStarts: Awakening[];
-  awakeningMode: AwakeningMode;
-}
+export type StrikerDraftAction = z.infer<typeof strikerDraftActionSchema>;
 
-export interface CreateStrikerDraftRoomRequest {
-  blueName: string;
-  redName: string;
-  map: GameMap;
-  awakeningMode: AwakeningMode;
-  bannedStarts: Awakening[];
-  customAwakenings: Awakening[];
-}
+export type StrikerDraftState = z.infer<typeof strikerDraftStateSchema>;
 
-export interface StrikerDraftActionRequest {
-  striker: Striker | null;
-  step: number;
-}
+export type CreateStrikerDraftRoomRequest = z.infer<typeof createStrikerDraftRoomRequestSchema>;
 
-export interface StrikerDraftPendingRequest {
-  side: Team;
-  striker: Striker | null;
-}
+export type StrikerDraftActionRequest = z.infer<typeof strikerDraftActionRequestSchema>;
+
+export type StrikerDraftPendingRequest = z.infer<typeof strikerDraftPendingRequestSchema>;

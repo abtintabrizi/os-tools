@@ -11,6 +11,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@orpc/client": "1.16.1",
+    "@orpc/contract": "1.16.1",
     "@os-tools/shared": "workspace:*",
     "@supabase/supabase-js": "^2.43.0",
     "@tailwindcss/vite": "^4.2.2",

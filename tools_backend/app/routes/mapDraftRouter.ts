@@ -1,50 +1,30 @@
-import type {
-  CreateMapDraftRoomRequest,
-  MapDraftActionRequest,
-  MapDraftPendingRequest,
-  MapDraftState,
-  ReadyRequest,
-  SetStrikerRoomRequest,
-} from "@os-tools/shared";
-import { DraftType } from "@os-tools/shared";
-import { Router } from "express";
+import { implement } from "@orpc/server";
+import { contract, DraftType } from "@os-tools/shared";
 
 import type { MapDraftManager } from "../managers/mapDraftManager.js";
 import type { RoomManager } from "../managers/roomManager.js";
 
-export function mapDraftRouter(manager: MapDraftManager, rooms: RoomManager): Router {
-  const router = Router();
+export function mapDraftRouter(manager: MapDraftManager, rooms: RoomManager) {
+  const procedure = implement(contract.mapDraft);
 
-  router.post<Record<string, never>, MapDraftState, CreateMapDraftRoomRequest>("/rooms", async (req, res) => {
-    res.json(await manager.createRoom(req.body));
+  return procedure.router({
+    createRoom: procedure.createRoom.handler(({ input }) => {
+      return manager.createRoom(input);
+    }),
+    getRoom: procedure.getRoom.handler(({ input }) => {
+      return rooms.get(DraftType.MapDraft, input);
+    }),
+    ready: procedure.ready.handler(({ input }) => {
+      return rooms.ready(DraftType.MapDraft, input);
+    }),
+    setPending: procedure.setPending.handler(({ input }) => {
+      return rooms.pending(DraftType.MapDraft, input);
+    }),
+    applyAction: procedure.applyAction.handler(({ input }) => {
+      return rooms.action(DraftType.MapDraft, input);
+    }),
+    linkStrikerRoom: procedure.linkStrikerRoom.handler(({ input }) => {
+      return manager.linkStrikerRoom(input);
+    }),
   });
-
-  router.get("/rooms/:roomId", async (req, res) => {
-    res.json(await rooms.get(DraftType.MapDraft, req.params.roomId));
-  });
-
-  router.post<{ roomId: string }, MapDraftState, ReadyRequest>("/rooms/:roomId/ready", async (req, res) => {
-    res.json(await rooms.ready(DraftType.MapDraft, req.params.roomId, req.body.side));
-  });
-
-  router.post<{ roomId: string }, MapDraftState, MapDraftPendingRequest>("/rooms/:roomId/pending", async (req, res) => {
-    const body = req.body;
-
-    res.json(await rooms.pending(DraftType.MapDraft, req.params.roomId, body.side, body.map));
-  });
-
-  router.post<{ roomId: string }, MapDraftState, MapDraftActionRequest>("/rooms/:roomId/action", async (req, res) => {
-    const body = req.body;
-
-    res.json(await rooms.action(DraftType.MapDraft, req.params.roomId, body.step, body.map));
-  });
-
-  router.post<{ roomId: string }, MapDraftState, SetStrikerRoomRequest>(
-    "/rooms/:roomId/striker-room",
-    async (req, res) => {
-      res.json(await manager.linkStrikerRoom(req.params.roomId, req.body));
-    },
-  );
-
-  return router;
 }
