@@ -3,10 +3,13 @@ import { z } from "zod";
 import { ReplayEventType, Team } from "../constants/game.js";
 
 export const playingSideSchema = z.enum([Team.Blue, Team.Red]);
+export type PlayingSide = z.infer<typeof playingSideSchema>;
 
 export const roomRequestSchema = z.object({ roomId: z.string().min(1) });
+export type RoomRequest = z.infer<typeof roomRequestSchema>;
 
 export const readyRequestSchema = z.object({ side: playingSideSchema });
+export type ReadyRequest = z.infer<typeof readyRequestSchema>;
 
 const replayFields = {
   atMs: z.number().int().nonnegative(),
@@ -18,6 +21,7 @@ export const replayEventSchema = z.discriminatedUnion("type", [
   z.object({ ...replayFields, type: z.literal(ReplayEventType.Pending) }),
   z.object({ ...replayFields, type: z.literal(ReplayEventType.Action), step: z.number().int().nonnegative() }),
 ]);
+export type ReplayEvent = z.infer<typeof replayEventSchema>;
 
 export const commonStateSchema = z.object({
   roomId: z.string(),
@@ -34,3 +38,4 @@ export const commonStateSchema = z.object({
   replayEvents: z.array(replayEventSchema).optional(),
   serverTime: z.number().optional(),
 });
+export type CommonState = z.infer<typeof commonStateSchema>;

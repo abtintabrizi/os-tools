@@ -13,7 +13,7 @@ and tactics boards. Live at [drafter.bestieinslot.com](https://drafter.bestieins
 - pnpm workspaces and Turborepo: one install and lockfile for the TypeScript apps.
   Turbo runs development servers, builds, and checks.
 
-Common game rules and types live in `tools_shared/src/constants/` and `tools_shared/src/types/`,
+Common game rules and types live in `tools_shared/src/constants/` and `tools_shared/src/schemas/`,
 exported by the private `@os-tools/shared` workspace package. UI assets and presentation
 types stay in the frontend; CORS, backend-only types, and runtime resources stay in the backend.
 HTTP APIs use contract-first oRPC with Zod input/output validation. A test suite remains deferred.
@@ -115,7 +115,8 @@ Horizontal scaling requires additional coordination.
 ## Contracts and API
 
 Shared Zod schemas in `tools_shared/src/schemas/` define request and state shapes.
-The existing exported TypeScript types are inferred from these schemas. Contracts in
+Each schema exports its inferred TypeScript type directly beside its definition. Internal rule
+types such as SequenceStep stay beside their game constants. Contracts in
 `tools_shared/src/contracts/` define inputs and outputs without backend code.
 Import public definitions from `@os-tools/shared`; shared internals use direct relative imports.
 

@@ -1,5 +1,4 @@
-import type { SequenceStep } from "../types/common.js";
-import { DraftAction, Team } from "./game.js";
+import { DraftAction, type SequenceStep, Team } from "./game.js";
 
 export enum Striker {
   AiMi = "Ai.Mi",

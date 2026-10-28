@@ -11,6 +11,7 @@ export const mapDraftActionSchema = z.object({
   step: z.number().int().nonnegative().nullable().optional(),
   action: z.enum(DraftAction),
 });
+export type MapDraftAction = z.infer<typeof mapDraftActionSchema>;
 
 export const mapDraftStateSchema = commonStateSchema.extend({
   maps: z.array(z.enum(GameMap)),
@@ -19,6 +20,7 @@ export const mapDraftStateSchema = commonStateSchema.extend({
   strikerLobbies: z.record(z.string(), z.object({ roomId: z.string(), firstPick: z.string() })).nullable(),
   bannedAwakenings: z.array(z.enum(Awakening)).nullable(),
 });
+export type MapDraftState = z.infer<typeof mapDraftStateSchema>;
 
 export const createMapDraftRoomRequestSchema = z.object({
   bestOf: z.enum(Sequence),
@@ -26,13 +28,16 @@ export const createMapDraftRoomRequestSchema = z.object({
   redName: z.string(),
   maps: z.array(z.enum(GameMap)),
 });
+export type CreateMapDraftRoomRequest = z.infer<typeof createMapDraftRoomRequestSchema>;
 
 export const mapDraftActionRequestSchema = z.object({
   map: z.enum(GameMap),
   step: z.number().int().nonnegative(),
 });
+export type MapDraftActionRequest = z.infer<typeof mapDraftActionRequestSchema>;
 
 export const mapDraftPendingRequestSchema = z.object({ side: playingSideSchema, map: z.enum(GameMap).nullable() });
+export type MapDraftPendingRequest = z.infer<typeof mapDraftPendingRequestSchema>;
 
 export const setStrikerRoomRequestSchema = z.object({
   map: z.enum(GameMap),
@@ -40,3 +45,4 @@ export const setStrikerRoomRequestSchema = z.object({
   firstPick: z.string(),
   bannedAwakenings: z.array(z.enum(Awakening)),
 });
+export type SetStrikerRoomRequest = z.infer<typeof setStrikerRoomRequestSchema>;

@@ -45,7 +45,8 @@ the repository root using `pnpm exec turbo run build --filter=@os-tools/frontend
 The build includes TypeScript and Vite validation; lint alone does not check types.
 Backend changes require formatting, lint, typecheck, and build as described in its guide.
 Shared package work requires reading `tools_shared/AGENTS.md`. Cross-app constants/types belong
-in its `src/constants/` and `src/types/`; keep assets, UI types, CORS, backend-only types, and timers local.
+in its `src/constants/` and `src/schemas/`; infer network types beside their schemas and keep
+internal rule interfaces beside their constants. Keep assets, UI types, CORS, backend-only types, and timers local.
 Import shared definitions directly from `@os-tools/shared`; do not add app-local forwarding
 modules or re-export shared definitions through local asset/type files. Keep local modules only
 for definitions or behavior owned by that app.

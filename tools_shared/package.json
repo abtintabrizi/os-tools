@@ -9,9 +9,9 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./types": {
-      "types": "./dist/types/index.d.ts",
-      "default": "./dist/types/index.js"
+    "./schemas": {
+      "types": "./dist/schemas/index.d.ts",
+      "default": "./dist/schemas/index.js"
     },
     "./constants": {
       "types": "./dist/constants/index.d.ts",
@@ -21,9 +21,9 @@
       "types": "./dist/constants/*.d.ts",
       "default": "./dist/constants/*.js"
     },
-    "./types/*": {
-      "types": "./dist/types/*.d.ts",
-      "default": "./dist/types/*.js"
+    "./schemas/*": {
+      "types": "./dist/schemas/*.d.ts",
+      "default": "./dist/schemas/*.js"
     }
   },
   "scripts": {
