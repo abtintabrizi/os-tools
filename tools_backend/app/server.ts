@@ -1,9 +1,10 @@
 import { createServer } from "node:http";
-import { type DraftType, Team } from "@os-tools/shared";
+import { implement, onError, ORPCError } from "@orpc/server";
+import { BodyLimitPlugin, RPCHandler } from "@orpc/server/node";
+import { contract, type DraftType, Team } from "@os-tools/shared";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import cors from "cors";
 import express, { type ErrorRequestHandler } from "express";
-import createError from "http-errors";
 import morgan from "morgan";
 import { WebSocketServer } from "ws";
 
@@ -50,32 +51,37 @@ export function createApplication(client?: SupabaseClient) {
       credentials: true,
     }),
   );
-  app.use(express.json({ limit: "1mb" }));
   app.get("/", (_req, res) => {
     res.json({ message: "Backend running" });
   });
-  app.use("/map-draft", mapDraftRouter(mapDraftManager, roomManager));
-  app.use("/striker-draft", strikerDraftRouter(strikerDraftManager, roomManager));
+  const router = implement(contract).router({
+    mapDraft: mapDraftRouter(mapDraftManager, roomManager),
+    strikerDraft: strikerDraftRouter(strikerDraftManager, roomManager),
+  });
+  const handler = new RPCHandler(router, {
+    plugins: [new BodyLimitPlugin({ maxBodySize: 1024 * 1024 })],
+    interceptors: [
+      onError((error) => {
+        if (!(error instanceof ORPCError) || error.status >= 500) {
+          logger.error("RPC request failed", { error });
+        }
+      }),
+    ],
+  });
+
+  app.use(async (req, res, next) => {
+    const { matched } = await handler.handle(req, res);
+
+    if (!matched) {
+      next();
+    }
+  });
   app.use((_req, res) => {
     res.status(404).json({ detail: "Not Found" });
   });
   const errors: ErrorRequestHandler = (error: unknown, req, res, _next) => {
     // Express identifies error middleware by its four-argument signature.
     void _next;
-    if (createError.isHttpError(error)) {
-      if (error.status >= 500) {
-        logger.error("Request failed", { method: req.method, path: req.path, error });
-      }
-
-      if (error.headers) {
-        res.set(error.headers);
-      }
-
-      res.status(error.status).json({ detail: error.expose ? error.message : "Internal Server Error" });
-
-      return;
-    }
-
     logger.error("Request failed", { method: req.method, path: req.path, error });
     res.status(500).json({ detail: "Internal Server Error" });
   };

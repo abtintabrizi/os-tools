@@ -3,14 +3,15 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "sideEffects": false,
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./types": {
-      "types": "./dist/types/index.d.ts",
-      "default": "./dist/types/index.js"
+    "./schemas": {
+      "types": "./dist/schemas/index.d.ts",
+      "default": "./dist/schemas/index.js"
     },
     "./constants": {
       "types": "./dist/constants/index.d.ts",
@@ -20,9 +21,9 @@
       "types": "./dist/constants/*.d.ts",
       "default": "./dist/constants/*.js"
     },
-    "./types/*": {
-      "types": "./dist/types/*.d.ts",
-      "default": "./dist/types/*.js"
+    "./schemas/*": {
+      "types": "./dist/schemas/*.d.ts",
+      "default": "./dist/schemas/*.js"
     }
   },
   "scripts": {
@@ -38,5 +39,9 @@
     "prettier": "^3.8.1",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.58.0"
+  },
+  "dependencies": {
+    "@orpc/contract": "1.16.1",
+    "zod": "4.6.7"
   }
 }

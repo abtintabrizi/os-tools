@@ -1,5 +1,4 @@
-import type { SequenceStep } from "../types/common.js";
-import { DraftAction, Sequence, Team } from "./game.js";
+import { DraftAction, Sequence, type SequenceStep, Team } from "./game.js";
 
 export enum GameMap {
   AhtenCity = "Ahten City",

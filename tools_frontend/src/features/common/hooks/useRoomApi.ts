@@ -1,23 +1,23 @@
-import type { DraftType, Team } from "@os-tools/shared";
+import type { DraftType } from "@os-tools/shared";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-export const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
-const WS_BASE = API_BASE.replace(/^http/, "ws");
+import { API_BASE } from "../api";
 
+const WS_BASE = API_BASE.replace(/^http/, "ws");
 const RECONNECT_DELAY_MS = 3000;
 
-export interface RoomApi<T> {
-  state: T | null;
-  loading: boolean;
-  error: string | null;
-  create: (config: object) => Promise<T>;
-  applyAction: (payload: Record<string, unknown>) => Promise<void>;
-  setPending: (payload: Record<string, unknown>) => Promise<void>;
-  ready: (side: Exclude<Team, Team.Spectator>) => Promise<void>;
-  post: (subPath: string, payload: Record<string, unknown>) => Promise<void>;
+interface RoomClient<TState, TCreate> {
+  getRoom: (input: { roomId: string }) => Promise<TState>;
+  createRoom: (input: TCreate) => Promise<TState>;
 }
 
-export function useRoomApi<T>(roomId: string | null, path: DraftType, side?: string, live = true): RoomApi<T> {
+export function useRoomApi<T, TCreate>(
+  roomId: string | null,
+  path: DraftType,
+  client: RoomClient<T, TCreate>,
+  side?: string,
+  live = true,
+) {
   const [state, setState] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,13 +33,8 @@ export function useRoomApi<T>(roomId: string | null, path: DraftType, side?: str
     setLoading(true);
     setError(null);
 
-    fetch(`${API_BASE}/${path}/rooms/${roomId}`)
-      .then((r) => {
-        if (!r.ok) {
-          throw new Error("Room not found");
-        }
-        return r.json();
-      })
+    client
+      .getRoom({ roomId })
       .then((data: T) => {
         if (!cancelled) {
           setState(data);
@@ -91,101 +86,27 @@ export function useRoomApi<T>(roomId: string | null, path: DraftType, side?: str
       wsRef.current?.close();
       wsRef.current = null;
     };
-  }, [roomId, path, side, live]);
+  }, [roomId, path, client, side, live]);
 
   const create = useCallback(
-    async (config: object): Promise<T> => {
-      const resp = await fetch(`${API_BASE}/${path}/rooms`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(config),
-      });
-      if (!resp.ok) {
-        const err = await resp.json();
-        throw new Error(err.detail ?? "Failed to create room");
-      }
-      const data: T = await resp.json();
+    async (config: TCreate): Promise<T> => {
+      const data = await client.createRoom(config);
       setState(data);
+
       return data;
     },
-    [path],
+    [client],
   );
 
-  const applyAction = useCallback(
-    async (payload: Record<string, unknown>): Promise<void> => {
-      if (!roomId) {
-        return;
-      }
-      const resp = await fetch(`${API_BASE}/${path}/rooms/${roomId}/action`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!resp.ok) {
-        const err = await resp.json();
-        throw new Error(err.detail ?? "Action failed");
-      }
-      // State update arrives via WebSocket broadcast
-    },
-    [roomId, path],
-  );
+  const runMutation = useCallback(async (operation: () => Promise<unknown>): Promise<void> => {
+    setError(null);
 
-  const setPending = useCallback(
-    async (payload: Record<string, unknown>): Promise<void> => {
-      if (!roomId) {
-        return;
-      }
-      await fetch(`${API_BASE}/${path}/rooms/${roomId}/pending`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      // State update arrives via WebSocket broadcast
-    },
-    [roomId, path],
-  );
+    try {
+      await operation();
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "Request failed");
+    }
+  }, []);
 
-  const ready = useCallback(
-    async (side: Exclude<Team, Team.Spectator>): Promise<void> => {
-      if (!roomId) {
-        return;
-      }
-      const resp = await fetch(`${API_BASE}/${path}/rooms/${roomId}/ready`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ side }),
-      });
-      if (!resp.ok) {
-        const err = await resp.json();
-        throw new Error(err.detail ?? "Ready failed");
-      }
-      // State update arrives via WebSocket broadcast
-    },
-    [roomId, path],
-  );
-
-  const post = useCallback(
-    async (subPath: string, payload: Record<string, unknown>): Promise<void> => {
-      if (!roomId) {
-        return;
-      }
-      await fetch(`${API_BASE}/${path}/rooms/${roomId}/${subPath}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-    },
-    [roomId, path],
-  );
-
-  return {
-    state,
-    loading,
-    error,
-    create,
-    applyAction,
-    setPending,
-    ready,
-    post,
-  };
+  return { state, loading, error, create, runMutation };
 }

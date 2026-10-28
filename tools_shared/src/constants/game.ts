@@ -9,6 +9,12 @@ export enum DraftAction {
   Pick = "pick",
 }
 
+export interface SequenceStep {
+  team: Exclude<Team, Team.Spectator>;
+  action: DraftAction;
+  gameNum?: number;
+}
+
 export enum Sequence {
   BO1 = "bo1",
   BO3 = "bo3",

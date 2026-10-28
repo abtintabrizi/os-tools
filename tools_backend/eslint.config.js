@@ -29,6 +29,10 @@ export default tseslint.config(
         {
           patterns: [
             {
+              group: ["@orpc/*", "../constants/errorCode.js"],
+              message: "Utilities must not depend on API transport errors; managers translate GameRuleError.",
+            },
+            {
               group: ["../managers/*"],
               allowTypeImports: true,
               message: "Utilities may import manager types only; runtime effects belong in managers.",
