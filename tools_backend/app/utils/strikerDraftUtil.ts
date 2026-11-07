@@ -9,7 +9,8 @@ import {
   STRIKER_SEQUENCE,
   type StrikerDraftState,
 } from "@os-tools/shared";
-import createError from "http-errors";
+
+import { GameRuleError } from "../gameRuleError.js";
 
 export function getAvailableAwakenings(bannedStarts: readonly Awakening[], first?: Awakening): Awakening[] {
   const firstPool = CURRENT_AWAKENING_POOL.filter((a) => {
@@ -17,7 +18,7 @@ export function getAvailableAwakenings(bannedStarts: readonly Awakening[], first
   });
 
   if (!firstPool.length) {
-    throw createError.BadRequest("No awakenings available: all are banned.");
+    throw new GameRuleError("No awakenings available: all are banned.");
   }
 
   if (first === undefined) {
@@ -30,7 +31,7 @@ export function getAvailableAwakenings(bannedStarts: readonly Awakening[], first
   });
 
   if (!available.length) {
-    throw createError.BadRequest(`No compatible second awakening available after choosing '${first}'.`);
+    throw new GameRuleError(`No compatible second awakening available after choosing '${first}'.`);
   }
 
   return available;
@@ -43,21 +44,21 @@ export function applyStrikerAction(
   const entry = STRIKER_SEQUENCE[state.step];
 
   if (!entry) {
-    throw createError.BadRequest("No more steps remaining");
+    throw new GameRuleError("No more steps remaining");
   }
 
   let selected: Striker | null = null;
 
   if (striker === null) {
     if (entry.action !== DraftAction.Ban) {
-      throw createError.BadRequest("No-ban is only allowed on ban steps");
+      throw new GameRuleError("No-ban is only allowed on ban steps");
     }
   } else {
     const candidate = STRIKER_POOL.find((name) => {
       return name === striker;
     });
     if (!candidate) {
-      throw createError.BadRequest("Invalid striker");
+      throw new GameRuleError("Invalid striker");
     }
 
     selected = candidate;
@@ -67,7 +68,7 @@ export function applyStrikerAction(
         return a.striker === striker;
       })
     ) {
-      throw createError.BadRequest("Striker already used");
+      throw new GameRuleError("Striker already used");
     }
   }
 

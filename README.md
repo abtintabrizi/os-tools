@@ -13,10 +13,10 @@ and tactics boards. Live at [drafter.bestieinslot.com](https://drafter.bestieins
 - pnpm workspaces and Turborepo: one install and lockfile for the TypeScript apps.
   Turbo runs development servers, builds, and checks.
 
-Common game rules and types live in `tools_shared/src/constants/` and `tools_shared/src/types/`,
+Common game rules and types live in `tools_shared/src/constants/` and `tools_shared/src/schemas/`,
 exported by the private `@os-tools/shared` workspace package. UI assets and presentation
 types stay in the frontend; CORS, backend-only types, and runtime resources stay in the backend.
-oRPC, Zod schemas, and a test suite are deferred.
+HTTP APIs use contract-first oRPC with Zod input/output validation. A test suite remains deferred.
 
 ## Shared package builds
 
@@ -41,17 +41,17 @@ Separate deployed apps still need rebuilding/redeploying to receive new shared c
 ## Backend request stack
 
 `main.ts` loads configuration and starts the application. `server.ts` wires the dependencies,
-registers Express route functions, and handles HTTP errors, WebSockets, and shutdown.
+mounts oRPC in Express, and handles request logging, WebSockets, and shutdown.
 
 ```text
-HTTP route → Manager → Supabase
+oRPC procedure → Manager → Supabase
                 ↓
           Utility functions
                 ↓
      Timer / connection managers
 ```
 
-- `routes/`: read typed HTTP input, call managers, and send responses.
+- `routes/`: implement shared oRPC contracts through managers; oRPC validates inputs and outputs.
 - `managers/`: draft workflows, shared locked room operations, timers, and socket registries.
 - `RoomManager` also owns Supabase client initialization and private room load/save methods.
 - `utils/`: pure draft calculations, replay, and state filtering.
@@ -63,12 +63,12 @@ Class methods and constructors declare their visibility explicitly.
 
 Managers receive ordinary constructor dependencies. There are no controller/router classes,
 decorators, dependency-injection containers, global mutable singletons, or extra bootstrap
-layers. Add abstraction only when it serves a concrete responsibility. oRPC remains deferred.
+layers. Add abstraction only when it serves a concrete responsibility.
 
 Room loading, modification, persistence, timer updates, and broadcasts stay inside one
 shared lock boundary. Routes must not load mutable room state before acquiring that lock.
 WebSocket reconnects and automatic actions use the same room manager as HTTP operations.
-Existing plain response bodies and `{ detail }` errors are preserved.
+Room payload shapes are preserved. HTTP procedures use the oRPC protocol and ORPCError.
 
 ## Local development
 
@@ -112,52 +112,41 @@ working directory. Set `PORT` to override port 8000. It binds to `0.0.0.0` for R
 **Run one backend instance.** Timers, locks, and sockets live inside one process.
 Horizontal scaling requires additional coordination.
 
-## Compatibility and API
+## Contracts and API
 
-The backend retains the original API URLs and saved room JSON. No database migration
-or frontend API change is required. Each draft type (`map-draft`, `striker-draft`) exposes:
+Shared Zod schemas in `tools_shared/src/schemas/` define request and state shapes.
+Each schema exports its inferred TypeScript type directly beside its definition. Internal rule
+types such as SequenceStep stay beside their game constants. Contracts in
+`tools_shared/src/contracts/` define inputs and outputs without backend code.
+Import public definitions from `@os-tools/shared`; shared internals use direct relative imports.
 
-| Method | Path                              | Purpose                            |
-| ------ | --------------------------------- | ---------------------------------- |
-| POST   | `/{type}/rooms`                   | Create room                        |
-| GET    | `/{type}/rooms/{id}`              | Read room                          |
-| POST   | `/{type}/rooms/{id}/ready`        | Mark side ready                    |
-| POST   | `/{type}/rooms/{id}/pending`      | Save private preview               |
-| POST   | `/{type}/rooms/{id}/action`       | Submit ban/pick with expected step |
-| WS     | `/{type}/ws/rooms/{id}?side=blue` | Stream side-filtered state         |
+The frontend calls the typed client in `features/common/api.ts`. It uses
+`VITE_API_BASE_URL` directly, without an additional URL prefix. Procedure paths are
+`/mapDraft/createRoom`, `/mapDraft/ready`, `/strikerDraft/applyAction`, and so on.
 
-`POST /map-draft/rooms/{id}/striker-room` links a striker lobby.
-`GET /` returns `{ "message": "Backend running" }`.
-Errors retain `{ detail }`; malformed JSON returns 400, missing rooms 404, and stale
-steps 409. Unknown map draft formats now return 400 instead of failing later in a timer.
+Both `rpc.mapDraft` and `rpc.strikerDraft` expose `createRoom`, `getRoom`, `ready`,
+`setPending`, and `applyAction`. Map drafts also expose `linkStrikerRoom`.
+Room operations take a `roomId`; linking additionally takes `strikerRoomId` for the target.
 
-Both-ready starts a five-second countdown followed by 30-second turns. Pending selections
-are used on timeout when valid. Otherwise maps are randomly selected for bans/picks;
-striker bans become no-bans and striker picks are random. Timestamps remain epoch seconds,
-while replay offsets remain milliseconds. Reconnect recovers timers from persisted deadlines.
-Rooms predating replay fields remain readable. A restart resumes a room's timer when a
-client reconnects, matching Python's behavior.
+Zod validates input and output at the server boundary. Managers retain gameplay checks.
+Missing rooms produce `NOT_FOUND`, invalid requests or game actions `BAD_REQUEST`, and
+stale steps `CONFLICT`. Unexpected failures are logged and returned as generic internal errors.
+Request bodies are limited to 1 MiB. Do not manually fetch the old REST endpoints;
+they have been removed. No OpenAPI generation, batching, or automatic mutation retries are enabled.
 
-HTTP routing uses Express defaults for capitalization and trailing slashes
-(no redirect). The cors package handles preflight responses with the existing origin allowlist.
-Send JSON objects/arrays with `Content-Type: application/json`. Unsupported methods
-fall through to 404, GET routes support HEAD, and OPTIONS is handled automatically. WebSockets retain Uvicorn's 20-second
-ping/pong heartbeat and 16 MiB message limit. Replay rounding matches Python, and timeout
-events use the original timer fire time even when storage access takes time.
+WebSockets remain at `/{map-draft|striker-draft}/ws/rooms/{id}?side=blue`.
+They still provide live room state, reconnect recovery, a 20-second ping/pong heartbeat,
+and a 16 MiB message limit. `GET /` remains the Render health check and returns
+`{ "message": "Backend running" }`.
 
-Node serializes every room mutation, including readiness and lobby linking. Every outgoing
-payload hides active replay events and other sides' pending selections. Pending requests
-persist and return the caller's preview without broadcasting, matching Python.
+Saved room JSON and database tables are unchanged. Optional replay fields and map decider
+steps remain supported. Timestamps remain epoch seconds; replay offsets remain milliseconds.
+Both-ready starts the five-second countdown, then 30-second turns. Room mutations remain
+serialized, and outgoing state is filtered before HTTP validation and WebSocket broadcasts.
+Active replay events and other sides' pending selections remain private.
 
-Deliberate differences: all room writes are serialized, map/striker runtime registries are
-separate, lobby-link payloads are filtered, and generated IDs are checked for collisions.
-Invalid map formats are rejected immediately. Striker creation requires `bannedStarts` and
-`customAwakenings` as arrays; use `[]` when unused. Request-shape validation is deferred to Zod/oRPC. Custom
-mode requires exactly two custom awakenings. Deploy frontend and backend together for this
-request change. Shared TypeScript types provide compile-time checks only; managers retain
-business-rule checks, without runtime request-shape validation or Pydantic coercion.
-FastAPI's automatic OpenAPI/Swagger/ReDoc pages are not replicated. Node limits JSON request
-bodies to 1 MiB; oversized requests return 413 rather than a server error.
+Striker creation requires `bannedStarts` and `customAwakenings` arrays, using `[]` when unused.
+Custom mode requires exactly two awakenings. Schema validation does not replace manager checks.
 
 ## Validation
 
@@ -202,14 +191,14 @@ Retain `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`; Render supplies `PORT`.
 Build filters must include root package/workspace/lock/Turbo/Node-version files as well as
 `tools_backend/**` and `tools_shared/**`. Existing CORS allowlists and Vercel preview-origin matching are preserved.
 
-Plan cutover between drafts so Python and Node do not run timers against the same rooms
-while Render replaces the process. Check health, room creation, a two-client draft, and
-WebSocket reconnect before declaring the cutover complete. Existing rooms need no conversion.
+Deploy the frontend and backend from the same revision as a coordinated cutover between drafts.
+Older frontend deployments use REST URLs and cannot call the new HTTP API. The base backend URL
+and environment variable names do not change. Check health, room creation, both teams,
+spectator updates, replay, and reconnect after deployment.
 
-Rollback: deploy the previous Python revision, restore Render's Python runtime and root
-`tools_backend`, use `pip install -r requirements.txt` for build and
-`uvicorn app.main:app --host 0.0.0.0 --port $PORT` for start. Stop Node before Python serves
-rooms. The Python source is available in Git history.
+Rollback both apps to the same pre-oRPC revision. Never run two backend instances against
+the same active rooms; locks, timers, and socket registries are process-local. Database records
+need no migration. These instructions do not change live services automatically.
 
 ### Vercel frontend
 

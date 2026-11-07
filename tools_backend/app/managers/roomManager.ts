@@ -1,20 +1,28 @@
 import { randomInt } from "node:crypto";
+import { ORPCError } from "@orpc/server";
 import {
   COUNTDOWN_SECONDS,
   DraftAction,
   DraftType,
+  type MapDraftActionRequest,
+  type MapDraftPendingRequest,
   type MapDraftState,
   type PlayingSide,
+  type ReadyRequest,
   ReplayEventType,
+  type RoomRequest,
   SEQUENCE_MAPPING,
   STRIKER_POOL,
   STRIKER_SEQUENCE,
+  type StrikerDraftActionRequest,
+  type StrikerDraftPendingRequest,
   type StrikerDraftState,
   Team,
 } from "@os-tools/shared";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import createError from "http-errors";
 
+import { ErrorCode } from "../constants/errorCode.js";
+import { GameRuleError } from "../gameRuleError.js";
 import { applyMapAction } from "../utils/mapDraftUtil.js";
 import { appendReplayEvent, stateForClient } from "../utils/replayUtil.js";
 import { roomKey } from "../utils/roomUtil.js";
@@ -30,6 +38,17 @@ export interface RoomStateByType {
 }
 
 export type RoomState = RoomStateByType[keyof RoomStateByType];
+
+interface RoomRequestsByType {
+  [DraftType.MapDraft]: {
+    pending: MapDraftPendingRequest;
+    action: MapDraftActionRequest;
+  };
+  [DraftType.StrikerDraft]: {
+    pending: StrikerDraftPendingRequest;
+    action: StrikerDraftActionRequest;
+  };
+}
 
 const logger = new LoggerManager("managers.roomManager");
 
@@ -120,7 +139,7 @@ export class RoomManager {
     return Date.now() / 1000;
   };
 
-  private timing = (state: RoomState, now = this.nowSeconds()) => {
+  private timing = (state: RoomState, now: number = this.nowSeconds()) => {
     return {
       stepStartedAt: state.stepStartedAt ?? null,
       elapsedSeconds: state.stepStartedAt == null ? null : Math.round((now - state.stepStartedAt) * 1000) / 1000,
@@ -147,25 +166,28 @@ export class RoomManager {
     const state = await this.loadRoom(type, roomId);
 
     if (!state) {
-      throw createError.NotFound("Room not found");
+      throw new ORPCError(ErrorCode.NotFound, { message: "Room not found" });
     }
 
     return state;
   };
 
-  public get = async <T extends DraftType>(type: T, roomId: string): Promise<RoomStateByType[T]> => {
+  public get = async <T extends DraftType>(type: T, { roomId }: RoomRequest): Promise<RoomStateByType[T]> => {
     return stateForClient(await this.requireRoom(type, roomId));
   };
 
   private playingSide = (side: Team): PlayingSide => {
     if (side !== Team.Blue && side !== Team.Red) {
-      throw createError.BadRequest("Invalid side");
+      throw new ORPCError(ErrorCode.BadRequest, { message: "Invalid side" });
     }
 
     return side;
   };
 
-  public ready = async <T extends DraftType>(type: T, roomId: string, side: Team): Promise<RoomStateByType[T]> => {
+  public ready = async <T extends DraftType>(
+    type: T,
+    { roomId, side }: RoomRequest & ReadyRequest,
+  ): Promise<RoomStateByType[T]> => {
     return this.locks.run(roomKey(type, roomId), async () => {
       const state = await this.requireRoom(type, roomId);
 
@@ -201,10 +223,10 @@ export class RoomManager {
 
   public pending = async <T extends DraftType>(
     type: T,
-    roomId: string,
-    side: Team,
-    value: string | null,
+    input: RoomRequest & RoomRequestsByType[NoInfer<T>]["pending"],
   ): Promise<RoomStateByType[T]> => {
+    const { roomId, side } = input;
+    const value = "map" in input ? input.map : input.striker;
     const player = this.playingSide(side);
 
     return this.locks.run(roomKey(type, roomId), async () => {
@@ -235,19 +257,20 @@ export class RoomManager {
 
   public action = async <T extends DraftType>(
     type: T,
-    roomId: string,
-    step: number,
-    value: string | null,
+    input: RoomRequest & RoomRequestsByType[NoInfer<T>]["action"],
   ): Promise<RoomStateByType[T]> => {
+    const { roomId, step } = input;
+    const value = "map" in input ? input.map : input.striker;
+
     return this.locks.run(roomKey(type, roomId), async () => {
       const state = await this.requireRoom(type, roomId);
 
       if (!state.readyBlue || !state.readyRed) {
-        throw createError.BadRequest("Both teams must be ready before the draft can start");
+        throw new ORPCError(ErrorCode.BadRequest, { message: "Both teams must be ready before the draft can start" });
       }
 
       if (state.done) {
-        throw createError.BadRequest("Draft is already complete");
+        throw new ORPCError(ErrorCode.BadRequest, { message: "Draft is already complete" });
       }
 
       const timing = this.timing(state);
@@ -262,13 +285,23 @@ export class RoomManager {
           ...timing,
         });
 
-        throw createError.Conflict(`Step mismatch: expected ${state.step}, got ${step}`);
+        throw new ORPCError(ErrorCode.Conflict, { message: `Step mismatch: expected ${state.step}, got ${step}` });
       }
 
       const sequence = "maps" in state ? SEQUENCE_MAPPING[state.bestOf] : STRIKER_SEQUENCE;
       const action = sequence?.[state.step]?.action;
 
-      const side = this.advance(state, value);
+      let side: PlayingSide;
+
+      try {
+        side = this.advance(state, value);
+      } catch (error: unknown) {
+        if (error instanceof GameRuleError) {
+          throw new ORPCError(ErrorCode.BadRequest, { message: error.message, cause: error });
+        }
+
+        throw error;
+      }
 
       await this.saveRoom(type, state);
       this.timerManager.schedule(type, state);
@@ -281,7 +314,7 @@ export class RoomManager {
     });
   };
 
-  private advance = (state: RoomState, value: string | null, now = this.nowSeconds()): PlayingSide => {
+  private advance = (state: RoomState, value: string | null, now: number = this.nowSeconds()): PlayingSide => {
     const step = state.step;
     const result = "maps" in state ? applyMapAction(state, value ?? "") : applyStrikerAction(state, value);
     const side = result.side;

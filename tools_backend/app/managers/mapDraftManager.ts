@@ -1,52 +1,65 @@
+import { ORPCError } from "@orpc/server";
 import {
   type CreateMapDraftRoomRequest,
   DraftType,
   type MapDraftState,
   MIN_MAPS,
+  type RoomRequest,
   SEQUENCE_MAPPING,
   type SetStrikerRoomRequest,
 } from "@os-tools/shared";
-import createError from "http-errors";
 
+import { ErrorCode } from "../constants/errorCode.js";
 import { initialState } from "../utils/roomUtil.js";
 import type { RoomManager } from "./roomManager.js";
 
 export class MapDraftManager {
   public constructor(private readonly roomManager: RoomManager) {}
 
-  public createRoom = async (body: CreateMapDraftRoomRequest): Promise<MapDraftState> => {
-    if (body.maps.length !== MIN_MAPS) {
-      throw createError.BadRequest(`Exactly ${MIN_MAPS} maps required to draft`);
+  public createRoom = async ({
+    bestOf,
+    blueName,
+    redName,
+    maps,
+  }: CreateMapDraftRoomRequest): Promise<MapDraftState> => {
+    if (maps.length !== MIN_MAPS) {
+      throw new ORPCError(ErrorCode.BadRequest, { message: `Exactly ${MIN_MAPS} maps required to draft` });
     }
 
-    if (!Object.hasOwn(SEQUENCE_MAPPING, body.bestOf)) {
-      throw createError.BadRequest("Invalid draft format");
+    if (!Object.hasOwn(SEQUENCE_MAPPING, bestOf)) {
+      throw new ORPCError(ErrorCode.BadRequest, { message: "Invalid draft format" });
     }
 
     return this.roomManager.create(DraftType.MapDraft, (roomId): MapDraftState => {
       return {
-        ...initialState(roomId, body),
-        maps: body.maps,
-        bestOf: body.bestOf,
+        ...initialState(roomId, { blueName, redName }),
+        maps,
+        bestOf,
         strikerLobbies: null,
         bannedAwakenings: null,
       };
     });
   };
 
-  public linkStrikerRoom = async (roomId: string, body: SetStrikerRoomRequest): Promise<MapDraftState> => {
+  public linkStrikerRoom = async ({
+    roomId,
+    map,
+    strikerRoomId,
+    firstPick,
+    bannedAwakenings,
+  }: RoomRequest & SetStrikerRoomRequest): Promise<MapDraftState> => {
     return this.roomManager.update(DraftType.MapDraft, roomId, (state) => {
       const existing = state.strikerLobbies ?? {};
 
-      if (Object.hasOwn(existing, body.map)) {
-        throw createError.BadRequest("Room already set for this map");
+      if (Object.hasOwn(existing, map)) {
+        throw new ORPCError(ErrorCode.BadRequest, { message: "Room already set for this map" });
       }
 
       if (!state.bannedAwakenings?.length) {
-        state.bannedAwakenings = body.bannedAwakenings;
+        state.bannedAwakenings = bannedAwakenings;
       }
 
-      state.strikerLobbies = { ...existing, [body.map]: { roomId: body.roomId, firstPick: body.firstPick } };
+      state.strikerLobbies = { ...existing, [map]: { roomId: strikerRoomId, firstPick } };
     });
   };
 }

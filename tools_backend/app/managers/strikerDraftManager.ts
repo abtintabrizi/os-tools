@@ -1,4 +1,5 @@
 import { randomInt } from "node:crypto";
+import { ORPCError } from "@orpc/server";
 import {
   type Awakening,
   AwakeningMode,
@@ -6,8 +7,9 @@ import {
   DraftType,
   type StrikerDraftState,
 } from "@os-tools/shared";
-import createError from "http-errors";
 
+import { ErrorCode } from "../constants/errorCode.js";
+import { GameRuleError } from "../gameRuleError.js";
 import { initialState } from "../utils/roomUtil.js";
 import { getAvailableAwakenings } from "../utils/strikerDraftUtil.js";
 import type { RoomManager } from "./roomManager.js";
@@ -15,26 +17,41 @@ import type { RoomManager } from "./roomManager.js";
 export class StrikerDraftManager {
   public constructor(private readonly roomManager: RoomManager) {}
 
-  public createRoom = async (body: CreateStrikerDraftRoomRequest): Promise<StrikerDraftState> => {
+  public createRoom = async ({
+    blueName,
+    redName,
+    map,
+    awakeningMode,
+    bannedStarts,
+    customAwakenings,
+  }: CreateStrikerDraftRoomRequest): Promise<StrikerDraftState> => {
     let awakenings: Awakening[];
 
-    if (body.awakeningMode === AwakeningMode.Custom) {
-      if (body.customAwakenings.length !== 2) {
-        throw createError.BadRequest("Exactly 2 custom awakenings required");
+    if (awakeningMode === AwakeningMode.Custom) {
+      if (customAwakenings.length !== 2) {
+        throw new ORPCError(ErrorCode.BadRequest, { message: "Exactly 2 custom awakenings required" });
       }
 
-      awakenings = body.customAwakenings;
+      awakenings = customAwakenings;
     } else {
-      awakenings = this.generateRandomAwakenings(body.bannedStarts);
+      try {
+        awakenings = this.generateRandomAwakenings(bannedStarts);
+      } catch (error: unknown) {
+        if (error instanceof GameRuleError) {
+          throw new ORPCError(ErrorCode.BadRequest, { message: error.message, cause: error });
+        }
+
+        throw error;
+      }
     }
 
     return this.roomManager.create(DraftType.StrikerDraft, (roomId): StrikerDraftState => {
       return {
-        ...initialState(roomId, body),
-        map: body.map,
+        ...initialState(roomId, { blueName, redName }),
+        map,
         awakenings,
-        bannedStarts: body.bannedStarts,
-        awakeningMode: body.awakeningMode,
+        bannedStarts,
+        awakeningMode,
       };
     });
   };

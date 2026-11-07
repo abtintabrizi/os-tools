@@ -202,6 +202,11 @@ export default function DraftPage() {
 
   return (
     <div className="h-dvh flex flex-col overflow-hidden">
+      {error && (
+        <p role="alert" className="shrink-0 bg-tools-void px-6 py-2 text-tools-red">
+          {error}
+        </p>
+      )}
       {/* Header */}
       <header className="grid grid-cols-3 px-6 border-b border-white/7 bg-tools-void/70 h-16 items-center shrink-0">
         <div className="flex items-center gap-3">

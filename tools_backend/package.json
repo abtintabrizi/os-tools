@@ -15,12 +15,12 @@
     "format": "prettier --write app"
   },
   "dependencies": {
+    "@orpc/server": "1.16.1",
     "@os-tools/shared": "workspace:*",
     "@supabase/supabase-js": "2.118.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
-    "http-errors": "^2.0.1",
     "morgan": "^1.12.1",
     "ws": "^8.18.3"
   },
@@ -28,7 +28,6 @@
     "@eslint/js": "^10.0.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
-    "@types/http-errors": "^2.0.5",
     "@types/morgan": "^1.9.10",
     "@types/node": "^24.0.0",
     "@types/ws": "^8.18.1",

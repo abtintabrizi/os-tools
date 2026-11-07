@@ -45,7 +45,8 @@ the repository root using `pnpm exec turbo run build --filter=@os-tools/frontend
 The build includes TypeScript and Vite validation; lint alone does not check types.
 Backend changes require formatting, lint, typecheck, and build as described in its guide.
 Shared package work requires reading `tools_shared/AGENTS.md`. Cross-app constants/types belong
-in its `src/constants/` and `src/types/`; keep assets, UI types, CORS, backend-only types, and timers local.
+in its `src/constants/` and `src/schemas/`; infer network types beside their schemas and keep
+internal rule interfaces beside their constants. Keep assets, UI types, CORS, backend-only types, and timers local.
 Import shared definitions directly from `@os-tools/shared`; do not add app-local forwarding
 modules or re-export shared definitions through local asset/type files. Keep local modules only
 for definitions or behavior owned by that app.
@@ -96,7 +97,7 @@ Each feature follows the same internal pattern:
 
 - `pages/` — SetupPage → LobbyPage → DraftPage (three-step flow)
 - `context/` — single React Context + Provider that owns all state for the feature; consumed by pages and components via `useXxxDraftContext()`
-- `hooks/useXxxDraftApi` — all HTTP and WebSocket calls; returns state derived from the WebSocket stream
+- `hooks/useXxxDraftApi` — typed oRPC calls and existing WebSocket updates; the common api.ts owns the client
 - `constants.ts` — frontend defaults and presentation configuration; game rules live in shared
 - `types/` — local presentation types; import common state types directly from shared
 
@@ -106,14 +107,16 @@ Room identity and side assignment live in URL params (`?room=XXXXX&side=blue`). 
 
 ### Backend
 
-Express route functions → managers (including RoomManager for Supabase access), with pure supporting utilities.
+oRPC procedures → managers (including RoomManager for Supabase access), with pure supporting utilities.
 `tools_backend/app/server.ts` constructs the application dependencies; `main.ts` loads the
 backend environment and starts the server. Read `tools_backend/AGENTS.md` for layer boundaries.
 
 Room mutations, timer advancement, readiness, and linking use locks keyed by draft type
 and room ID. Timers and WebSockets are process-local: deploy one backend instance.
 Every outgoing room payload must use the shared client-state filter to hide private data.
-Existing API paths, WebSocket payloads, and saved Supabase JSON remain compatible.
+HTTP uses shared Zod contracts with no URL prefix (for example /mapDraft/createRoom).
+WebSocket paths/payloads and saved Supabase JSON remain compatible.
+Keep network schemas and contracts in tools_shared/src/, infer their types, and use the typed frontend client.
 
 ## Environment
 

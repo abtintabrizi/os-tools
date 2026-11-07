@@ -1,31 +1,49 @@
-import {
-  type CreateStrikerDraftRoomRequest as CreateStrikerRoomConfig,
-  DraftType,
-  type Striker,
-  type StrikerDraftState,
-  type Team,
-} from "@os-tools/shared";
+import { DraftType, type PlayingSide, type Striker } from "@os-tools/shared";
 import { useCallback } from "react";
 
+import { rpc } from "../../common/api";
 import { useRoomApi } from "../../common/hooks/useRoomApi";
 
-export function useStrikerDraftApi(roomId: string | null, side?: string, live = true) {
-  const api = useRoomApi<StrikerDraftState>(roomId, DraftType.StrikerDraft, side, live);
+// oRPC creates a new proxy for each property access; keep the hook dependency stable.
+const client = rpc.strikerDraft;
 
-  const create = useCallback(
-    (config: CreateStrikerRoomConfig) => api.create(config),
-    [api.create], // eslint-disable-line react-hooks/exhaustive-deps
-  );
+export function useStrikerDraftApi(roomId: string | null, side?: string, live = true) {
+  const api = useRoomApi(roomId, DraftType.StrikerDraft, client, side, live);
+  const step = api.state?.step;
+  const { runMutation } = api;
 
   const applyAction = useCallback(
-    (striker: Striker | null) => api.applyAction({ striker, step: api.state?.step }),
-    [api.applyAction, api.state?.step], // eslint-disable-line react-hooks/exhaustive-deps
+    async (striker: Striker | null): Promise<void> => {
+      if (!roomId || step === undefined) {
+        return;
+      }
+
+      await runMutation(() => rpc.strikerDraft.applyAction({ roomId, step, striker }));
+    },
+    [roomId, step, runMutation],
   );
 
   const setPending = useCallback(
-    (side: Exclude<Team, Team.Spectator>, striker: Striker | null) => api.setPending({ side, striker }),
-    [api.setPending], // eslint-disable-line react-hooks/exhaustive-deps
+    async (side: PlayingSide, striker: Striker | null): Promise<void> => {
+      if (!roomId) {
+        return;
+      }
+
+      await runMutation(() => rpc.strikerDraft.setPending({ roomId, side, striker }));
+    },
+    [roomId, runMutation],
   );
 
-  return { ...api, create, applyAction, setPending };
+  const ready = useCallback(
+    async (side: PlayingSide): Promise<void> => {
+      if (!roomId) {
+        return;
+      }
+
+      await runMutation(() => rpc.strikerDraft.ready({ roomId, side }));
+    },
+    [roomId, runMutation],
+  );
+
+  return { ...api, applyAction, setPending, ready };
 }

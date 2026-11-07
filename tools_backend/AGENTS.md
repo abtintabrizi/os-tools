@@ -64,10 +64,10 @@ logging middleware; newly idle keep-alive sockets can otherwise delay server clo
 Keep this backend small: route functions → managers, with supporting utility functions.
 `server.ts` constructs one set of dependencies per application and registers routes explicitly.
 Do not add controller classes, router classes, an API-server class, or a separate bootstrap
-layer for simple delegation. No decorators, DI container, oRPC, or global mutable singletons.
+layer for simple delegation. No decorators, DI container, or global mutable singletons.
 
-- `routes/`: Express route functions that read typed request bodies, call managers, and serialize
-  responses. Keep business decisions and database access out of route handlers.
+- `routes/`: implement shared oRPC contracts by calling managers. Keep business decisions and
+  database access out of procedure handlers. server.ts mounts the Node RPCHandler without a URL prefix.
 - `managers/`: classes for draft workflows and stateful resources. Feature managers handle
   room creation and linking; `RoomManager` owns shared locked room operations, clock reads,
   random choices, and room-ID generation. `TimerManager` owns timer handles;
@@ -78,10 +78,16 @@ layer for simple delegation. No decorators, DI container, oRPC, or global mutabl
   logging, timers, locks, shared mutable state, randomness, or implicit clock reads.
   Pass timestamps as arguments; compute valid pools here and select randomly in managers.
   Local mutation of newly created values and throwing validation errors are fine.
+  Expected game-rule failures throw the transport-independent GameRuleError from app/gameRuleError.ts.
+  Managers translate only GameRuleError into ORPCError for HTTP calls; unexpected errors propagate.
+  Utilities must not import oRPC or API error codes; ESLint enforces this boundary.
   Do not create separate one-file `helpers/`, `rules/`, `validators/`, or `errors/` folders.
 
-Use arrow methods for manager methods passed by reference. Return existing plain state
-bodies and `{ detail }` errors. Do not add layers until they serve a concrete responsibility.
+Use arrow methods for manager methods passed by reference. Return filtered room states;
+oRPC validates outputs and serializes responses and errors. Do not add unnecessary layers.
+Manager methods called by HTTP procedures accept plain input objects and destructure them
+inside the method. RoomManager takes the server-owned DraftType separately and preserves
+the relationship between draft type, request shape, and returned state.
 
 Load mutable room state inside the manager's room lock, never before locking in a route.
 Timer callbacks and WebSocket reconnects use the same room manager and lock boundaries
@@ -106,18 +112,10 @@ request timing/logging or mix shutdown cleanup into request logging middleware.
 
 ## Python compatibility checks
 
-Use the cors package with the existing frontend origin allowlist and preview regex; let it
-handle preflight requests. Use Express default JSON parsing (with a 1 MiB size limit) and
-trailing-slash matching; do not add custom preflight handlers, redirect middleware, or
-content-type compatibility logic. Keep Express defaults for case-insensitive routing and
-response headers; add settings only for a concrete requirement. Unmatched methods fall through to 404,
-GET routes also support HEAD, and Express supplies OPTIONS responses. Do not add manual
-405/Allow compatibility handlers merely to reproduce FastAPI behavior.
-JSON callers must send `Content-Type: application/json`; primitive JSON bodies are rejected.
-Request bodies currently use compile-time shared types without runtime shape validation or
-Pydantic coercion. Do not add validation helpers until the planned Zod/oRPC work. Manager
-checks for business rules and expected HTTP errors remain. JSON parser failures use their
-Express status (400 for malformed JSON).
+Use the cors package with the existing frontend origin allowlist and preview regex.
+HTTP operations use the oRPC protocol without a URL prefix; old REST handlers are removed.
+Let RPCHandler parse bodies and validate shared Zod inputs/outputs. Its Node BodyLimitPlugin
+enforces 1 MiB; do not place express.json() before it. Manager gameplay checks remain.
 
 Uvicorn's WebSocket defaults are 20-second pings, a 20-second pong timeout, and a 16 MiB
 message limit. Heartbeat handles belong to `ConnectionManager` and must be cleared during
@@ -128,9 +126,9 @@ the timer fire time captured before acquiring the lock or waiting for database a
 ## Invariants
 
 - Striker creation requires `bannedStarts` and `customAwakenings` as arrays, including when
-  empty. Frontend callers supply both; runtime request-shape validation is deferred.
+  empty. Frontend callers supply both; Zod validates request shapes.
 
-- REST and WebSocket URLs and persisted JSON must remain compatible with Python and the frontend.
+- Preserve WebSocket URLs and persisted JSON. HTTP clients must use the shared oRPC contract.
 - Common game constants, request/state types, and replay types live in `../tools_shared/src/`.
   Keep server-only configuration and backend-only types local. Read the shared package guide.
 - `stepStartedAt`, `replayStartedAt`, and `serverTime` are epoch **seconds**; `atMs` is milliseconds.
@@ -144,7 +142,7 @@ the timer fire time captured before acquiring the lock or waiting for database a
 - A timer must verify its identity and expected step under the room lock before advancing.
 - Supabase service-role credentials must never enter frontend code, logs, or Turbo cache inputs.
 - Preserve nullable striker actions and legacy rooms without replay fields. Map deciders omit `step`.
-- No schema changes, oRPC, Zod, or authentication redesign in this extraction.
+- No database schema changes or authentication redesign in this migration.
 
 Import order is enforced by `simple-import-sort/imports` in each TypeScript package.
 Keep package imports together and relative imports together. Frontend source imports use
@@ -152,7 +150,7 @@ relative paths; workspace packages retain package imports. Side-effect imports r
 Use the package's `pnpm exec eslint <files> --fix` to fix sorting, then format with Prettier.
 VS Code applies ESLint fixes on explicit saves when the ESLint extension is enabled.
 
-Use `http-errors` for expected HTTP failures (`createError.BadRequest`, `NotFound`,
-and `Conflict`). Do not create a custom request-error class or wrapper. The central
-Express error handler preserves `{ detail }`, honors error headers, and uses `expose`
-to determine whether a message can be sent to clients; unexpected errors remain generic 500s.
+Use ORPCError with the backend-local ErrorCode enum in app/constants/errorCode.ts.
+These errors do not need contract declarations unless custom typed error data is required.
+Unexpected failures are logged by the handler
+interceptor and remain generic internal errors. Never expose storage error details in error data.

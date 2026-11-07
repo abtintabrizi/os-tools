@@ -1,5 +1,6 @@
 import { BO3_FORMATS, DraftAction, type MapDraftState, type PlayingSide, SEQUENCE_MAPPING } from "@os-tools/shared";
-import createError from "http-errors";
+
+import { GameRuleError } from "../gameRuleError.js";
 
 export function appendDecider(state: MapDraftState): MapDraftState {
   if (!BO3_FORMATS.includes(state.bestOf)) {
@@ -27,7 +28,7 @@ export function applyMapAction(state: MapDraftState, map: string): { state: MapD
   const entry = sequence?.[state.step];
 
   if (!entry) {
-    throw createError.BadRequest("No more steps remaining");
+    throw new GameRuleError("No more steps remaining");
   }
 
   const selected = state.maps.find((name) => {
@@ -35,7 +36,7 @@ export function applyMapAction(state: MapDraftState, map: string): { state: MapD
   });
 
   if (!selected) {
-    throw createError.BadRequest("Map not in pool");
+    throw new GameRuleError("Map not in pool");
   }
 
   if (
@@ -43,7 +44,7 @@ export function applyMapAction(state: MapDraftState, map: string): { state: MapD
       return a.map === map;
     })
   ) {
-    throw createError.BadRequest("Map already used");
+    throw new GameRuleError("Map already used");
   }
 
   const step = state.step + 1;

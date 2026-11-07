@@ -11,8 +11,8 @@ import {
 import classNames from "classnames";
 import { useState } from "react";
 
+import { rpc } from "../../common/api";
 import { AWAKENING_ICONS, DEFAULT_BANNED_AWAKENINGS, MAP_METADATA } from "../../common/constants/constants";
-import { API_BASE } from "../../common/hooks/useRoomApi";
 import { useMapDraftContext } from "../context/MapDraftContext";
 import { deriveMapStatuses } from "../utils";
 
@@ -22,22 +22,13 @@ async function createStrikerRoom(config: {
   map: GameMap;
   bannedStarts: Awakening[];
 }): Promise<string> {
-  const resp = await fetch(`${API_BASE}/striker-draft/rooms`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      ...config,
-      awakeningMode: AwakeningMode.Random,
-      customAwakenings: [],
-    } satisfies CreateStrikerDraftRoomRequest),
-  });
-  if (!resp.ok) {
-    const err = await resp.json();
-    throw new Error(err.detail ?? "Failed to create striker draft room");
-  }
-  const data = await resp.json();
+  const data = await rpc.strikerDraft.createRoom({
+    ...config,
+    awakeningMode: AwakeningMode.Random,
+    customAwakenings: [],
+  } satisfies CreateStrikerDraftRoomRequest);
 
-  return data.roomId as string;
+  return data.roomId;
 }
 
 export default function DonePanel() {
