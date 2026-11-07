@@ -5,6 +5,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    date: "2026-11-06",
+    notes: [
+      "Updated the icons for Heavy Handed and Quick Reflexes",
+      "A bunch of other technical changes which shouldn't impact the user experience",
+    ],
+  },
+  {
     date: "2026-10-13",
     notes: ["Added the tactics feature"],
   },
