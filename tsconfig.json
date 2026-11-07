@@ -1,0 +1,8 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./tools_shared" },
+    { "path": "./tools_backend" },
+    { "path": "./tools_frontend" }
+  ]
+}
