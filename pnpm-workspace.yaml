@@ -1,0 +1,9 @@
+packages:
+  - frontend
+  - backend
+
+# Keep the outer script alive during Ctrl+C; cmd.exe can return the prompt early.
+shellEmulator: true
+
+onlyBuiltDependencies:
+  - esbuild
