@@ -10,6 +10,9 @@ const SOURCE_HEADERS = {
 };
 
 const MAX_RETRY_WAIT_MS = 60_000;
+const REQUEST_FAILURE_WINDOW = 20;
+const MIN_REQUESTS_FOR_FAILURE_CHECK = 10;
+const MAX_REQUEST_FAILURE_RATE = 0.3;
 
 export const REQUEST_SPACING_MS = 1000;
 
@@ -33,10 +36,40 @@ function retryDelay(response: Response): number {
 export function createRankedSourceClient(runSignal: AbortSignal): RankedSourceClient {
   const pause = new AbortController();
   const signal = AbortSignal.any([runSignal, pause.signal]);
+  const recentOutcomes: boolean[] = [];
   let nextRequestAt = 0;
   let startQueue = Promise.resolve();
 
-  async function request(url: string): Promise<Response> {
+  function stopSource(message: string): never {
+    const error = new SourcePausedError(message);
+    pause.abort(error);
+
+    throw error;
+  }
+
+  function recordOutcome(succeeded: boolean): void {
+    signal.throwIfAborted();
+    recentOutcomes.push(succeeded);
+    if (recentOutcomes.length > REQUEST_FAILURE_WINDOW) {
+      recentOutcomes.shift();
+    }
+
+    const requests = recentOutcomes.length;
+    if (requests < MIN_REQUESTS_FOR_FAILURE_CHECK) {
+      return;
+    }
+
+    const failures = recentOutcomes.filter((outcome) => {
+      return !outcome;
+    }).length;
+    if (failures / requests > MAX_REQUEST_FAILURE_RATE) {
+      stopSource(
+        `Stats site request failure rate exceeded ${MAX_REQUEST_FAILURE_RATE * 100}% (${failures}/${requests})`,
+      );
+    }
+  }
+
+  async function getHtml(url: string): Promise<string> {
     for (let attempt = 1; attempt <= 3; attempt += 1) {
       const start = startQueue.then(async () => {
         while (nextRequestAt > performance.now()) {
@@ -58,6 +91,7 @@ export function createRankedSourceClient(runSignal: AbortSignal): RankedSourceCl
       signal.throwIfAborted();
 
       let response: Response;
+      let html: string | undefined;
 
       try {
         response = await fetch(url, {
@@ -65,8 +99,11 @@ export function createRankedSourceClient(runSignal: AbortSignal): RankedSourceCl
           redirect: "manual",
           signal: AbortSignal.any([signal, AbortSignal.timeout(20_000)]),
         });
+        if (response.ok && response.headers.get("content-type")?.toLowerCase().startsWith("text/html")) {
+          html = await response.text();
+        }
       } catch (error) {
-        signal.throwIfAborted();
+        recordOutcome(false);
         if (attempt === 3) {
           throw error;
         }
@@ -78,16 +115,21 @@ export function createRankedSourceClient(runSignal: AbortSignal): RankedSourceCl
         continue;
       }
 
+      if (html !== undefined) {
+        recordOutcome(true);
+
+        return html;
+      }
+
+      await response.body?.cancel();
+      recordOutcome(false);
       if (response.ok) {
-        return response;
+        throw new Error("Expected HTML from the stats site");
       }
 
       const wait = retryDelay(response);
       if (wait > MAX_RETRY_WAIT_MS || (response.status === 429 && attempt === 3)) {
-        const error = new SourcePausedError(`Stats site requested a pause (HTTP ${response.status})`);
-        pause.abort(error);
-
-        throw error;
+        stopSource(`Stats site requested a pause (HTTP ${response.status})`);
       }
 
       const retry = attempt < 3 && [408, 429, 500, 502, 503, 504].includes(response.status);
@@ -96,7 +138,6 @@ export function createRankedSourceClient(runSignal: AbortSignal): RankedSourceCl
         nextRequestAt = Math.max(nextRequestAt, performance.now() + retryInMs);
       }
 
-      await response.body?.cancel();
       if (!retry) {
         throw new Error(`Unexpected stats site response (HTTP ${response.status})`);
       }
@@ -107,14 +148,5 @@ export function createRankedSourceClient(runSignal: AbortSignal): RankedSourceCl
     throw new Error("Stats site request attempts exhausted");
   }
 
-  return async function getHtml(url: string): Promise<string> {
-    const response = await request(url);
-    if (!response.headers.get("content-type")?.toLowerCase().startsWith("text/html")) {
-      await response.body?.cancel();
-
-      throw new Error("Expected HTML from the stats site");
-    }
-
-    return response.text();
-  };
+  return getHtml;
 }
