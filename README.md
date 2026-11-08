@@ -120,8 +120,8 @@ Run the collector from the repository root after installing dependencies. Start 
 pnpm --filter @os-tools/backend collect:ranked --dry-run --pages 4 --output ranked-matches.json
 ```
 
-See the [ranked collector guide](tools_backend/app/ranked/AGENTS.md) for Supabase setup, the daily
-Render cron job, data storage, and troubleshooting.
+See the [ranked collector guide](tools_backend/app/ranked/AGENTS.md) for Supabase setup, daily runs
+on GitHub Actions, data storage, and troubleshooting.
 
 ## Contracts and API
 

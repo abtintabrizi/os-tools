@@ -50,45 +50,6 @@ GitHub may delay scheduled runs and disables public schedules after 60 days with
 activity. Enable one scheduler for the collector to avoid duplicate scrapes.
 [GitHub scheduling](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule)
 
-## Daily Render cron job
-
-In Render, create a **Cron Job** from the branch containing the collector. Add `SUPABASE_URL` and
-`SUPABASE_SERVICE_ROLE_KEY` to the cron job's environment settings. Render can also share those
-values with the web service through an environment group. [Render Cron Jobs](https://render.com/docs/cronjobs)
-
-| Render setting | Value                                                                                                      |
-| -------------- | ---------------------------------------------------------------------------------------------------------- |
-| Name           | `ranked-match-collector`                                                                                   |
-| Runtime        | Node 24 from `.node-version`                                                                               |
-| Root Directory | Leave blank to use the repository root                                                                     |
-| Build Command  | `corepack pnpm install --frozen-lockfile && corepack pnpm exec turbo run build --filter=@os-tools/backend` |
-| Schedule       | `0 10,11 * * *`                                                                                            |
-
-Use this **Command** to scrape all 400 pages at **6 a.m. Eastern local time**.
-
-```sh
-if [ "$(TZ=America/New_York date +%H)" = "06" ]; then
-  exec node tools_backend/dist/ranked/collectRanked.js --pages 400
-fi
-```
-
-Render schedules in UTC. The local-hour check selects 10:00 UTC during daylight time and 11:00 UTC
-during standard time. For fixed 6 a.m. EST (UTC−05:00) year-round, use `0 11 * * *` and the `node`
-command directly. [Render schedule documentation](https://render.com/docs/cronjobs#setup)
-
-For the first hosted test, temporarily set the Command to
-`node tools_backend/dist/ranked/collectRanked.js --pages 1` and use **Runs → Trigger Run**. Check
-for `Ranked collection finished` in the run logs, then confirm that `ranked_matches` and
-`ranked_player_snapshots` have the expected rows in Supabase. Restore the 400-page command after
-the test. An unscheduled run of the command with the local-hour check skips collection outside
-the 6 a.m. hour. Triggering a run while one is active cancels the active run.
-[Render manual runs](https://render.com/docs/cronjobs#manually-triggering-a-run)
-
-At one request start per second, 400 leaderboard pages plus 10,000 distinct profiles take about
-2 hours and 53 minutes before history pagination, retries, or write delays. Render caps a run at
-12 hours. Use the run logs to inspect checkpoints and warnings because the cron job's local files
-are ephemeral. [Render run limits](https://render.com/docs/cronjobs#single-run-guarantee)
-
 ## Collection and failure handling
 
 - [`collectRanked.ts`](collectRanked.ts) streams leaderboard entries into five profile workers.
