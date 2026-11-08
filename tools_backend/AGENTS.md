@@ -5,7 +5,7 @@ Use Node 24 and the root-pinned pnpm version. Do not create test files.
 
 ## Style conventions — required reading
 
-Read this file before every task touching the Node backend, alongside the root `AGENTS.md`.
+Read this file before every task touching the Node backend, alongside the [repository guidance](../AGENTS.md).
 Keep these conventions updated when the user establishes a new style preference.
 
 - Always use explicit braced blocks for function bodies (including arrow functions and callbacks)
@@ -92,6 +92,11 @@ the relationship between draft type, request shape, and returned state.
 Load mutable room state inside the manager's room lock, never before locking in a route.
 Timer callbacks and WebSocket reconnects use the same room manager and lock boundaries
 as HTTP mutations. Keep persistence, timer updates, and broadcasts ordered under the lock.
+
+## Ranked collector
+
+`app/ranked/` is a standalone CLI independent of the Express server and draft room storage.
+Read its [directory guidance](app/ranked/AGENTS.md) before changing collection, persistence, or scheduling.
 
 ## Logging
 

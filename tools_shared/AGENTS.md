@@ -1,6 +1,6 @@
 # Shared package
 
-Read this guide and the root AGENTS.md before editing this package.
+Read this guide and the [repository guidance](../AGENTS.md) before editing this package.
 
 - Keep common game constants and internal rule types in src/constants/.
   Define network schemas in src/schemas/ and export each inferred type immediately beside its schema.

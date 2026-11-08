@@ -7,7 +7,7 @@ and tactics boards. Live at [drafter.bestieinslot.com](https://drafter.bestieins
 
 - `tools_frontend/`: React, TypeScript, Vite, Tailwind; hosted on Vercel.
 - `tools_backend/`: Express 5, TypeScript, native WebSockets through `ws`; intended for Render.
-- Supabase: unchanged `map_drafts` and `striker_drafts` tables, each storing `room_id` and `state`.
+- Supabase: `map_drafts` and `striker_drafts` for draft rooms, plus `ranked_matches`, `ranked_players`, and `ranked_player_snapshots` for match collection.
 - `tools_shared/`: common game constants, API/state types, and replay types.
 - `dev.mjs`: workspace development launcher.
 - pnpm workspaces and Turborepo: one install and lockfile for the TypeScript apps.
@@ -111,6 +111,17 @@ working directory. Set `PORT` to override port 8000. It binds to `0.0.0.0` for R
 
 **Run one backend instance.** Timers, locks, and sockets live inside one process.
 Horizontal scaling requires additional coordination.
+
+## Ranked match collection
+
+Run the collector from the repository root after installing dependencies. Start with a read-only sample.
+
+```sh
+pnpm --filter @os-tools/backend collect:ranked --dry-run --pages 4 --output ranked-matches.json
+```
+
+See the [ranked collector guide](tools_backend/app/ranked/AGENTS.md) for Supabase setup, daily runs
+on GitHub Actions, data storage, and troubleshooting.
 
 ## Contracts and API
 

@@ -3,3 +3,5 @@ node_modules
 .env
 .turbo/
 tools_backend/dist/
+/ranked-matches.json
+/ranked-collector-errors.jsonl

@@ -4,9 +4,15 @@ This file provides guidance to AI agents when working with code in this reposito
 
 ## Required reading and code style
 
-At the start of every task, read this file and all applicable directory-level `AGENTS.md`
-files before editing code. For Node backend work, always read `tools_backend/AGENTS.md`,
-including its style conventions. Re-read guidance when it changes during a task.
+At the start of every task, read this file and follow the `AGENTS.md` files from the
+repository root to each directory you plan to change. Apply the guidance together. When
+two files give conflicting directions, follow the one closest to the affected file. Re-read
+guidance when it changes during a task.
+
+- For backend work, read the [backend guide](tools_backend/AGENTS.md). It points to the
+  [ranked collector guide](tools_backend/app/ranked/AGENTS.md) for scraper work.
+- For shared package work, read the [shared package guide](tools_shared/AGENTS.md).
+- For tactics whiteboard work, read the [tactics guide](tools_frontend/src/features/tactics/AGENTS.md).
 
 - Always use explicit braced blocks for control flow (`if`, `else`, loops, and similar
   statements), even for one statement. Put statements on their own lines.
@@ -73,7 +79,8 @@ Do not create test files; use temporary command-line smoke checks.
 After major feature or architecture changes, consider whether adding or updating an `AGENTS.md` in the relevant
 directory would help future work. Document useful local conventions, non-obvious behavior, invariants, and validation
 requirements, and update guidance that the change makes inaccurate. Keep feature-specific details close to the
-feature and repository-wide conventions in this root file.
+feature and repository-wide conventions in this root file. Link a new directory guide from the nearest
+parent `AGENTS.md` so agents can find it before working in that area.
 
 Do this only when it would be truly helpful. Routine fixes and small changes do not require a new file or an update;
 avoid duplicating existing guidance or turning agent instructions into a change log.

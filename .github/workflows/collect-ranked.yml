@@ -1,0 +1,41 @@
+name: Collect ranked matches
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+      timezone: America/New_York
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ranked-match-collector
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    # Standard hosted runners are free for public repositories.
+    if: ${{ toJSON(github.event.repository.private) == 'false' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+
+      - name: Install workspace dependencies
+        run: corepack pnpm install --frozen-lockfile
+
+      - name: Build the collector
+        run: corepack pnpm exec turbo run build --filter=@os-tools/backend
+
+      - name: Collect ranked matches
+        env:
+          PAGES: ${{ github.event_name == 'schedule' && '25' || '1' }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node tools_backend/dist/ranked/collectRanked.js --pages "$PAGES"
