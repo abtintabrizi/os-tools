@@ -1,7 +1,7 @@
 # Tactics feature
 
-This is the frontend-only whiteboard at `/tactics`, linked from the home page. Repository-level `AGENTS.md`
-instructions still apply.
+This is the frontend-only whiteboard at `/tactics`, linked from the home page.
+Read the [repository guidance](../../../../AGENTS.md) before editing this feature.
 
 ## Architecture
 
@@ -70,8 +70,8 @@ instructions still apply.
 
 - Use the frontend Prettier configuration (`printWidth: 120`). Add logical blank lines between hooks, handlers,
   processing stages, and before returns; Prettier does not add these for you. Keep related declarations together.
-- Do not create test files. After TypeScript changes, format changed files, run ESLint on them, and run
-  `npm.cmd run build` from `tools_frontend/`, following the repository instructions.
+- Follow the [repository's frontend validation steps](../../../../AGENTS.md#workspace-and-validation)
+  after TypeScript changes.
 - Manually verify map switching/resizing, Clarion options, repeated striker placement and team colors, drawing styles,
   moving/deleting objects, dragging pieces off the board, right-click deletion, core removal/restoration, cancellation,
   undo/redo/reset, disabled/active controls, map preloading, PNG export, and session reset.

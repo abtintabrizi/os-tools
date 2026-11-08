@@ -5,7 +5,7 @@ Use Node 24 and the root-pinned pnpm version. Do not create test files.
 
 ## Style conventions — required reading
 
-Read this file before every task touching the Node backend, alongside the root `AGENTS.md`.
+Read this file before every task touching the Node backend, alongside the [repository guidance](../AGENTS.md).
 Keep these conventions updated when the user establishes a new style preference.
 
 - Always use explicit braced blocks for function bodies (including arrow functions and callbacks)
@@ -95,14 +95,8 @@ as HTTP mutations. Keep persistence, timer updates, and broadcasts ordered under
 
 ## Ranked collector
 
-`app/ranked/` is a standalone CLI. It reads public HTML and uses a service-role-only Supabase RPC
-to persist a match and its player identities atomically. Keep it independent of the Express server
-and draft room storage. Dry runs must not create a Supabase client. Recheck a real match from both
-player perspectives before changing source selectors or fingerprint inputs. A profile's relative age
-and local card ID are not global match identifiers. Keep unknown player IDs and ranks nullable.
-Pair profile snapshots with stable IDs through the profile owner's roster slot. Append a snapshot
-on every scrape with a verified player ID. Write matches in batches and retain fingerprints for
-summary counts.
+`app/ranked/` is a standalone CLI independent of the Express server and draft room storage.
+Read its [directory guidance](app/ranked/AGENTS.md) before changing collection, persistence, or scheduling.
 
 ## Logging
 
