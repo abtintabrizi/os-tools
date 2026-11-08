@@ -27,11 +27,14 @@ jobs:
         with:
           node-version-file: .node-version
 
+      - name: Enable pnpm
+        run: corepack enable pnpm
+
       - name: Install workspace dependencies
-        run: corepack pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Build the collector
-        run: corepack pnpm exec turbo run build --filter=@os-tools/backend
+        run: pnpm exec turbo run build --filter=@os-tools/backend
 
       - name: Collect ranked matches
         env:
