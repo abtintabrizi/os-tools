@@ -34,6 +34,22 @@ pnpm --filter @os-tools/backend collect:ranked --pages 1
 
 Use `--pages 400` for the full leaderboard. Supabase writes are enabled when `--dry-run` is absent.
 
+## Daily GitHub Actions run
+
+The [GitHub Actions workflow](../../../.github/workflows/collect-ranked.yml) scrapes the first 25 pages at
+6 a.m. Eastern local time. It uses a standard hosted Linux runner and skips private repositories
+to avoid consuming paid compute. [GitHub Actions billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions)
+
+1. Apply the ranked schema migration if needed. In GitHub, go to **Settings → Secrets and variables →
+   Actions** and add `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` as repository secrets.
+2. Merge the workflow and collector into the default branch. GitHub uses that branch for scheduled runs.
+3. In **Actions → Collect ranked matches**, select **Run workflow**. The manual run writes one page
+   so you can check the final run log and confirm matches and player snapshots in Supabase.
+
+GitHub may delay scheduled runs and disables public schedules after 60 days without repository
+activity. Enable one scheduler for the collector to avoid duplicate scrapes.
+[GitHub scheduling](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule)
+
 ## Daily Render cron job
 
 In Render, create a **Cron Job** from the branch containing the collector. Add `SUPABASE_URL` and
