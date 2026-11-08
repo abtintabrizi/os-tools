@@ -80,14 +80,12 @@ async function* getProfiles(
         return;
       }
 
-      progress.leaderboardFailures += 1;
       if (error instanceof SourcePausedError) {
-        progress.sourcePaused = true;
+        throw error;
       }
+
+      progress.leaderboardFailures += 1;
       await reportFailure("Leaderboard page failed", { page, url, error });
-      if (progress.sourcePaused) {
-        return;
-      }
 
       continue;
     }
@@ -234,15 +232,12 @@ async function* collectProfileBatches(
         return;
       }
 
-      progress.profileFailures += 1;
       if (error instanceof SourcePausedError) {
-        progress.sourcePaused = true;
+        throw error;
       }
-      await reportFailure("Profile collection failed", { ...context, url, error });
 
-      if (progress.sourcePaused) {
-        break;
-      }
+      progress.profileFailures += 1;
+      await reportFailure("Profile collection failed", { ...context, url, error });
     }
   }
 }
@@ -285,6 +280,13 @@ async function* collectBatches(pages: number, progress: CrawlProgress, reportFai
         pending.set(next.worker, advance(next.worker));
       }
     }
+  } catch (error) {
+    if (!(error instanceof SourcePausedError)) {
+      throw error;
+    }
+
+    progress.sourcePaused = true;
+    await reportFailure("Stopped ranked collection after source failures", { error }, "ERROR");
   } finally {
     run.abort();
     await Promise.allSettled(

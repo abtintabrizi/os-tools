@@ -50,6 +50,11 @@ GitHub may delay scheduled runs and disables public schedules after 60 days with
 activity. Enable one scheduler for the collector to avoid duplicate scrapes.
 [GitHub scheduling](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule)
 
+For failure emails, enable **Email** and **Only notify for failed workflows** under **System → Actions**
+in GitHub notification settings. GitHub sends scheduled run notifications to the account responsible
+for the schedule. [GitHub Actions notification settings](https://github.com/settings/notifications) ·
+[Scheduled run notifications](https://docs.github.com/en/actions/concepts/workflows-and-actions/notifications-for-workflow-runs)
+
 ## Collection and failure handling
 
 - [`collectRanked.ts`](collectRanked.ts) streams leaderboard entries into five profile workers.
@@ -59,6 +64,11 @@ activity. Enable one scheduler for the collector to avoid duplicate scrapes.
   and profile fetches. It spaces request starts by at least one second and allows up to three
   attempts for transient failures. Preserve the shared pacing and `Retry-After` handling. A long
   `Retry-After` or a final HTTP 429 stops the crawl.
+- The source client tracks the last 20 completed HTTP attempts across all workers, including
+  retries. Once at least 10 attempts have finished, a failure rate above 30% stops the crawl.
+  Transport errors, unsuccessful HTTP statuses, and unexpected content types count as failures.
+  The collector logs the stop at `ERROR` level with the failure and attempt counts, then exits
+  nonzero so GitHub marks the job failed.
 - [`rankedSource.ts`](rankedSource.ts) parses server-rendered HTML with Cheerio. It collects only
   `Ranked` cards with identifiable teams and complete character and goals/assists/saves/KOs data
   for all six slots. The profile owner's slot can also be identified from a `Normal` card to
