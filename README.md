@@ -114,6 +114,8 @@ Horizontal scaling requires additional coordination.
 
 ## Ranked match collection
 
+[![Collect ranked matches](https://github.com/abtintabrizi/os-tools/actions/workflows/collect-ranked.yml/badge.svg)](https://github.com/abtintabrizi/os-tools/actions/workflows/collect-ranked.yml)
+
 Run the collector from the repository root after installing dependencies. Start with a read-only sample.
 
 ```sh
