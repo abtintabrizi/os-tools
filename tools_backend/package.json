@@ -10,6 +10,7 @@
     "dev": "tsx watch --include \"../tools_shared/dist/**/*.js\" app/main.ts",
     "build": "tsc",
     "start": "node dist/main.js",
+    "collect:ranked": "tsx app/ranked/collectRanked.ts",
     "lint": "eslint app --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write app"
@@ -18,6 +19,7 @@
     "@orpc/server": "1.16.1",
     "@os-tools/shared": "workspace:*",
     "@supabase/supabase-js": "2.118.0",
+    "cheerio": "1.1.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",

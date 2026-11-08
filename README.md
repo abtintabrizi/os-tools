@@ -7,7 +7,7 @@ and tactics boards. Live at [drafter.bestieinslot.com](https://drafter.bestieins
 
 - `tools_frontend/`: React, TypeScript, Vite, Tailwind; hosted on Vercel.
 - `tools_backend/`: Express 5, TypeScript, native WebSockets through `ws`; intended for Render.
-- Supabase: unchanged `map_drafts` and `striker_drafts` tables, each storing `room_id` and `state`.
+- Supabase: `map_drafts` and `striker_drafts` for draft rooms, plus `ranked_matches`, `ranked_players`, and `ranked_player_snapshots` for match collection.
 - `tools_shared/`: common game constants, API/state types, and replay types.
 - `dev.mjs`: workspace development launcher.
 - pnpm workspaces and Turborepo: one install and lockfile for the TypeScript apps.
@@ -111,6 +111,48 @@ working directory. Set `PORT` to override port 8000. It binds to `0.0.0.0` for R
 
 **Run one backend instance.** Timers, locks, and sockets live inside one process.
 Horizontal scaling requires additional coordination.
+
+## Ranked match collection
+
+Run the collector from the repository root after installing dependencies. Start with a read-only sample.
+
+```sh
+pnpm --filter @os-tools/backend collect:ranked --dry-run --pages 4 --output ranked-matches.json
+```
+
+`--output` streams a JSON file with `batches` and a final `summary`. Each batch contains up to
+50 `matches` and an optional `playerSnapshot`. Repeat match sightings remain in the export for
+fingerprint comparisons. The path is relative to the directory where you launch the command.
+The collector replaces an existing file at that path when the export finishes.
+
+To enable writes, apply `supabase/migrations/20261108014912_ranked_match_collection.sql` to your
+Supabase project. Set
+`SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in `tools_backend/.env` or in the process environment.
+
+```sh
+pnpm --filter @os-tools/backend collect:ranked
+```
+
+The default run reads the first four ranked leaderboard pages and visits each distinct profile on
+those pages. `--pages` accepts 1 through 400. Up to five leaderboard and profile requests can be
+in flight, with at least one second between request starts. Batch writes run one at a time.
+Collection can recover only matches still exposed by those profiles.
+The terminal logs a checkpoint after each leaderboard page, batch, and profile. Profile logs include
+the leaderboard rank, player name, and URL. The collector skips duplicate profiles, failed pages,
+failed profiles, and rejected matches, and appends their details to `ranked-collector-errors.jsonl`.
+Dry runs do not read credentials or connect to Supabase. The final summary shows the skipped work.
+A source pause, a run with no readable profiles, or a fatal error still returns a nonzero exit.
+
+Each match row has a `participants` JSONB array with six entries ordered by winning and losing team.
+Player IDs link to `ranked_players` when the source exposes them. Each scrape of a profile with a
+verified player ID adds a row to `ranked_player_snapshots` with the name, current LP, tier, and
+observation time. Identical values still get their own snapshot on a later scrape. For a historical
+lookup, use the latest snapshot at or before the estimated match time. Older matches may predate
+the player's first snapshot. The collector writes each batch as it is scraped and retains match
+fingerprints for summary counts.
+The collector subtracts the source's rounded age from `observed_at` to store an absolute UTC
+`estimated_played_at`. Unrecognized ages yield a null estimate. The first available estimate stays
+on the match across repeat sightings. The match also retains the average tier reported by the source.
 
 ## Contracts and API
 

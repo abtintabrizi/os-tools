@@ -93,6 +93,17 @@ Load mutable room state inside the manager's room lock, never before locking in 
 Timer callbacks and WebSocket reconnects use the same room manager and lock boundaries
 as HTTP mutations. Keep persistence, timer updates, and broadcasts ordered under the lock.
 
+## Ranked collector
+
+`app/ranked/` is a standalone CLI. It reads public HTML and uses a service-role-only Supabase RPC
+to persist a match and its player identities atomically. Keep it independent of the Express server
+and draft room storage. Dry runs must not create a Supabase client. Recheck a real match from both
+player perspectives before changing source selectors or fingerprint inputs. A profile's relative age
+and local card ID are not global match identifiers. Keep unknown player IDs and ranks nullable.
+Pair profile snapshots with stable IDs through the profile owner's roster slot. Append a snapshot
+on every scrape with a verified player ID. Write matches in batches and retain fingerprints for
+summary counts.
+
 ## Logging
 
 Use the module-scoped `LoggerManager` from `managers/loggerManager.ts`; it writes JSON lines with UTC
